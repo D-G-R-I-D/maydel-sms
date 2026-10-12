@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Maydel.Api/Maydel.Api.csproj" />
+    <Project Path="src/Maydel.Application/Maydel.Application.csproj" />
+    <Project Path="src/Maydel.Domain/Maydel.Domain.csproj" />
+    <Project Path="src/Maydel.Infrastructure/Maydel.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Maydel.Api.Tests/Maydel.Api.Tests.csproj" />
+    <Project Path="tests/Maydel.Application.Tests/Maydel.Application.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Maydel",
+  "classifications": ["Maydel", "Slice"],
+  "identity": "Maydel.Slice",
+  "name": "Maydel use-case slice",
+  "shortName": "maydel-slice",
+  "description": "Command or query + handler + validator for one use case (ADR-004).",
+  "tags": { "language": "C#", "type": "item" },
+  "sourceName": "UseCaseName",
+  "preferNameDirectory": true,
+  "symbols": {
+    "module": {
+      "type": "parameter",
+      "datatype": "text",
+      "isRequired": true,
+      "replaces": "ModuleName",
+      "description": "Module folder / namespace segment, e.g. Students."
+    },
+    "kind": {
+      "type": "parameter",
+      "datatype": "choice",
+      "choices": [{ "choice": "command" }, { "choice": "query" }],
+      "defaultValue": "command"
+    },
+    "response": {
+      "type": "parameter",
+      "datatype": "text",
+      "defaultValue": "Guid",
+      "replaces": "ResponseType",
+      "description": "Success payload type, e.g. StudentDetail."
+    },
+    "isQuery": { "type": "computed", "value": "(kind == \"query\")" }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        { "condition": "(isQuery)", "exclude": ["UseCaseNameCommand.cs"] },
+        { "condition": "(!isQuery)", "exclude": ["UseCaseNameQuery.cs"] }
+      ]
+    }
+  ]
+}

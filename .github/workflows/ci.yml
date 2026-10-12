@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+      - run: dotnet tool restore
+      - run: dotnet restore
+      - run: dotnet build --no-restore -c Release
+      # Unit + integration tests; Testcontainers uses the runner's Docker.
+      - run: dotnet test --no-build -c Release --logger "trx" --results-directory ../TestResults
+      - name: OpenAPI contract is committed and current
+        run: git diff --exit-code -- ../contracts/openapi.json || (echo "::error::contracts/openapi.json is stale. Build locally and commit it." && exit 1)
+      - name: No model changes without a migration
+        run: dotnet ef migrations has-pending-model-changes -p src/Maydel.Infrastructure -s src/Maydel.Api
+        env:
+          ConnectionStrings__Default: Host=localhost;Database=ci;Username=ci;Password=ci
+      - name: No known-vulnerable packages
+        run: |
+          dotnet list package --vulnerable --include-transitive | tee vulnerable.txt
+          ! grep -q "has the following vulnerable packages" vulnerable.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: TestResults
+
+  frontend:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('frontend/package.json') != '' }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Generated API types match the committed contract
+        run: npm run api:types && git diff --exit-code -- src/lib/api/schema.d.ts
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm audit --audit-level=high
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

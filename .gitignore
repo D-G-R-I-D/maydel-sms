@@ -1,0 +1,24 @@
+# Secrets
+.env
+*.pfx
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+uploads/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/

@@ -1,0 +1,54 @@
+# Local development. First run:  cp .env.example .env  &&  docker compose up -d --build
+# The web service joins once frontend/ exists:  docker compose --profile web up -d --build
+name: maydel
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: maydel
+      POSTGRES_USER: maydel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (copy .env.example)}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"   # change POSTGRES_PORT in .env if a local Postgres already uses 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maydel -d maydel"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development          # Scalar docs, auto-migrate, demo data
+      ConnectionStrings__Default: Host=db;Database=maydel;Username=maydel;Password=${POSTGRES_PASSWORD}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY (32+ chars) in .env}
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@maydel.test}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      # Trust X-Forwarded-For from containers on the compose network (the web BFF).
+      ForwardedHeaders__KnownNetworks__0: 172.16.0.0/12
+    ports:
+      - "5178:8080"
+    volumes:
+      - uploads:/data/uploads
+
+  web:
+    profiles: ["web"]
+    build: ./frontend
+    depends_on:
+      - api
+    environment:
+      API_BASE_URL: http://api:8080
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
+  uploads:
