@@ -9,7 +9,7 @@ import { formatLastSeen, isSelf } from "@/lib/validation/staff";
 import { Avatar, Badge, Card } from "@/components/ui/primitives";
 import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
 import { StaffForm } from "@/components/staff/staff-form";
-import { ResetPasswordButton } from "@/components/staff/reset-password";
+import { IssueLoginButton } from "@/components/credentials/issue-login";
 
 export const metadata: Metadata = { title: "Staff member" };
 
@@ -65,7 +65,7 @@ export default async function StaffDetailPage({ params }: { params: Promise<{ id
           <p className="text-sm text-muted">{staff.jobTitle ?? "Staff"}</p>
         </div>
         {staff.hasLogin && staff.isActive && !self && (
-          <ResetPasswordButton staffId={staff.id} fullName={staff.fullName} description={staff.jobTitle ?? "Staff"} />
+          <IssueLoginButton kind="staff" id={staff.id} hasLogin fullName={staff.fullName} description={staff.jobTitle ?? "Staff"} />
         )}
       </div>
 
