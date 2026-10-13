@@ -564,10 +564,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assessment/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAssessmentSettings"];
+        put: operations["SaveAssessmentSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment/my-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListGradableClasses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assessment/gradesheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetGradeSheet"];
+        put: operations["SaveGradeSheet"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AssessmentSettings: {
+            components: components["schemas"]["ComponentDto"][];
+            bands: components["schemas"]["GradeBandDto"][];
+        };
         /** @enum {unknown} */
         AuditAction: "Added" | "Modified" | "Deleted";
         AuditFilters: {
@@ -655,6 +707,31 @@ export interface components {
         ClassSubjectsRequest: {
             subjects: components["schemas"]["ClassSubjectAssignment"][];
         };
+        ComponentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: double */
+            maxScore: number;
+            /** Format: int32 */
+            order: number;
+            isActive: boolean;
+            hasScores: boolean;
+        };
+        ComponentInput: {
+            /** Format: uuid */
+            id: null | string;
+            name: string;
+            /** Format: double */
+            maxScore: number;
+            isActive: boolean;
+        };
+        ComponentScoreValue: {
+            /** Format: uuid */
+            componentId: string;
+            /** Format: double */
+            score: null | number;
+        };
         CreateClassRoomCommand: {
             /** Format: uuid */
             classLevelId: string;
@@ -686,6 +763,64 @@ export interface components {
         };
         GoogleLoginCommand: {
             idToken: string;
+        };
+        GradableClass: {
+            /** Format: uuid */
+            classRoomId: string;
+            classRoom: string;
+            /** Format: int32 */
+            levelOrder: number;
+            /** Format: uuid */
+            subjectId: string;
+            subject: string;
+            isFormClass: boolean;
+        };
+        GradeBandDto: {
+            grade: string;
+            /** Format: double */
+            minScore: number;
+            /** Format: double */
+            maxScore: number;
+            remark: string;
+        };
+        GradeSheet: {
+            /** Format: uuid */
+            classRoomId: string;
+            classRoom: string;
+            /** Format: uuid */
+            subjectId: string;
+            subject: string;
+            /** Format: uuid */
+            termId: string;
+            term: string;
+            components: components["schemas"]["GradeSheetComponent"][];
+            rows: components["schemas"]["GradeSheetRow"][];
+        };
+        GradeSheetComponent: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: double */
+            maxScore: number;
+        };
+        GradeSheetEntry: {
+            /** Format: uuid */
+            studentId: string;
+            scores: components["schemas"]["ComponentScoreValue"][];
+            comment: null | string;
+        };
+        GradeSheetRow: {
+            /** Format: uuid */
+            studentId: string;
+            admissionNumber: string;
+            name: string;
+            scores: components["schemas"]["ComponentScoreValue"][];
+            /** Format: double */
+            total: null | number;
+            grade: null | string;
+            remark: null | string;
+            comment: null | string;
+            locked: boolean;
         };
         GuardianAdded: {
             student: components["schemas"]["StudentDetail"];
@@ -861,6 +996,19 @@ export interface components {
         };
         /** @enum {unknown} */
         Role: "Admin" | "Teacher" | "Bursar" | "Parent" | "Student";
+        SaveAssessmentSettingsCommand: {
+            components: components["schemas"]["ComponentInput"][];
+            bands: components["schemas"]["GradeBandDto"][];
+        };
+        SaveGradeSheetCommand: {
+            /** Format: uuid */
+            classRoomId: string;
+            /** Format: uuid */
+            subjectId: string;
+            /** Format: uuid */
+            termId: string;
+            entries: components["schemas"]["GradeSheetEntry"][];
+        };
         /** @enum {unknown} */
         SchoolSection: "Creche" | "Nursery" | "Primary" | "JuniorSecondary" | "SeniorSecondary";
         SessionDto: {
@@ -3722,6 +3870,271 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAssessmentSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentSettings"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveAssessmentSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAssessmentSettingsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssessmentSettings"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListGradableClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradableClass"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetGradeSheet: {
+        parameters: {
+            query: {
+                classRoomId: string;
+                subjectId: string;
+                termId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeSheet"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveGradeSheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveGradeSheetCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradeSheet"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

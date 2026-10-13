@@ -96,6 +96,7 @@ app.MapAcademicsEndpoints();
 app.MapStaffEndpoints();
 app.MapStudentEndpoints();
 app.MapPhotoEndpoints();
+app.MapAssessmentEndpoints();
 
 if (!generatingOpenApiDocument && app.Configuration.GetValue("Database:MigrateOnStartup", false))
 {

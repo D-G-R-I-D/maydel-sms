@@ -3355,10 +3355,349 @@
           }
         }
       }
+    },
+    "/api/assessment/settings": {
+      "get": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "GetAssessmentSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "SaveAssessmentSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAssessmentSettingsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/my-classes": {
+      "get": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "ListGradableClasses",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GradableClass"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/gradesheet": {
+      "get": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "GetGradeSheet",
+        "parameters": [
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GradeSheet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "SaveGradeSheet",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveGradeSheetCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GradeSheet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssessmentSettings": {
+        "required": [
+          "components",
+          "bands"
+        ],
+        "type": "object",
+        "properties": {
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComponentDto"
+            }
+          },
+          "bands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeBandDto"
+            }
+          }
+        }
+      },
       "AuditAction": {
         "enum": [
           "Added",
@@ -3682,6 +4021,88 @@
           }
         }
       },
+      "ComponentDto": {
+        "required": [
+          "id",
+          "name",
+          "maxScore",
+          "order",
+          "isActive",
+          "hasScores"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "hasScores": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ComponentInput": {
+        "required": [
+          "id",
+          "name",
+          "maxScore",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ComponentScoreValue": {
+        "required": [
+          "componentId",
+          "score"
+        ],
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "CreateClassRoomCommand": {
         "required": [
           "classLevelId",
@@ -3795,6 +4216,220 @@
         "properties": {
           "idToken": {
             "type": "string"
+          }
+        }
+      },
+      "GradableClass": {
+        "required": [
+          "classRoomId",
+          "classRoom",
+          "levelOrder",
+          "subjectId",
+          "subject",
+          "isFormClass"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classRoom": {
+            "type": "string"
+          },
+          "levelOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "isFormClass": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GradeBandDto": {
+        "required": [
+          "grade",
+          "minScore",
+          "maxScore",
+          "remark"
+        ],
+        "type": "object",
+        "properties": {
+          "grade": {
+            "type": "string"
+          },
+          "minScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "remark": {
+            "type": "string"
+          }
+        }
+      },
+      "GradeSheet": {
+        "required": [
+          "classRoomId",
+          "classRoom",
+          "subjectId",
+          "subject",
+          "termId",
+          "term",
+          "components",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classRoom": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "term": {
+            "type": "string"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeSheetComponent"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeSheetRow"
+            }
+          }
+        }
+      },
+      "GradeSheetComponent": {
+        "required": [
+          "id",
+          "name",
+          "maxScore"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxScore": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "GradeSheetEntry": {
+        "required": [
+          "studentId",
+          "scores",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComponentScoreValue"
+            }
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "GradeSheetRow": {
+        "required": [
+          "studentId",
+          "admissionNumber",
+          "name",
+          "scores",
+          "total",
+          "grade",
+          "remark",
+          "comment",
+          "locked"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComponentScoreValue"
+            }
+          },
+          "total": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "grade": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "remark": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "locked": {
+            "type": "boolean"
           }
         }
       },
@@ -4460,6 +5095,56 @@
           "Parent",
           "Student"
         ]
+      },
+      "SaveAssessmentSettingsCommand": {
+        "required": [
+          "components",
+          "bands"
+        ],
+        "type": "object",
+        "properties": {
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComponentInput"
+            }
+          },
+          "bands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeBandDto"
+            }
+          }
+        }
+      },
+      "SaveGradeSheetCommand": {
+        "required": [
+          "classRoomId",
+          "subjectId",
+          "termId",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeSheetEntry"
+            }
+          }
+        }
       },
       "SchoolSection": {
         "enum": [
@@ -5308,6 +5993,9 @@
     },
     {
       "name": "Photos"
+    },
+    {
+      "name": "Assessment"
     }
   ]
 }
