@@ -15,9 +15,11 @@ export function FormDialog({
   description,
   open: controlledOpen,
   onOpenChange,
+  size = "md",
   children,
 }: {
   trigger?: ReactNode;
+  size?: "md" | "lg";
   title: string;
   description?: ReactNode;
   open?: boolean;
@@ -40,7 +42,8 @@ export function FormDialog({
           className={cn(
             "animate-rise fixed z-50 flex flex-col overflow-hidden border border-border bg-surface text-text shadow-2xl",
             "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-panel",
-            "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[85dvh] sm:w-[calc(100%-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-card",
+            size === "lg" ? "sm:max-w-3xl" : "sm:max-w-lg",
+            "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[85dvh] sm:w-[calc(100%-2rem)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-card",
           )}
         >
           <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
