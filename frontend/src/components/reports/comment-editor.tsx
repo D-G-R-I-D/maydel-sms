@@ -82,7 +82,7 @@ export function CommentEditor({
         }}
         rows={3}
         aria-invalid={tooLong ? true : undefined}
-        placeholder={kind === "formTeacher" ? "e.g. Chidera is attentive and works hard. Keep it up." : "e.g. A good term. Promoted on trial."}
+        placeholder={kind === "formTeacher" ? "e.g. Attentive and hardworking. Keep it up." : "e.g. A good term. Promoted on trial."}
         className={cn(
           "block w-full rounded-input border bg-surface px-3 py-2 text-base text-text placeholder:text-muted/70 focus-visible:outline-2 focus-visible:outline-brand sm:text-sm",
           tooLong ? "border-danger" : "border-border",
