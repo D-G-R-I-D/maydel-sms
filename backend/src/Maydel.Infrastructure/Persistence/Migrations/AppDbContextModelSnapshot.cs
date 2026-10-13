@@ -189,7 +189,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Academics.AcademicSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -223,7 +222,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Academics.ClassLevel", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -256,7 +254,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Academics.ClassRoom", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Arm")
@@ -292,7 +289,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Academics.ClassSubject", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ClassRoomId")
@@ -325,7 +321,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Academics.Subject", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Code")
@@ -361,7 +356,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Academics.Term", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -402,7 +396,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Admissions.AdmissionApplication", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int>("ChildAge")
@@ -472,7 +465,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Admissions.ContactMessage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -513,7 +505,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Admissions.NewsletterSubscriber", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -541,7 +532,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Assessment.AssessmentComponent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -573,7 +563,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Assessment.GradeBand", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -608,7 +597,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Assessment.SubjectScore", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ClassRoomId")
@@ -665,7 +653,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Assessment.TermReport", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Average")
@@ -737,7 +724,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Attendance.AttendanceRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ClassRoomId")
@@ -829,7 +815,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Communication.Announcement", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int>("Audience")
@@ -878,7 +863,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Communication.GalleryPhoto", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Caption")
@@ -920,7 +904,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Communication.SchoolEvent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int>("Audience")
@@ -961,7 +944,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Finance.FeeItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
@@ -1000,7 +982,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Finance.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -1041,7 +1022,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Finance.Payment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
@@ -1090,7 +1070,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.People.Guardian", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Address")
@@ -1115,8 +1094,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1128,7 +1107,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Email");
 
-                    b.HasIndex("Phone");
+                    b.HasIndex("Phone")
+                        .IsUnique();
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -1139,7 +1119,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.People.Staff", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Bio")
@@ -1208,7 +1187,6 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.People.Student", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("AdmissionNumber")

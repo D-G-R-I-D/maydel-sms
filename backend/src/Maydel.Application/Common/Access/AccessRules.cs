@@ -22,7 +22,7 @@ public sealed class AccessRules(IAppDbContext db, ICurrentUser me)
         return await PortalStudents(uid).AnyAsync(s => s.Id == studentId, ct);
     }
 
-    /// <summary>Students the signed-in parent or student may see in the portal. Empty for staff and anonymous callers.</summary>
+    /// <summary>Active students the signed-in parent or student may see in the portal. Empty for staff and anonymous callers.</summary>
     public IQueryable<Student> PortalStudents() =>
         me.UserId is { } uid && (me.IsInRole(Roles.Parent) || me.IsInRole(Roles.Student))
             ? PortalStudents(uid)
@@ -49,8 +49,9 @@ public sealed class AccessRules(IAppDbContext db, ICurrentUser me)
     {
         var asStudent = me.IsInRole(Roles.Student);
         var asParent = me.IsInRole(Roles.Parent);
-        return db.Students.Where(s =>
+        // Suspended, withdrawn and graduated students drop out of the portal (E3.5); their records are kept.
+        return db.Students.Where(s => s.Status == StudentStatus.Active && (
             (asStudent && s.UserId == uid) ||
-            (asParent && s.Guardians.Any(g => g.Guardian.UserId == uid)));
+            (asParent && s.Guardians.Any(g => g.Guardian.UserId == uid))));
     }
 }
