@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { ChevronDown, Filter, SlidersHorizontal, X } from "lucide-react";
-import { auditHref, hasFilters, type AuditSearch } from "@/lib/audit/query";
+import { auditAction, auditHref, hasFilters, type AuditSearch } from "@/lib/audit/query";
 import { Card, Input, Select, buttonClasses, cn } from "@/components/ui/primitives";
 
 const chipLabels: Record<"entityType" | "action" | "entityId" | "userId" | "from" | "to", string> = {
@@ -53,7 +53,7 @@ export function AuditFilterBar({
       const v = data.get(k);
       return typeof v === "string" && v.trim() ? v.trim() : undefined;
     };
-    const href = auditHref({ entityType: read("entityType"), action: read("action"), entityId: read("entityId"), userId: search.userId, from: read("from"), to: read("to"), page: 1 });
+    const href = auditHref({ entityType: read("entityType"), action: auditAction(read("action")), entityId: read("entityId"), userId: search.userId, from: read("from"), to: read("to"), page: 1 });
     startTransition(() => router.replace(href, { scroll: false }));
   };
 

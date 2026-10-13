@@ -27,7 +27,7 @@ public sealed class LoginTests(PostgresFixture fixture)
         Assert.InRange(auth.AccessTokenExpiresAt - DateTimeOffset.UtcNow, TimeSpan.FromMinutes(14), TimeSpan.FromMinutes(15.5));
         Assert.InRange(auth.RefreshTokenExpiresAt - DateTimeOffset.UtcNow, TimeSpan.FromDays(13.9), TimeSpan.FromDays(14.1));
         Assert.Equal(user.Id, auth.User.Id);
-        Assert.Equal([Roles.Teacher], auth.User.Roles);
+        Assert.Equal([Role.Teacher], auth.User.Roles);
         Assert.False(auth.User.MustChangePassword);
     }
 
@@ -40,7 +40,7 @@ public sealed class LoginTests(PostgresFixture fixture)
         var auth = await Api.LoginAsync(admissionNo);
 
         Assert.Equal(admissionNo, auth.User.UserName);
-        Assert.Equal([Roles.Student], auth.User.Roles);
+        Assert.Equal([Role.Student], auth.User.Roles);
     }
 
     [Fact]

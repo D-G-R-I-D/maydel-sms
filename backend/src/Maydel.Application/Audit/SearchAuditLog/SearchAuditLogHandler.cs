@@ -14,7 +14,11 @@ internal sealed class SearchAuditLogHandler(IAppDbContext db) : IQueryHandler<Se
         if (!string.IsNullOrWhiteSpace(q.EntityType)) logs = logs.Where(l => l.EntityType == q.EntityType);
         if (!string.IsNullOrWhiteSpace(q.EntityId)) logs = logs.Where(l => l.EntityId == q.EntityId);
         if (q.UserId is { } userId) logs = logs.Where(l => l.UserId == userId);
-        if (!string.IsNullOrWhiteSpace(q.Action)) logs = logs.Where(l => l.Action.ToLower() == q.Action.ToLower());
+        if (q.Action is { } action)
+        {
+            var name = action.ToString();
+            logs = logs.Where(l => l.Action == name);
+        }
         if (q.From is { } from) logs = logs.Where(l => l.Timestamp >= from);
         if (q.To is { } to) logs = logs.Where(l => l.Timestamp < to);
 
@@ -25,7 +29,7 @@ internal sealed class SearchAuditLogHandler(IAppDbContext db) : IQueryHandler<Se
 
         return new PagedResult<AuditLogEntry>(
             [.. page.Items.Select(l => new AuditLogEntry(
-                l.Id, l.Timestamp, l.UserId, l.UserName, l.Action, l.EntityType, l.EntityId, l.IpAddress, Parse(l.Changes)))],
+                l.Id, l.Timestamp, l.UserId, l.UserName, Enum.Parse<AuditAction>(l.Action), l.EntityType, l.EntityId, l.IpAddress, Parse(l.Changes)))],
             page.Page, page.PageSize, page.TotalCount);
     }
 

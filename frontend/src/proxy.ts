@@ -6,6 +6,7 @@ import { forwardingHeaders } from "@/lib/auth/forwarding";
 import { refreshSession, sessionIsDead } from "@/lib/auth/refresh";
 import { canEnter, homeFor } from "@/lib/auth/roles";
 import { jwtExpiry, needsRefresh } from "@/lib/auth/token";
+import { publicUrl } from "@/lib/http/redirect";
 
 const PATH_HEADER = "x-maydel-path";
 
@@ -67,7 +68,7 @@ export async function proxy(request: NextRequest) {
 
   let response: NextResponse;
   if (target) {
-    response = NextResponse.redirect(new URL(target, request.url));
+    response = NextResponse.redirect(publicUrl(request, target));
   } else {
     // Hand the fresh token to this request's Server Components, not just the browser.
     if (refreshed?.ok) {

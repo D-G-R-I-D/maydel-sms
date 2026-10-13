@@ -8,7 +8,7 @@ public sealed record SearchAuditLogQuery(
     string? EntityType = null,
     string? EntityId = null,
     Guid? UserId = null,
-    string? Action = null,
+    AuditAction? Action = null,
     DateTimeOffset? From = null,
     DateTimeOffset? To = null,
     int? Page = null,

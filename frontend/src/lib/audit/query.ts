@@ -1,10 +1,18 @@
+import type { AuditAction } from "@/lib/api/types";
+
+const AUDIT_ACTIONS = ["Added", "Modified", "Deleted"] as const satisfies readonly AuditAction[];
+
+export function auditAction(v: string | undefined): AuditAction | undefined {
+  return AUDIT_ACTIONS.find((a) => a === v);
+}
+
 /** The school's clock: Africa/Lagos is UTC+1 all year (no DST). Date filters are school days. */
 const SCHOOL_OFFSET = "+01:00";
 export const AUDIT_PAGE_SIZE = 25;
 
 export type AuditSearch = {
   entityType?: string;
-  action?: string;
+  action?: AuditAction;
   entityId?: string;
   userId?: string;
   from?: string; // yyyy-mm-dd, inclusive
@@ -32,7 +40,7 @@ export function parseAuditSearch(params: Params): AuditSearch {
   const page = Number.parseInt(first(params.page) ?? "1", 10);
   return {
     entityType: first(params.entityType),
-    action: first(params.action),
+    action: auditAction(first(params.action)),
     entityId: first(params.entityId),
     userId: uuid.test(first(params.userId) ?? "") ? first(params.userId) : undefined,
     from: validDate(first(params.from)),

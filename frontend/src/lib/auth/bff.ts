@@ -9,6 +9,7 @@ import { forwardingHeaders } from "./forwarding";
 import { refreshSession, sessionIsDead } from "./refresh";
 import { canEnter, homeFor, safeNext } from "./roles";
 import { needsRefresh } from "./token";
+import { isTrustedOrigin } from "./origins";
 
 export type ApiReply<T> = { ok: true; status: number; data: T } | { ok: false; problem: Problem };
 
@@ -52,6 +53,8 @@ export function crossSiteRejection(request: NextRequest): NextResponse | null {
   } catch {
     // malformed Origin: reject below
   }
+  // Tunnels/proxies that hide the public host (see origins.ts) must be listed explicitly.
+  if (isTrustedOrigin(origin)) return null;
   return problemResponse({ status: 403, title: "Cross-site request blocked." });
 }
 

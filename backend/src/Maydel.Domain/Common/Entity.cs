@@ -10,6 +10,16 @@ public abstract class Entity
 /// <summary>Raised when a business rule is violated. The API maps it to HTTP 422.</summary>
 public class DomainException(string message) : Exception(message);
 
+/// <summary>The fixed set of roles. Serialised by name; <see cref="Roles"/> holds the same names as constants for policies.</summary>
+public enum Role
+{
+    Admin,
+    Teacher,
+    Bursar,
+    Parent,
+    Student,
+}
+
 public static class Roles
 {
     public const string Admin = "Admin";

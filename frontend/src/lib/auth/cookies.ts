@@ -1,5 +1,6 @@
 import type { AuthResponse, MeResponse } from "@/lib/api/types";
 import { FLASH_COOKIE, encodeFlash, type Flash } from "@/lib/flash";
+import { isRole } from "@/lib/auth/roles";
 
 export const ACCESS_COOKIE = "access_token";
 export const REFRESH_COOKIE = "refresh_token";
@@ -64,7 +65,7 @@ export function decodeUser(value: string | undefined): SessionUser | null {
         userName: parsed.userName,
         fullName: parsed.fullName,
         email,
-        roles: parsed.roles.filter((r): r is string => typeof r === "string"),
+        roles: parsed.roles.filter(isRole),
         mustChangePassword: parsed.mustChangePassword,
       };
     }

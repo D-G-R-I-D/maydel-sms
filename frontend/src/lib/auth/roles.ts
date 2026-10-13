@@ -1,5 +1,13 @@
-export const Roles = ["Admin", "Teacher", "Bursar", "Parent", "Student"] as const;
-export type Role = (typeof Roles)[number];
+import type { Role } from "@/lib/api/types";
+
+export type { Role };
+
+/** Every role the API knows. `satisfies` makes the type check fail if the contract adds or renames one. */
+export const Roles = ["Admin", "Teacher", "Bursar", "Parent", "Student"] as const satisfies readonly Role[];
+
+export function isRole(value: unknown): value is Role {
+  return typeof value === "string" && (Roles as readonly string[]).includes(value);
+}
 
 const staffRoles: readonly Role[] = ["Admin", "Teacher", "Bursar"];
 const portalRoles: readonly Role[] = ["Parent", "Student"];
