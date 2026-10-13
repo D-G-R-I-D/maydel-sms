@@ -53,11 +53,11 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E2.6** School profile: name, motto, logo, address, principal's signature image (used on report cards & receipts).
 
 ## E3 — Student information system
-- **E3.1** Create/edit student with biodata (name, DOB, sex, state/LGA, address, house, medical notes, photo). AC: admission number auto-generated `MSS/{year}/{seq}`, unique.
-- **E3.2** Guardians: many-to-many with relationship, primary contact, authorised pick-up. AC: adding a guardian with an existing phone reuses that guardian (siblings share one parent account).
-- **E3.3** Issue/reset logins for students and guardians; temporary password shown once. AC: never retrievable later; reset revokes sessions.
-- **E3.4** Search & filter (name, admission no., class, status) with pagination. AC: < 300 ms for 2k students.
-- **E3.5** Lifecycle: Active, Suspended, Withdrawn, Graduated. AC: non-active students lose portal access; history retained.
+- **E3.1** 🟡 *API ✅ 2026-10-13 except photo upload (next, with secure file storage); UI pending.* Create/edit student with biodata (name, DOB, sex, state/LGA, address, house, medical notes, photo). AC: admission number auto-generated `MSS/{year}/{seq}`, unique.
+- **E3.2** 🟡 *API ✅ 2026-10-13 (reuse by normalised phone); UI pending.* Guardians: many-to-many with relationship, primary contact, authorised pick-up. AC: adding a guardian with an existing phone reuses that guardian (siblings share one parent account).
+- **E3.3** 🟡 *API ✅ 2026-10-13; UI pending.* Issue/reset logins for students and guardians; temporary password shown once. AC: never retrievable later; reset revokes sessions.
+- **E3.4** 🟡 *API ✅ 2026-10-13 (performance at 2k students not yet measured); UI pending.* Search & filter (name, admission no., class, status) with pagination. AC: < 300 ms for 2k students.
+- **E3.5** 🟡 *API ✅ 2026-10-13; UI pending.* Lifecycle: Active, Suspended, Withdrawn, Graduated. AC: non-active students lose portal access; history retained.
 - **E3.6** End-of-session promotion wizard: promote class → next level, with per-student exceptions (repeat/withdraw); Year 12 → Graduated. AC: preview before commit; single transaction; audited.
 - **E3.7 (S)** Documents per student (birth certificate, previous school report) — private storage.
 - **E3.8 (S)** Bulk import from Excel template with validation report.

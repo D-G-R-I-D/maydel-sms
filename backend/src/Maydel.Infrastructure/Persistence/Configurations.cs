@@ -109,7 +109,9 @@ internal sealed class GuardianConfig : IEntityTypeConfiguration<Guardian>
 {
     public void Configure(EntityTypeBuilder<Guardian> b)
     {
-        b.HasIndex(x => x.Phone);
+        // Phones are stored normalised (+234…); one guardian record per phone so siblings share a parent account.
+        b.HasIndex(x => x.Phone).IsUnique();
+        b.Property(x => x.Phone).HasMaxLength(20);
         b.HasIndex(x => x.Email);
         b.HasIndex(x => x.UserId).IsUnique();
         b.Property(x => x.Address).HasMaxLength(1000);

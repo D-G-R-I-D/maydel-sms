@@ -53,6 +53,43 @@ public class Student : Entity
 
     public string FullName =>
         string.Join(' ', new[] { FirstName, MiddleName, LastName }.Where(p => !string.IsNullOrWhiteSpace(p)));
+
+    public bool IsActive => Status == StudentStatus.Active;
+
+    /// <summary>MSS/{year}/{seq:0000}, e.g. MSS/2026/0007. Sequence restarts each admission year.</summary>
+    public static string AdmissionNumberFor(int year, int sequence) => $"MSS/{year}/{sequence:0000}";
+
+    public static string AdmissionPrefix(int year) => $"MSS/{year}/";
+
+    /// <summary>Date of birth can't be in the future or implausibly old for a pupil (1–25 years at admission).</summary>
+    public static DomainError? ValidateDates(DateOnly? dateOfBirth, DateOnly admittedOn, DateOnly today)
+    {
+        if (admittedOn > today.AddYears(1)) return new("student.admitted_future", "The admission date is too far in the future.", "admittedOn");
+        if (dateOfBirth is not { } dob) return null;
+        if (dob > today) return new("student.dob_future", "Date of birth can't be in the future.", "dateOfBirth");
+        if (dob > admittedOn.AddYears(-1) || dob < admittedOn.AddYears(-25))
+            return new("student.dob_range", "Check the date of birth: pupils are 1 to 25 years old at admission.", "dateOfBirth");
+        return null;
+    }
+
+    /// <summary>
+    /// Active ⇄ Suspended; Active or Suspended → Withdrawn or Graduated; Withdrawn → Active (re-admission).
+    /// Graduated is final. Non-active students lose portal access; their records are kept.
+    /// </summary>
+    public DomainError? ChangeStatus(StudentStatus to)
+    {
+        if (to == Status) return new("student.status_unchanged", $"The student is already {to}.", "status");
+        var allowed = (Status, to) switch
+        {
+            (StudentStatus.Active, _) => true,
+            (StudentStatus.Suspended, StudentStatus.Active or StudentStatus.Withdrawn or StudentStatus.Graduated) => true,
+            (StudentStatus.Withdrawn, StudentStatus.Active) => true,
+            _ => false,
+        };
+        if (!allowed) return new("student.status_transition", $"A {Status.ToString().ToLowerInvariant()} student can't be marked {to.ToString().ToLowerInvariant()}.");
+        Status = to;
+        return null;
+    }
 }
 
 /// <summary>A parent or guardian. One guardian can be linked to many students (siblings).</summary>
@@ -65,6 +102,26 @@ public class Guardian : Entity
     public string? Address { get; set; }
     public Guid? UserId { get; set; }
     public List<StudentGuardian> Students { get; set; } = [];
+
+    /// <summary>
+    /// Canonical form used to recognise the same parent across siblings: Nigerian local numbers become +234…
+    /// ("0803 000 0000" → "+2348030000000"); other numbers keep their country code. Null if it can't be a phone number.
+    /// </summary>
+    public static string? NormalizePhone(string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return null;
+        var trimmed = phone.Trim();
+        var digits = new string(trimmed.Where(char.IsDigit).ToArray());
+        if (trimmed.Any(c => !char.IsDigit(c) && c is not (' ' or '-' or '(' or ')' or '+'))) return null;
+
+        string normalized;
+        if (trimmed.StartsWith('+')) normalized = "+" + digits;
+        else if (digits.StartsWith("234")) normalized = "+" + digits;
+        else if (digits.StartsWith('0') && digits.Length == 11) normalized = "+234" + digits[1..];
+        else return null;
+
+        return normalized.Length is >= 8 and <= 16 ? normalized : null;
+    }
 }
 
 public class StudentGuardian
