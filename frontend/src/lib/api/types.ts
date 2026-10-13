@@ -41,3 +41,12 @@ export type GuardianDetail = Schemas["GuardianDetail"];
 export type GuardianChild = Schemas["GuardianChild"];
 export type GuardianRelationship = Schemas["GuardianRelationship"];
 export type GuardianLoginIssued = Schemas["GuardianLoginIssued"];
+
+export type AssessmentSettings = Schemas["AssessmentSettings"];
+export type AssessmentComponent = Schemas["ComponentDto"];
+export type ComponentInput = Schemas["ComponentInput"];
+export type GradeBand = Schemas["GradeBandDto"];
+export type GradableClass = Schemas["GradableClass"];
+export type GradeSheet = Schemas["GradeSheet"];
+export type GradeSheetRow = Schemas["GradeSheetRow"];
+export type GradeSheetEntry = Schemas["GradeSheetEntry"];
