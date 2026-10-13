@@ -12,7 +12,7 @@ namespace Maydel.Application.Identity.GoogleLogin;
 /// The first sign-in links the Google subject; a different Google account for the same email is rejected afterwards.
 /// </summary>
 internal sealed class GoogleLoginHandler(
-    IGoogleIdTokenVerifier google, UserManager<AppUser> users, SessionService sessions, TimeProvider clock)
+    IGoogleIdTokenVerifier google, UserManager<AppUser> users, IAppDbContext db, SessionService sessions, TimeProvider clock)
     : ICommandHandler<GoogleLoginCommand, AuthResponse>
 {
     public const string Provider = "Google";
@@ -44,8 +44,7 @@ internal sealed class GoogleLoginHandler(
             return IdentityErrors.GoogleAccountMismatch;
         }
 
-        user.LastLoginAt = clock.GetUtcNow();
-        await users.UpdateAsync(user);
+        await db.RecordSuccessfulSignInAsync(user.Id, clock, ct);
         return await sessions.IssueAsync(user, ct: ct);
     }
 }

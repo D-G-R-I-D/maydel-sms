@@ -109,6 +109,35 @@ public sealed class LoginTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Simultaneous_sign_ins_as_the_same_user_all_succeed()
+    {
+        var email = ApiFactory.UniqueEmail();
+        await Api.CreateUserAsync(Roles.Admin, email);
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+            Api.CreateClient().PostAsJsonAsync("/api/auth/login", new { userName = email, password = ApiFactory.TestPassword })));
+
+        Assert.All(responses, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+    }
+
+    [Fact]
+    public async Task Parallel_wrong_passwords_are_all_counted_and_lock_the_account()
+    {
+        var email = ApiFactory.UniqueEmail();
+        await Api.CreateUserAsync(Roles.Teacher, email);
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 6).Select(_ =>
+            Api.CreateClient().PostAsJsonAsync("/api/auth/login", new { userName = email, password = "Wrong#Pass123" })));
+
+        Assert.All(responses, r => Assert.Equal(HttpStatusCode.Unauthorized, r.StatusCode));
+        await Api.WithServicesAsync(async sp =>
+        {
+            var users = sp.GetRequiredService<UserManager<AppUser>>();
+            Assert.True(await users.IsLockedOutAsync((await users.FindByEmailAsync(email))!));
+        });
+    }
+
+    [Fact]
     public async Task Missing_fields_return_400_with_field_errors()
     {
         var response = await Api.CreateClient().PostAsJsonAsync("/api/auth/login", new { userName = "", password = "" });

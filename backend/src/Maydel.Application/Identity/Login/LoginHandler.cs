@@ -1,3 +1,4 @@
+using Maydel.Application.Abstractions;
 using Maydel.Application.Common;
 using Maydel.Application.Common.Messaging;
 using Microsoft.AspNetCore.Identity;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Maydel.Application.Identity.Login;
 
 // Non-transactional: a failed attempt must still be counted towards lockout.
-internal sealed class LoginHandler(UserManager<AppUser> users, SessionService sessions, TimeProvider clock)
+internal sealed class LoginHandler(UserManager<AppUser> users, IAppDbContext db, SessionService sessions, TimeProvider clock)
     : ICommandHandler<LoginCommand, AuthResponse>
 {
     private static readonly AppUser DummyUser = new() { FullName = "", UserName = "" };
@@ -25,13 +26,11 @@ internal sealed class LoginHandler(UserManager<AppUser> users, SessionService se
 
         if (!await users.CheckPasswordAsync(user, command.Password))
         {
-            await users.AccessFailedAsync(user);
+            await db.RecordFailedSignInAsync(user.Id, users.Options.Lockout, clock, ct);
             return IdentityErrors.InvalidCredentials;
         }
 
-        await users.ResetAccessFailedCountAsync(user);
-        user.LastLoginAt = clock.GetUtcNow();
-        await users.UpdateAsync(user);
+        await db.RecordSuccessfulSignInAsync(user.Id, clock, ct);
         return await sessions.IssueAsync(user, ct: ct);
     }
 
