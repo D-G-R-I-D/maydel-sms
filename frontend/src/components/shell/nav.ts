@@ -38,7 +38,7 @@ export const consoleNav: NavGroup[] = [
       { label: "My classes", href: "/admin/my-classes", icon: "classes", roles: ["Teacher"] },
       { label: "Subjects", href: "/admin/academics/subjects", icon: "subjects", roles: A, ready: true },
       { label: "Sessions & terms", href: "/admin/academics/sessions", icon: "sessions", roles: STAFF, ready: true },
-      { label: "Score entry", href: "/admin/scores", icon: "scores", roles: AT },
+      { label: "Score entry", href: "/admin/assessment", icon: "scores", roles: AT, ready: true },
       { label: "Report cards", href: "/admin/reports", icon: "reports", roles: A },
       { label: "Report comments", href: "/admin/report-comments", icon: "reports", roles: ["Teacher"] },
     ],
@@ -67,7 +67,7 @@ export const consoleNav: NavGroup[] = [
     label: "Settings",
     items: [
       { label: "School profile", href: "/admin/settings/school", icon: "school", roles: A },
-      { label: "Assessment", href: "/admin/settings/assessment", icon: "assessment", roles: A },
+      { label: "Assessment", href: "/admin/settings/assessment", icon: "assessment", roles: AT, ready: true },
       { label: "Users", href: "/admin/settings/users", icon: "users", roles: A },
     ],
   },
