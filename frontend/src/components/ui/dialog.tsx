@@ -86,19 +86,28 @@ export function ConfirmDialog({
   confirmLabel,
   tone = "primary",
   onConfirm,
+  open: controlledOpen,
+  onOpenChange,
 }: {
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   children: ReactNode;
   confirmLabel: string;
   tone?: "primary" | "destructive";
   onConfirm: () => Promise<boolean>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolled, setUncontrolled] = useState(false);
   const [busy, setBusy] = useState(false);
+  const open = controlledOpen ?? uncontrolled;
+  const setOpen = (v: boolean) => {
+    if (controlledOpen === undefined) setUncontrolled(v);
+    onOpenChange?.(v);
+  };
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !busy && setOpen(v)}>
-      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Dialog.Portal>
         <Dialog.Overlay className="animate-fade fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]" />
         <Dialog.Content

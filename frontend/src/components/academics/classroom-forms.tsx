@@ -1,35 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus, UserRound } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
-import type { ClassLevelDto, ClassRoomDto } from "@/lib/api/types";
+import type { ClassLevelDto, ClassRoomDto, StaffLookupItem } from "@/lib/api/types";
 import { createClassroom, updateClassroom } from "@/lib/academics/actions";
 import { runAction } from "@/lib/client/action";
 import { SECTION_ORDER, classroomSchema, sectionLabels, type ClassroomFormValues, type ClassroomInput } from "@/lib/validation/academics";
+import { teacherOptions } from "@/lib/validation/staff";
 import { Button, Field, Input, Select, describedBy } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { CancelButton, DialogActions, FormDialog } from "@/components/ui/dialog";
 
 const fields = ["classLevelId", "arm", "capacity", "formTeacherId"] as const;
 
-/** Disabled until the staff list arrives (M1.1 part 2): shows the current teacher, sends it unchanged. */
-export function TeacherPicker({ id, label, current }: { id: string; label: string; current: string | null }) {
+/** Teacher picker over GET /api/staff/lookup (active staff; a deactivated current teacher stays listed). */
+export function TeacherPicker({
+  id,
+  label,
+  teachers,
+  current,
+  error,
+  registration,
+}: {
+  id: string;
+  label: string;
+  teachers: StaffLookupItem[];
+  current: { id: string | null; name: string | null };
+  error?: string;
+  registration: UseFormRegisterReturn;
+}) {
+  const options = teacherOptions(teachers, current);
   return (
-    <Field id={id} label={label} hint="Staff list coming soon. Teachers can be assigned once staff records are in.">
+    <Field id={id} label={label} error={error} hint={teachers.length === 0 ? "No active staff yet. Add them under People → Staff." : undefined}>
       <div className="relative">
         <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
-        <Select id={id} aria-describedby={`${id}-hint`} disabled className="pl-9">
-          <option>{current ?? "Not assigned"}</option>
+        <Select {...describedBy(id, error, teachers.length === 0)} {...registration} className="pl-9">
+          <option value="">Not assigned</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))}
         </Select>
       </div>
     </Field>
   );
 }
 
-function ClassroomForm({ levels, classroom, close }: { levels: ClassLevelDto[]; classroom?: ClassRoomDto; close: () => void }) {
+function ClassroomForm({
+  levels,
+  teachers,
+  classroom,
+  close,
+}: {
+  levels: ClassLevelDto[];
+  teachers: StaffLookupItem[];
+  classroom?: ClassRoomDto;
+  close: () => void;
+}) {
   const [problem, setProblem] = useState<Problem | null>(null);
   const {
     register,
@@ -38,7 +69,12 @@ function ClassroomForm({ levels, classroom, close }: { levels: ClassLevelDto[]; 
     formState: { errors, isSubmitting },
   } = useForm<ClassroomFormValues, unknown, ClassroomInput>({
     resolver: zodResolver(classroomSchema(classroom?.studentCount ?? 1)),
-    defaultValues: { classLevelId: classroom?.classLevelId ?? "", arm: classroom?.arm ?? "", capacity: classroom?.capacity ?? 30 },
+    defaultValues: {
+      classLevelId: classroom?.classLevelId ?? "",
+      arm: classroom?.arm ?? "",
+      capacity: classroom?.capacity ?? 30,
+      formTeacherId: classroom?.formTeacherId ?? "",
+    },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -46,12 +82,12 @@ function ClassroomForm({ levels, classroom, close }: { levels: ClassLevelDto[]; 
     const saved = await runAction(
       () =>
         classroom
-          ? updateClassroom(classroom.id, { arm: values.arm, capacity: values.capacity, formTeacherId: classroom.formTeacherId })
-          : createClassroom({ classLevelId: values.classLevelId, arm: values.arm, capacity: values.capacity }),
+          ? updateClassroom(classroom.id, { arm: values.arm, capacity: values.capacity, formTeacherId: values.formTeacherId })
+          : createClassroom(values),
       {
         success: (c) => (classroom ? `${c.name} updated` : `${c.name} created`),
         fields,
-        setError: (f, e) => setError(f === "formTeacherId" ? "arm" : f, e),
+        setError,
         onProblem: (p) => (p.code === "classroom.duplicate" ? setError("arm", { type: "server", message: problemMessage(p) }) : setProblem(p)),
       },
     );
@@ -98,10 +134,24 @@ function ClassroomForm({ levels, classroom, close }: { levels: ClassLevelDto[]; 
           error={errors.capacity?.message}
           hint={classroom && classroom.studentCount > 0 ? `${classroom.studentCount} students enrolled now.` : "Up to 200."}
         >
-          <Input {...describedBy("class-capacity", errors.capacity?.message, true)} {...register("capacity")} type="number" inputMode="numeric" min={Math.max(1, classroom?.studentCount ?? 1)} max={200} />
+          <Input
+            {...describedBy("class-capacity", errors.capacity?.message, true)}
+            {...register("capacity")}
+            type="number"
+            inputMode="numeric"
+            min={Math.max(1, classroom?.studentCount ?? 1)}
+            max={200}
+          />
         </Field>
       </div>
-      <TeacherPicker id="class-form-teacher" label="Form teacher" current={classroom?.formTeacher ?? null} />
+      <TeacherPicker
+        id="class-form-teacher"
+        label="Form teacher"
+        teachers={teachers}
+        current={{ id: classroom?.formTeacherId ?? null, name: classroom?.formTeacher ?? null }}
+        error={errors.formTeacherId?.message}
+        registration={register("formTeacherId")}
+      />
       <DialogActions>
         <CancelButton />
         <Button type="submit" loading={isSubmitting}>
@@ -112,7 +162,7 @@ function ClassroomForm({ levels, classroom, close }: { levels: ClassLevelDto[]; 
   );
 }
 
-export function NewClassroomButton({ levels }: { levels: ClassLevelDto[] }) {
+export function NewClassroomButton({ levels, teachers }: { levels: ClassLevelDto[]; teachers: StaffLookupItem[] }) {
   return (
     <FormDialog
       title="New class"
@@ -124,12 +174,12 @@ export function NewClassroomButton({ levels }: { levels: ClassLevelDto[] }) {
         </Button>
       }
     >
-      {(close) => <ClassroomForm levels={levels} close={close} />}
+      {(close) => <ClassroomForm levels={levels} teachers={teachers} close={close} />}
     </FormDialog>
   );
 }
 
-export function EditClassroomButton({ levels, classroom }: { levels: ClassLevelDto[]; classroom: ClassRoomDto }) {
+export function EditClassroomButton({ levels, teachers, classroom }: { levels: ClassLevelDto[]; teachers: StaffLookupItem[]; classroom: ClassRoomDto }) {
   return (
     <FormDialog
       title={`Edit ${classroom.name}`}
@@ -139,7 +189,7 @@ export function EditClassroomButton({ levels, classroom }: { levels: ClassLevelD
         </Button>
       }
     >
-      {(close) => <ClassroomForm levels={levels} classroom={classroom} close={close} />}
+      {(close) => <ClassroomForm levels={levels} teachers={teachers} classroom={classroom} close={close} />}
     </FormDialog>
   );
 }

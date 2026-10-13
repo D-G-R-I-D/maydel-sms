@@ -75,14 +75,14 @@ describe("term rules", () => {
 
 describe("class rules", () => {
   it("requires an arm and a capacity of 1–200", () => {
-    expect(classroomSchema().safeParse({ classLevelId: "x", arm: "A", capacity: "30" }).data?.capacity).toBe(30);
-    expect(messages(classroomSchema().safeParse({ classLevelId: "x", arm: " ", capacity: 0 })).map((m) => m.split(":")[0])).toEqual(["arm", "capacity"]);
-    expect(classroomSchema().safeParse({ classLevelId: "x", arm: "A".repeat(33), capacity: 30 }).success).toBe(false);
-    expect(classroomSchema().safeParse({ classLevelId: "x", arm: "A", capacity: 201 }).success).toBe(false);
+    expect(classroomSchema().safeParse({ classLevelId: "x", formTeacherId: "", arm: "A", capacity: "30" }).data?.capacity).toBe(30);
+    expect(messages(classroomSchema().safeParse({ classLevelId: "x", formTeacherId: "", arm: " ", capacity: 0 })).map((m) => m.split(":")[0])).toEqual(["arm", "capacity"]);
+    expect(classroomSchema().safeParse({ classLevelId: "x", formTeacherId: "", arm: "A".repeat(33), capacity: 30 }).success).toBe(false);
+    expect(classroomSchema().safeParse({ classLevelId: "x", formTeacherId: "", arm: "A", capacity: 201 }).success).toBe(false);
   });
 
   it("won't shrink capacity below the students already enrolled", () => {
-    expect(messages(classroomSchema(24).safeParse({ classLevelId: "x", arm: "A", capacity: 20 }))).toEqual(["capacity: The class already has 24 students."]);
+    expect(messages(classroomSchema(24).safeParse({ classLevelId: "x", formTeacherId: "", arm: "A", capacity: 20 }))).toEqual(["capacity: The class already has 24 students."]);
   });
 
   it("groups classes by section in level order", () => {

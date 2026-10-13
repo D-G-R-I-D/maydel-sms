@@ -197,3 +197,30 @@
     box-shadow: 0 8px 24px rgb(35 74 109 / 0.12);
   }
 }
+
+/* Printing credential slips: a print-only copy is portalled into <body> as .print-root;
+   everything else on the page is hidden for print. One slip per page. */
+@media print {
+  @page {
+    margin: 18mm;
+  }
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff !important;
+  }
+  body > :not(.print-root) {
+    display: none !important;
+  }
+  .print-root {
+    display: block !important;
+    color: #000;
+  }
+  .credential-slip {
+    background: #fff !important;
+    color: #000 !important;
+    max-width: 120mm;
+    break-inside: avoid;
+  }
+}

@@ -15,3 +15,12 @@ export function diffSelection(saved: readonly string[], selected: ReadonlySet<st
   const removed = new Set([...before].filter((id) => !selected.has(id)));
   return { added, removed, dirty: added.size > 0 || removed.size > 0 };
 }
+
+/** Subjects kept on the class whose teacher was changed (unsaved). New subjects don't count twice. */
+export function changedTeachers(
+  saved: readonly ClassSubjectDto[],
+  teacherFor: Readonly<Record<string, string | null>>,
+  selected: ReadonlySet<string>,
+): Set<string> {
+  return new Set(saved.filter((a) => selected.has(a.subjectId) && (teacherFor[a.subjectId] ?? null) !== a.teacherId).map((a) => a.subjectId));
+}

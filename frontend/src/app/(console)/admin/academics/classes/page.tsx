@@ -29,12 +29,14 @@ export default async function ClassesPage() {
   }
 
   const isAdmin = hasAnyRole(user.roles, ["Admin"]);
-  const [classrooms, levels] = await Promise.all([
+  const [classrooms, levels, lookup] = await Promise.all([
     load((api) => api.GET("/api/academics/classrooms")),
     load((api) => api.GET("/api/academics/class-levels")),
+    isAdmin ? load((api) => api.GET("/api/staff/lookup")) : Promise.resolve(null),
   ]);
   const levelList = levels.ok ? levels.data : [];
-  const newButton = isAdmin && levelList.length > 0 ? <NewClassroomButton levels={levelList} /> : undefined;
+  const teachers = lookup?.ok ? lookup.data : [];
+  const newButton = isAdmin && levelList.length > 0 ? <NewClassroomButton levels={levelList} teachers={teachers} /> : undefined;
 
   if (!classrooms.ok) {
     return (
@@ -107,7 +109,7 @@ export default async function ClassesPage() {
                                 <BookOpen className="size-4" aria-hidden />
                                 Subjects
                               </Link>
-                              {isAdmin && levels.ok && <EditClassroomButton levels={levelList} classroom={c} />}
+                              {isAdmin && levels.ok && <EditClassroomButton levels={levelList} teachers={teachers} classroom={c} />}
                             </div>
                           </td>
                         </tr>
@@ -124,7 +126,7 @@ export default async function ClassesPage() {
                             <CapacityBar count={c.studentCount} capacity={c.capacity} />
                           </div>
                         </Link>
-                        {isAdmin && levels.ok && <EditClassroomButton levels={levelList} classroom={c} />}
+                        {isAdmin && levels.ok && <EditClassroomButton levels={levelList} teachers={teachers} classroom={c} />}
                         <ChevronRight className="size-4 text-muted" aria-hidden />
                       </li>
                     ))}

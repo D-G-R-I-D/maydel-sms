@@ -36,12 +36,14 @@ export default async function ClassSubjectsPage({ params }: { params: Promise<{ 
 
   const isAdmin = hasAnyRole(user.roles, ["Admin"]);
   // There's no single-class endpoint yet; the list is small (one row per class).
-  const [classrooms, assigned, subjects, levels] = await Promise.all([
+  const [classrooms, assigned, subjects, levels, lookup] = await Promise.all([
     load((api) => api.GET("/api/academics/classrooms")),
     load((api) => api.GET("/api/academics/classrooms/{id}/subjects", { params: { path: { id } } })),
     load((api) => api.GET("/api/academics/subjects")),
     load((api) => api.GET("/api/academics/class-levels")),
+    isAdmin ? load((api) => api.GET("/api/staff/lookup")) : Promise.resolve(null),
   ]);
+  const teachers = lookup?.ok ? lookup.data : [];
 
   if (!assigned.ok && assigned.problem.status === 404) notFound();
   const classroom = classrooms.ok ? classrooms.data.find((c) => c.id === id) : undefined;
@@ -66,7 +68,7 @@ export default async function ClassSubjectsPage({ params }: { params: Promise<{ 
       <PageHeader
         title={classroom.name}
         description={`${sectionLabels[classroom.section]} · choose the subjects this class offers.`}
-        actions={isAdmin && levels.ok ? <EditClassroomButton levels={levels.data} classroom={classroom} /> : undefined}
+        actions={isAdmin && levels.ok ? <EditClassroomButton levels={levels.data} teachers={teachers} classroom={classroom} /> : undefined}
       />
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2">
@@ -97,7 +99,7 @@ export default async function ClassSubjectsPage({ params }: { params: Promise<{ 
         </p>
       )}
 
-      <ClassSubjectsEditor classroomId={classroom.id} className={classroom.name} assigned={assigned.data} subjects={subjects.data} canEdit={isAdmin} />
+      <ClassSubjectsEditor classroomId={classroom.id} className={classroom.name} assigned={assigned.data} subjects={subjects.data} teachers={teachers} canEdit={isAdmin} />
     </>
   );
 }

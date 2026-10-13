@@ -21,3 +21,11 @@ export type ClassSubjectDto = Schemas["ClassSubjectDto"];
 export type ClassSubjectAssignment = Schemas["ClassSubjectAssignment"];
 export type SubjectDto = Schemas["SubjectDto"];
 export type SchoolSection = Schemas["SchoolSection"];
+
+export type StaffListItem = Schemas["StaffListItem"];
+export type StaffDetail = Schemas["StaffDetail"];
+export type StaffAssignment = Schemas["StaffAssignment"];
+export type StaffCreated = Schemas["StaffCreated"];
+export type StaffLookupItem = Schemas["StaffLookupItem"];
+export type IssuedCredentials = Schemas["IssuedCredentials"];
+export type PagedStaff = Schemas["PagedResultOfStaffListItem"];

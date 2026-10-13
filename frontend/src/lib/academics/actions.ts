@@ -39,9 +39,8 @@ export async function makeTermCurrent(id: string): Promise<Loaded<TermDto>> {
   return done(await load((api) => api.POST("/api/academics/terms/{id}/make-current", { params: { path: { id } } })));
 }
 
-export async function createClassroom(body: { classLevelId: string; arm: string; capacity: number }): Promise<Loaded<ClassRoomDto>> {
-  // Teacher pickers arrive with the staff list (M1.1 part 2); until then the form teacher is unset.
-  return done(await load((api) => api.POST("/api/academics/classrooms", { body: { ...body, formTeacherId: null } })));
+export async function createClassroom(body: { classLevelId: string; arm: string; capacity: number; formTeacherId: string | null }): Promise<Loaded<ClassRoomDto>> {
+  return done(await load((api) => api.POST("/api/academics/classrooms", { body })));
 }
 
 export async function updateClassroom(id: string, body: { arm: string; capacity: number; formTeacherId: string | null }): Promise<Loaded<ClassRoomDto>> {
