@@ -98,6 +98,14 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
         return client;
     }
 
+    /// <summary>A fresh user in <paramref name="role"/>, signed in; returns a client carrying their bearer token.</summary>
+    public async Task<HttpClient> ClientAsync(string role)
+    {
+        var email = UniqueEmail();
+        await CreateUserAsync(role, email);
+        return CreateClient((await LoginAsync(email)).AccessToken);
+    }
+
     public async Task WithServicesAsync(Func<IServiceProvider, Task> action)
     {
         await using var scope = Services.CreateAsyncScope();

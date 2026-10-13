@@ -55,6 +55,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Entities create their own v7 ids. Telling EF the key is never database-generated makes a new child added
+        // through a navigation (session.Terms.Add(term)) an INSERT; otherwise a set key reads as "already exists".
+        foreach (var type in builder.Model.GetEntityTypes().Where(t => typeof(Domain.Common.Entity).IsAssignableFrom(t.ClrType)))
+            builder.Entity(type.ClrType).Property(nameof(Domain.Common.Entity.Id)).ValueGeneratedNever();
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
