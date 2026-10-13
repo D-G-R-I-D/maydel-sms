@@ -48,7 +48,7 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E2.1** 🟡 *API ✅ 2026-10-13; UI pending.* Sessions & terms with dates, mid-term break, one current term. AC: setting a term current unsets the previous one atomically.
 - **E2.2** 🟡 *API ✅ 2026-10-13; UI pending.* Class levels (Creche → Year 12, by section) and arms (e.g. Year 3 A/B), capacity, form teacher.
 - **E2.3** 🟡 *API ✅ 2026-10-13; UI pending.* Subjects catalogue and per-class subject offering with assigned subject teacher.
-- **E2.4** Assessment configuration: components (name, max) and grade bands. Default (agreed 2026-10-12): Project 10 · Homefun 5 · Class Fun 5 · Attendance 10 · CAT (Continuous Assessment Test) 30 · Exams 40 = 100. AC: active components must total 100; bands start at 0 with unique minima; changing config never alters already-published reports.
+- **E2.4** 🟡 *API ✅ 2026-10-13; UI pending.* Assessment configuration: components (name, max) and grade bands. Default (agreed 2026-10-12): Project 10 · Homefun 5 · Class Fun 5 · Attendance 10 · CAT (Continuous Assessment Test) 30 · Exams 40 = 100. AC: active components must total 100; bands start at 0 with unique minima; changing config never alters already-published reports.
 - **E2.5 (S)** Affective & psychomotor traits (punctuality, neatness, handwriting, sports…) rated 1–5 — standard on Nigerian report cards.
 - **E2.6** School profile: name, motto, logo, address, principal's signature image (used on report cards & receipts).
 
@@ -68,8 +68,8 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E4.3** Public profile toggle (photo, title, bio, order) feeding the website Staff page.
 
 ## E5 — Assessment & report cards  ★ core value
-- **E5.1** *As a subject teacher, I enter scores for my subject for a whole class in one grid.* AC: keyboard-friendly grid (tab/enter), per-component max enforced client & server, total/grade computed live, autosave draft, works on a tablet.
-- **E5.2** Scores lock once the student's report is published; unpublish (admin) unlocks. AC: API returns 422 on edit of published scores.
+- **E5.1** 🟡 *API ✅ 2026-10-13 (row-level: subject/form teacher; partial autosave); UI pending.* *As a subject teacher, I enter scores for my subject for a whole class in one grid.* AC: keyboard-friendly grid (tab/enter), per-component max enforced client & server, total/grade computed live, autosave draft, works on a tablet.
+- **E5.2** 🟡 *Lock ✅ 2026-10-13; publish/unpublish come with E5.5.* Scores lock once the student's report is published; unpublish (admin) unlocks. AC: API returns 422 on edit of published scores.
 - **E5.3** *As a form teacher, I write a comment per student; as admin/principal, a principal's comment.*
 - **E5.4** Report preview per student showing components, total, grade, remark, subject class highest/lowest/average, overall average, class average, position (competition ranking 1,2,2,4), attendance (days opened/present/absent from register).
 - **E5.5** Publish per class & term (admin). AC: freezes averages, positions, attendance on the report; parents notified (E12); idempotent re-publish recalculates.
