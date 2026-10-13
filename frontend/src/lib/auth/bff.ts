@@ -9,7 +9,7 @@ import { forwardingHeaders } from "./forwarding";
 import { refreshSession, sessionIsDead } from "./refresh";
 import { canEnter, homeFor, safeNext } from "./roles";
 import { needsRefresh } from "./token";
-import { isTrustedOrigin } from "./origins";
+import { checkSameSite } from "./csrf";
 
 export type ApiReply<T> = { ok: true; status: number; data: T } | { ok: false; problem: Problem };
 
@@ -40,27 +40,18 @@ export async function callApi<T>(
   return { ok: false, problem: toProblem(res.status, body) };
 }
 
-/**
- * CSRF guard for the BFF's POST routes. Cookies are SameSite=Lax and JSON bodies need a
- * preflight cross-origin, but we also reject any request whose Origin is another site.
- */
+/** CSRF guard for the BFF's POST routes: 403 problem unless the request is same-site (see {@link checkSameSite}). */
 export function crossSiteRejection(request: NextRequest): NextResponse | null {
-  const origin = request.headers.get("origin");
-  if (!origin) return null;
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  try {
-    if (host && new URL(origin).host === host) return null;
-  } catch {
-    // malformed Origin: reject below
-  }
-  // Tunnels/proxies that hide the public host (see origins.ts) must be listed explicitly.
-  if (isTrustedOrigin(origin)) return null;
-  // Say exactly what was refused, so a tunnel/proxy domain missing from TRUSTED_ORIGINS is obvious in the server log.
-  console.warn(`[bff] Cross-site request blocked: Origin=${origin} Host=${host ?? "(none)"}. If this origin is yours, add it to TRUSTED_ORIGINS.`);
+  const check = checkSameSite(request.headers);
+  if (check.ok) return null;
+
+  // Say exactly what was refused, so a proxy domain missing from TRUSTED_ORIGINS is obvious in the server log.
+  const hosts = check.hosts.join(", ") || "(none)";
+  console.warn(`[bff] Cross-site request blocked: Origin=${check.origin} Hosts=${hosts}`);
   return problemResponse({
     status: 403,
     title: "Cross-site request blocked.",
-    detail: process.env.NODE_ENV === "production" ? undefined : `Origin ${origin} isn't trusted. Add it to TRUSTED_ORIGINS in frontend/.env.local and restart.`,
+    detail: process.env.NODE_ENV === "production" ? undefined : `Origin ${check.origin} doesn't match this server (${hosts}). If it's yours, add it to TRUSTED_ORIGINS in frontend/.env.local and restart.`,
   });
 }
 
