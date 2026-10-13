@@ -5,9 +5,10 @@ import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { parseStudentSearch, statusTone, studentsHref } from "@/lib/validation/students";
-import { Avatar, Badge, Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
+import { Badge, Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 import { Pagination } from "@/components/ui/pagination";
+import { PhotoAvatar } from "@/components/media/photo-avatar";
 import { StudentFilters } from "@/components/students/student-filters";
 import { BatchLoginsButton } from "@/components/students/batch-logins";
 
@@ -97,7 +98,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
               <tr key={s.id} className="transition-colors hover:bg-surface-2/50">
                 <th scope="row" className="px-4 py-3 font-normal">
                   <Link href={`/admin/students/${s.id}`} className="group flex items-center gap-3">
-                    <Avatar name={`${s.firstName} ${s.lastName}`} className="size-8 text-xs" />
+                    <PhotoAvatar kind="students" id={s.id} name={`${s.firstName} ${s.lastName}`} photoVersion={s.photoVersion} className="size-8 text-xs" />
                     <span className="font-medium group-hover:text-brand group-hover:underline">{s.fullName}</span>
                   </Link>
                 </th>
@@ -115,7 +116,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           {rows.map((s) => (
             <li key={s.id}>
               <Link href={`/admin/students/${s.id}`} className="flex items-center gap-3 px-4 py-3">
-                <Avatar name={`${s.firstName} ${s.lastName}`} className="size-9 text-xs" />
+                <PhotoAvatar kind="students" id={s.id} name={`${s.firstName} ${s.lastName}`} photoVersion={s.photoVersion} className="size-9 text-xs" />
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{s.fullName}</span>
                   <span className="block truncate font-mono text-xs text-muted">

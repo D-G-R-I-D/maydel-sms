@@ -5,9 +5,10 @@ import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { formatLastSeen, parseStaffSearch, staffHref } from "@/lib/validation/staff";
-import { Avatar, Badge, Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
+import { Badge, Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 import { Pagination } from "@/components/ui/pagination";
+import { PhotoAvatar } from "@/components/media/photo-avatar";
 import { AddStaffButton } from "@/components/staff/add-staff";
 import { StaffFilters } from "@/components/staff/staff-filters";
 
@@ -90,7 +91,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
               <tr key={s.id} className="transition-colors hover:bg-surface-2/50">
                 <th scope="row" className="px-4 py-3 font-normal">
                   <Link href={`/admin/staff/${s.id}`} className="group flex items-center gap-3">
-                    <Avatar name={s.fullName} className="size-8 text-xs" />
+                    <PhotoAvatar kind="staff" id={s.id} name={s.fullName} photoVersion={s.photoVersion} className="size-8 text-xs" />
                     <span className="min-w-0">
                       <span className="block font-medium group-hover:text-brand group-hover:underline">{s.fullName}</span>
                       <span className="block truncate text-xs text-muted">{s.email}</span>
@@ -119,7 +120,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
           {rows.map((s) => (
             <li key={s.id}>
               <Link href={`/admin/staff/${s.id}`} className="flex items-center gap-3 px-4 py-3">
-                <Avatar name={s.fullName} className="size-9 text-xs" />
+                <PhotoAvatar kind="staff" id={s.id} name={s.fullName} photoVersion={s.photoVersion} className="size-9 text-xs" />
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{s.fullName}</span>
                   <span className="block truncate text-xs text-muted">

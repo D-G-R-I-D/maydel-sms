@@ -7,8 +7,9 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { formatDay } from "@/lib/validation/academics";
 import { ageOn, statusTone } from "@/lib/validation/students";
-import { Avatar, Badge, Card } from "@/components/ui/primitives";
+import { Badge, Card } from "@/components/ui/primitives";
 import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
+import { PhotoControls } from "@/components/media/photo-controls";
 import { IssueLoginButton } from "@/components/credentials/issue-login";
 import { EditStudentButton } from "@/components/students/edit-student";
 import { GuardiansSection } from "@/components/students/guardians-section";
@@ -69,8 +70,7 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
     <>
       {back}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        {/* Photo upload arrives with secure file storage; monogram until then. */}
-        <Avatar name={`${s.firstName} ${s.lastName}`} className="size-16 text-xl" />
+        <PhotoControls kind="students" id={s.id} name={s.fullName} photoVersion={s.photoVersion} canEdit={isAdmin} />
         <div className="min-w-0 flex-1">
           <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-semibold sm:text-3xl">
             {s.fullName}
