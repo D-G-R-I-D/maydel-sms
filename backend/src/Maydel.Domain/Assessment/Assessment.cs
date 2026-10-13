@@ -105,6 +105,70 @@ public class TermReport : Entity
     public Guid? PublishedByUserId { get; set; }
 
     public int DaysAbsent => Math.Max(0, DaysOpened - DaysPresent);
+
+    public bool IsPublished => Status == ReportStatus.Published;
+
+    private static readonly DomainError Locked = new("report.published",
+        "This report is published. An administrator must unpublish it before it can change.");
+
+    public DomainError? SetFormTeacherComment(string? comment)
+    {
+        if (IsPublished) return Locked;
+        FormTeacherComment = Clean(comment);
+        return null;
+    }
+
+    public DomainError? SetPrincipalComment(string? comment)
+    {
+        if (IsPublished) return Locked;
+        PrincipalComment = Clean(comment);
+        return null;
+    }
+
+    /// <summary>Days the school opened this term and days this student was present (manual until the register, E9, exists).</summary>
+    public DomainError? SetAttendance(int daysOpened, int daysPresent)
+    {
+        if (IsPublished) return Locked;
+        if (daysOpened is < 0 or > 200) return new("report.days_opened", "Days opened must be between 0 and 200.", "daysOpened");
+        if (daysPresent < 0 || daysPresent > daysOpened) return new("report.days_present", "Days present must be between 0 and the days the school opened.", "daysPresent");
+        (DaysOpened, DaysPresent) = (daysOpened, daysPresent);
+        return null;
+    }
+
+    /// <summary>Freezes the computed figures so the report never changes under parents. Re-publishing recalculates (E5.5).</summary>
+    public void Publish(decimal average, decimal classAverage, int position, int classSize, DateTimeOffset at, Guid? by)
+    {
+        (Average, ClassAverage, Position, ClassSize) = (average, classAverage, position, classSize);
+        (Status, PublishedAt, PublishedByUserId) = (ReportStatus.Published, at, by);
+    }
+
+    public void Unpublish()
+    {
+        (Status, PublishedAt, PublishedByUserId) = (ReportStatus.Draft, null, null);
+        Position = null;
+    }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}
+
+/// <summary>Class-level report figures (E5.4). Pure so the arithmetic is unit-tested.</summary>
+public static class ReportMath
+{
+    /// <summary>Two decimal places, halves rounded up (69.995 → 70.00), as on the school's existing result sheet.</summary>
+    public static decimal Round(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+    /// <summary>A student's average: mean of their subject totals (only subjects they were scored in).</summary>
+    public static decimal? Average(IReadOnlyCollection<decimal> subjectTotals) =>
+        subjectTotals.Count == 0 ? null : Round(subjectTotals.Average());
+
+    /// <summary>Class average: mean of the students' averages.</summary>
+    public static decimal ClassAverage(IReadOnlyCollection<decimal> studentAverages) =>
+        studentAverages.Count == 0 ? 0 : Round(studentAverages.Average());
+
+    public sealed record SubjectStats(decimal Highest, decimal Lowest, decimal Average);
+
+    public static SubjectStats ForSubject(IReadOnlyCollection<decimal> totals) =>
+        new(totals.Max(), totals.Min(), Round(totals.Average()));
 }
 
 /// <summary>Pure grading logic, kept free of persistence so it can be unit tested.</summary>

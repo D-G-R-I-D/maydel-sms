@@ -70,9 +70,9 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 ## E5 — Assessment & report cards  ★ core value
 - **E5.1** 🟡 *API ✅ 2026-10-13 (row-level: subject/form teacher; partial autosave); UI pending.* *As a subject teacher, I enter scores for my subject for a whole class in one grid.* AC: keyboard-friendly grid (tab/enter), per-component max enforced client & server, total/grade computed live, autosave draft, works on a tablet.
 - **E5.2** 🟡 *Lock ✅ 2026-10-13; publish/unpublish come with E5.5.* Scores lock once the student's report is published; unpublish (admin) unlocks. AC: API returns 422 on edit of published scores.
-- **E5.3** *As a form teacher, I write a comment per student; as admin/principal, a principal's comment.*
-- **E5.4** Report preview per student showing components, total, grade, remark, subject class highest/lowest/average, overall average, class average, position (competition ranking 1,2,2,4), attendance (days opened/present/absent from register).
-- **E5.5** Publish per class & term (admin). AC: freezes averages, positions, attendance on the report; parents notified (E12); idempotent re-publish recalculates.
+- **E5.3** 🟡 *API ✅ 2026-10-14; UI pending.* *As a form teacher, I write a comment per student; as admin/principal, a principal's comment.*
+- **E5.4** 🟡 *API ✅ 2026-10-14 (attendance entered manually until E9); UI pending.* Report preview per student showing components, total, grade, remark, subject class highest/lowest/average, overall average, class average, position (competition ranking 1,2,2,4), attendance (days opened/present/absent from register).
+- **E5.5** 🟡 *API ✅ 2026-10-14 except parent notification (E12); UI pending.* Publish per class & term (admin). AC: freezes averages, positions, attendance on the report; parents notified (E12); idempotent re-publish recalculates.
 - **E5.6** PDF report card generated from a **school-configurable report template** (layout, orientation, sections on/off and order: biodata, components, class stats, traits, attendance, comments, grading key, next-term date; logo, crest, signature images). Default template reproduces the school's current Excel result sheet. AC: admin previews a template with sample data before activating it; published reports keep the template version they were published with; A4 print fits one page for ≤ 15 subjects.
 - **E5.6b** Bulk download: all report cards for a class as one PDF / ZIP (for printing).
 - **E5.7 (S)** Class broadsheet (all students × all subjects) export to Excel.

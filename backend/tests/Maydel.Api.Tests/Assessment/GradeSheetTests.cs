@@ -236,10 +236,6 @@ public sealed class GradeSheetTests(PostgresFixture fixture)
 
     // ---------- helpers ----------
 
-    private sealed record School(
-        Guid ClassRoomId, Guid SubjectId, Guid OtherSubjectId, Guid TermId, IReadOnlyList<Guid> Students,
-        HttpClient SubjectTeacher, HttpClient FormTeacher);
-
     private static string SheetUrl(School s) => $"/api/assessment/gradesheet?classRoomId={s.ClassRoomId}&subjectId={s.SubjectId}&termId={s.TermId}";
 
     private static async Task<GradeSheet> GetSheetAsync(HttpClient client, School s)
@@ -252,44 +248,7 @@ public sealed class GradeSheetTests(PostgresFixture fixture)
     private static Task<HttpResponseMessage> SaveAsync(HttpClient client, School s, params object[] entries) =>
         client.PutAsJsonAsync("/api/assessment/gradesheet", new { classRoomId = s.ClassRoomId, subjectId = s.SubjectId, termId = s.TermId, entries });
 
-    /// <summary>A class with 3 students offering two subjects: one taught by a subject teacher, plus a separate form teacher.</summary>
-    private async Task<School> SetUpAsync()
-    {
-        var admin = await Api.ClientAsync(Roles.Admin);
-        var (subjectTeacher, subjectStaff) = await TeacherAsync();
-        var (formTeacher, formStaff) = await TeacherAsync();
+    private Task<School> SetUpAsync() => SchoolBuilder.SetUpAsync(Api);
 
-        var level = (await admin.GetFromJsonAsync<List<ClassLevelDto>>("/api/academics/class-levels", Json.Options))!.First();
-        var room = (await (await admin.PostAsJsonAsync("/api/academics/classrooms",
-            new { classLevelId = level.Id, arm = "G" + Guid.NewGuid().ToString("N")[..8], capacity = 30, formTeacherId = formStaff.Id }))
-            .Content.ReadFromJsonAsync<ClassRoomDto>(Json.Options))!;
-        var subjects = (await admin.GetFromJsonAsync<List<SubjectDto>>("/api/academics/subjects", Json.Options))!.Where(s => s.IsActive).Take(2).ToList();
-        (await admin.PutAsJsonAsync($"/api/academics/classrooms/{room.Id}/subjects", new
-        {
-            subjects = new object[] { new { subjectId = subjects[0].Id, teacherId = subjectStaff.Id }, new { subjectId = subjects[1].Id, teacherId = (Guid?)null } },
-        })).EnsureSuccessStatusCode();
-
-        var students = new List<Guid>();
-        foreach (var name in new[] { "Adaeze", "Bola", "Chidi" })
-        {
-            var r = await admin.PostAsJsonAsync("/api/students", new { firstName = name, lastName = "Test", dateOfBirth = "2018-03-10", classRoomId = room.Id, admittedOn = "2026-09-14" });
-            students.Add((await r.Content.ReadFromJsonAsync<StudentDetail>(Json.Options))!.Id);
-        }
-        var term = (await admin.GetFromJsonAsync<TermDto>("/api/academics/terms/current", Json.Options))!;
-        return new School(room.Id, subjects[0].Id, subjects[1].Id, term.Id, students, subjectTeacher, formTeacher);
-    }
-
-    /// <summary>A teacher with a staff record and a signed-in client.</summary>
-    private async Task<(HttpClient Client, StaffDetail Staff)> TeacherAsync()
-    {
-        var admin = await Api.ClientAsync(Roles.Admin);
-        var email = ApiFactory.UniqueEmail();
-        var created = (await (await admin.PostAsJsonAsync("/api/staff", new { fullName = "Teacher " + email[..6], email, roles = new[] { "Teacher" } }))
-            .Content.ReadFromJsonAsync<StaffCreated>(Json.Options))!;
-        var first = await Api.LoginAsync(email, created.Credentials!.TemporaryPassword);
-        var changed = await Api.CreateClient(first.AccessToken).PostAsJsonAsync("/api/auth/change-password",
-            new { currentPassword = created.Credentials.TemporaryPassword, newPassword = "Brand#NewPass2026" });
-        var session = (await changed.Content.ReadFromJsonAsync<AuthResponse>(Json.Options))!;
-        return (Api.CreateClient(session.AccessToken), created.Staff);
-    }
+    private Task<(HttpClient Client, StaffDetail Staff)> TeacherAsync() => SchoolBuilder.TeacherAsync(Api);
 }

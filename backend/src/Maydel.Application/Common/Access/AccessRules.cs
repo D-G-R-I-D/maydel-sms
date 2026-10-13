@@ -45,6 +45,15 @@ public sealed class AccessRules(IAppDbContext db, ICurrentUser me)
         return await db.ClassRooms.AnyAsync(c => c.Id == classRoomId && c.FormTeacher != null && c.FormTeacher.UserId == uid, ct);
     }
 
+    /// <summary>Admins, the class's form teacher, or a teacher of any subject in it: who may view the class's reports.</summary>
+    public async Task<bool> TeachesClassAsync(Guid classRoomId, CancellationToken ct)
+    {
+        if (me.IsInRole(Roles.Admin)) return true;
+        if (!me.IsInRole(Roles.Teacher) || me.UserId is not { } uid) return false;
+        return await db.ClassRooms.AnyAsync(c => c.Id == classRoomId &&
+            ((c.FormTeacher != null && c.FormTeacher.UserId == uid) || c.Subjects.Any(cs => cs.Teacher != null && cs.Teacher.UserId == uid)), ct);
+    }
+
     private IQueryable<Student> PortalStudents(Guid uid)
     {
         var asStudent = me.IsInRole(Roles.Student);
