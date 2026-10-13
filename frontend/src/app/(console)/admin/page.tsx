@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, CalendarCheck, Command, GraduationCap, KeyRound, ScrollText, TableProperties, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, CalendarDays, Layers, Command, GraduationCap, KeyRound, ScrollText, TableProperties, Wallet, type LucideIcon } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { hasAnyRole, type Role } from "@/lib/auth/roles";
 import { firstName } from "@/lib/flash";
@@ -21,7 +21,9 @@ type Tile = { title: string; body: string; icon: LucideIcon; roles: Role[]; href
 const tiles: Tile[] = [
   { title: "Audit log", body: "Every change to school records: who, what, when and from where.", icon: ScrollText, roles: ["Admin"], href: "/admin/audit" },
   { title: "Change password", body: "Keep your account safe. Other devices get signed out.", icon: KeyRound, roles: ["Admin", "Teacher", "Bursar"], href: "/change-password" },
-  { title: "Students & classes", body: "Admissions, class lists and guardians.", icon: GraduationCap, roles: ["Admin"] },
+  { title: "Classes & subjects", body: "Year groups and arms, capacity, and the subjects each class offers.", icon: Layers, roles: ["Admin"], href: "/admin/academics/classes" },
+  { title: "School calendar", body: "Sessions, terms and mid-term breaks, and which term is current.", icon: CalendarDays, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/academics/sessions" },
+  { title: "Students & guardians", body: "Admissions, class lists and guardians.", icon: GraduationCap, roles: ["Admin"] },
   { title: "Score entry", body: "Spreadsheet-style entry for CA and exams.", icon: TableProperties, roles: ["Admin", "Teacher"] },
   { title: "Attendance", body: "Morning register in a couple of taps.", icon: CalendarCheck, roles: ["Admin", "Teacher"] },
   { title: "Fees & payments", body: "Invoices, receipts and who still owes.", icon: Wallet, roles: ["Admin", "Bursar"] },
