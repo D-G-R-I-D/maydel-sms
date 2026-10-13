@@ -53,7 +53,8 @@ test("issuing a student login shows a one-time slip", async ({ page }) => {
   await page.getByRole("button", { name: /Issue login|Reset password/ }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: /Issue login|Reset password/ }).click();
   const slip = page.getByRole("dialog", { name: "Sign-in details" });
-  await expect(slip.getByText("This password won't be shown again.")).toBeVisible();
+  // The slip opens after the action's revalidation round-trip; allow for a slow dev server.
+  await expect(slip.getByText("This password won't be shown again.")).toBeVisible({ timeout: 15_000 });
   await expect(slip.getByText("MSS/2026/0003", { exact: true })).toBeVisible();
 });
 

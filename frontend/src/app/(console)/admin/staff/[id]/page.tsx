@@ -6,8 +6,9 @@ import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { formatLastSeen, isSelf } from "@/lib/validation/staff";
-import { Avatar, Badge, Card } from "@/components/ui/primitives";
+import { Badge, Card } from "@/components/ui/primitives";
 import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
+import { PhotoControls } from "@/components/media/photo-controls";
 import { StaffForm } from "@/components/staff/staff-form";
 import { IssueLoginButton } from "@/components/credentials/issue-login";
 
@@ -55,7 +56,7 @@ export default async function StaffDetailPage({ params }: { params: Promise<{ id
     <>
       {back}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <Avatar name={staff.fullName} className="size-14 text-lg" />
+        <PhotoControls kind="staff" id={staff.id} name={staff.fullName} photoVersion={staff.photoVersion} canEdit />
         <div className="min-w-0 flex-1">
           <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-semibold sm:text-3xl">
             {staff.fullName}
