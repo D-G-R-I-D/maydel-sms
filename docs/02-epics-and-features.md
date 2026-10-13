@@ -63,7 +63,7 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E3.8 (S)** Bulk import from Excel template with validation report.
 
 ## E4 — Staff management
-- **E4.1** Staff records with role (Admin/Teacher/Bursar), creating a login with temporary password. AC: email unique; admins cannot demote/deactivate themselves.
+- **E4.1** 🟡 *API ✅ 2026-10-13 (logins, roles, self-lockout guard, admin password reset); UI pending.* Staff records with role (Admin/Teacher/Bursar), creating a login with temporary password. AC: email unique; admins cannot demote/deactivate themselves.
 - **E4.2** 🟡 *API ✅ 2026-10-13 (form teacher on the class, subject teacher per class subject); UI pending.* Assign form teacher per class and subject teacher per class-subject.
 - **E4.3** Public profile toggle (photo, title, bio, order) feeding the website Staff page.
 

@@ -16,6 +16,8 @@ namespace Maydel.Application.Abstractions;
 public interface IAppDbContext
 {
     DbSet<AppUser> Users { get; }
+    DbSet<AppRole> Roles { get; }
+    DbSet<Microsoft.AspNetCore.Identity.IdentityUserRole<Guid>> UserRoles { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
 
     DbSet<AcademicSession> Sessions { get; }
