@@ -3673,6 +3673,576 @@
           }
         }
       }
+    },
+    "/api/reports/class": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetClassReports",
+        "parameters": [
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassReportSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/{studentId}/{termId}": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetReportCard",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportCard"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/{studentId}/{termId}/form-teacher-comment": {
+      "put": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "SetFormTeacherComment",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportCard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/attendance": {
+      "put": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "SaveReportAttendance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAttendanceCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassReportSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/{studentId}/{termId}/principal-comment": {
+      "put": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "SetPrincipalComment",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportCard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/publish": {
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "PublishClassReports",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishClassReportsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/unpublish": {
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "UnpublishClassReports",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnpublishClassReportsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnpublishResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3695,6 +4265,23 @@
             "items": {
               "$ref": "#/components/schemas/GradeBandDto"
             }
+          }
+        }
+      },
+      "AttendanceEntry": {
+        "required": [
+          "studentId",
+          "daysPresent"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "daysPresent": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -3860,6 +4447,134 @@
           }
         }
       },
+      "ClassReportRow": {
+        "required": [
+          "studentId",
+          "admissionNumber",
+          "name",
+          "subjectsScored",
+          "average",
+          "position",
+          "status",
+          "daysPresent",
+          "hasFormTeacherComment",
+          "hasPrincipalComment"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subjectsScored": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "average": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "position": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "daysPresent": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "hasFormTeacherComment": {
+            "type": "boolean"
+          },
+          "hasPrincipalComment": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ClassReportSummary": {
+        "required": [
+          "classRoomId",
+          "classRoom",
+          "termId",
+          "term",
+          "formTeacher",
+          "subjectsOffered",
+          "classAverage",
+          "daysOpened",
+          "publishedCount",
+          "draftCount",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classRoom": {
+            "type": "string"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "term": {
+            "type": "string"
+          },
+          "formTeacher": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subjectsOffered": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "classAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "daysOpened": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "publishedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "draftCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClassReportRow"
+            }
+          }
+        }
+      },
       "ClassRoomDto": {
         "required": [
           "id",
@@ -4018,6 +4733,20 @@
             "items": {
               "$ref": "#/components/schemas/ClassSubjectAssignment"
             }
+          }
+        }
+      },
+      "CommentRequest": {
+        "required": [
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5076,6 +5805,47 @@
           }
         }
       },
+      "PublishClassReportsCommand": {
+        "required": [
+          "classRoomId",
+          "termId"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "PublishResult": {
+        "required": [
+          "published",
+          "classAverage",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "classAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkippedStudent"
+            }
+          }
+        }
+      },
       "RefreshSessionCommand": {
         "required": [
           "refreshToken"
@@ -5084,6 +5854,268 @@
         "properties": {
           "refreshToken": {
             "type": "string"
+          }
+        }
+      },
+      "ReportCard": {
+        "required": [
+          "studentId",
+          "studentName",
+          "admissionNumber",
+          "sex",
+          "dateOfBirth",
+          "house",
+          "photoVersion",
+          "classRoomId",
+          "classRoom",
+          "termId",
+          "term",
+          "session",
+          "termEndsOn",
+          "nextTermBegins",
+          "status",
+          "publishedAt",
+          "components",
+          "subjects",
+          "average",
+          "classAverage",
+          "position",
+          "classSize",
+          "daysOpened",
+          "daysPresent",
+          "daysAbsent",
+          "formTeacher",
+          "formTeacherComment",
+          "principalComment",
+          "gradingKey"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentName": {
+            "type": "string"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "sex": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Sex"
+              }
+            ]
+          },
+          "dateOfBirth": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "house": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "photoVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classRoom": {
+            "type": "string"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "term": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "termEndsOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "nextTermBegins": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "publishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeSheetComponent"
+            }
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportSubjectLine"
+            }
+          },
+          "average": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "classAverage": {
+            "type": "number",
+            "format": "double"
+          },
+          "position": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "classSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysOpened": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "daysPresent": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "daysAbsent": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "formTeacher": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "formTeacherComment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "principalComment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "gradingKey": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeBandDto"
+            }
+          }
+        }
+      },
+      "ReportStatus": {
+        "enum": [
+          "Draft",
+          "Published"
+        ]
+      },
+      "ReportSubjectLine": {
+        "required": [
+          "subjectId",
+          "subject",
+          "scores",
+          "total",
+          "grade",
+          "remark",
+          "comment",
+          "classHighest",
+          "classLowest",
+          "classAverage"
+        ],
+        "type": "object",
+        "properties": {
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComponentScoreValue"
+            }
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "grade": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "remark": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "classHighest": {
+            "type": "number",
+            "format": "double"
+          },
+          "classLowest": {
+            "type": "number",
+            "format": "double"
+          },
+          "classAverage": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -5113,6 +6145,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/GradeBandDto"
+            }
+          }
+        }
+      },
+      "SaveAttendanceCommand": {
+        "required": [
+          "classRoomId",
+          "termId",
+          "daysOpened",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "daysOpened": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttendanceEntry"
             }
           }
         }
@@ -5219,6 +6280,26 @@
           "Male",
           null
         ]
+      },
+      "SkippedStudent": {
+        "required": [
+          "studentId",
+          "name",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
       },
       "StaffAssignment": {
         "required": [
@@ -5969,6 +7050,46 @@
             "format": "date"
           }
         }
+      },
+      "UnpublishClassReportsCommand": {
+        "required": [
+          "classRoomId",
+          "termId",
+          "studentIds"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "UnpublishResult": {
+        "required": [
+          "unpublished"
+        ],
+        "type": "object",
+        "properties": {
+          "unpublished": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     }
   },
@@ -5996,6 +7117,9 @@
     },
     {
       "name": "Assessment"
+    },
+    {
+      "name": "Reports"
     }
   ]
 }

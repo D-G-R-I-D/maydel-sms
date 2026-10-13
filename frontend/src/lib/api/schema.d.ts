@@ -612,6 +612,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/class": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetClassReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/{studentId}/{termId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetReportCard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/{studentId}/{termId}/form-teacher-comment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetFormTeacherComment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SaveReportAttendance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/{studentId}/{termId}/principal-comment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetPrincipalComment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublishClassReports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnpublishClassReports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -619,6 +731,12 @@ export interface components {
         AssessmentSettings: {
             components: components["schemas"]["ComponentDto"][];
             bands: components["schemas"]["GradeBandDto"][];
+        };
+        AttendanceEntry: {
+            /** Format: uuid */
+            studentId: string;
+            /** Format: int32 */
+            daysPresent: number;
         };
         /** @enum {unknown} */
         AuditAction: "Added" | "Modified" | "Deleted";
@@ -660,6 +778,43 @@ export interface components {
             section: components["schemas"]["SchoolSection"];
             /** Format: int32 */
             order: number;
+        };
+        ClassReportRow: {
+            /** Format: uuid */
+            studentId: string;
+            admissionNumber: string;
+            name: string;
+            /** Format: int32 */
+            subjectsScored: number;
+            /** Format: double */
+            average: null | number;
+            /** Format: int32 */
+            position: null | number;
+            status: components["schemas"]["ReportStatus"];
+            /** Format: int32 */
+            daysPresent: null | number;
+            hasFormTeacherComment: boolean;
+            hasPrincipalComment: boolean;
+        };
+        ClassReportSummary: {
+            /** Format: uuid */
+            classRoomId: string;
+            classRoom: string;
+            /** Format: uuid */
+            termId: string;
+            term: string;
+            formTeacher: null | string;
+            /** Format: int32 */
+            subjectsOffered: number;
+            /** Format: double */
+            classAverage: number;
+            /** Format: int32 */
+            daysOpened: null | number;
+            /** Format: int32 */
+            publishedCount: number;
+            /** Format: int32 */
+            draftCount: number;
+            rows: components["schemas"]["ClassReportRow"][];
         };
         ClassRoomDto: {
             /** Format: uuid */
@@ -706,6 +861,9 @@ export interface components {
         };
         ClassSubjectsRequest: {
             subjects: components["schemas"]["ClassSubjectAssignment"][];
+        };
+        CommentRequest: {
+            comment: null | string;
         };
         ComponentDto: {
             /** Format: uuid */
@@ -991,14 +1149,100 @@ export interface components {
             /** @description Quote this to support. */
             traceId?: string;
         };
+        PublishClassReportsCommand: {
+            /** Format: uuid */
+            classRoomId: string;
+            /** Format: uuid */
+            termId: string;
+        };
+        PublishResult: {
+            /** Format: int32 */
+            published: number;
+            /** Format: double */
+            classAverage: number;
+            skipped: components["schemas"]["SkippedStudent"][];
+        };
         RefreshSessionCommand: {
             refreshToken: string;
+        };
+        ReportCard: {
+            /** Format: uuid */
+            studentId: string;
+            studentName: string;
+            admissionNumber: string;
+            sex: null | components["schemas"]["Sex"];
+            /** Format: date */
+            dateOfBirth: null | string;
+            house: null | string;
+            photoVersion: null | string;
+            /** Format: uuid */
+            classRoomId: string;
+            classRoom: string;
+            /** Format: uuid */
+            termId: string;
+            term: string;
+            session: string;
+            /** Format: date */
+            termEndsOn: string;
+            /** Format: date */
+            nextTermBegins: null | string;
+            status: components["schemas"]["ReportStatus"];
+            /** Format: date-time */
+            publishedAt: null | string;
+            components: components["schemas"]["GradeSheetComponent"][];
+            subjects: components["schemas"]["ReportSubjectLine"][];
+            /** Format: double */
+            average: null | number;
+            /** Format: double */
+            classAverage: number;
+            /** Format: int32 */
+            position: null | number;
+            /** Format: int32 */
+            classSize: number;
+            /** Format: int32 */
+            daysOpened: null | number;
+            /** Format: int32 */
+            daysPresent: null | number;
+            /** Format: int32 */
+            daysAbsent: null | number;
+            formTeacher: null | string;
+            formTeacherComment: null | string;
+            principalComment: null | string;
+            gradingKey: components["schemas"]["GradeBandDto"][];
+        };
+        /** @enum {unknown} */
+        ReportStatus: "Draft" | "Published";
+        ReportSubjectLine: {
+            /** Format: uuid */
+            subjectId: string;
+            subject: string;
+            scores: components["schemas"]["ComponentScoreValue"][];
+            /** Format: double */
+            total: number;
+            grade: null | string;
+            remark: null | string;
+            comment: null | string;
+            /** Format: double */
+            classHighest: number;
+            /** Format: double */
+            classLowest: number;
+            /** Format: double */
+            classAverage: number;
         };
         /** @enum {unknown} */
         Role: "Admin" | "Teacher" | "Bursar" | "Parent" | "Student";
         SaveAssessmentSettingsCommand: {
             components: components["schemas"]["ComponentInput"][];
             bands: components["schemas"]["GradeBandDto"][];
+        };
+        SaveAttendanceCommand: {
+            /** Format: uuid */
+            classRoomId: string;
+            /** Format: uuid */
+            termId: string;
+            /** Format: int32 */
+            daysOpened: number;
+            entries: components["schemas"]["AttendanceEntry"][];
         };
         SaveGradeSheetCommand: {
             /** Format: uuid */
@@ -1031,6 +1275,12 @@ export interface components {
         };
         /** @enum {unknown} */
         Sex: "Female" | "Male" | null;
+        SkippedStudent: {
+            /** Format: uuid */
+            studentId: string;
+            name: string;
+            reason: string;
+        };
         StaffAssignment: {
             /** Format: uuid */
             classRoomId: string;
@@ -1205,6 +1455,17 @@ export interface components {
             midTermStartsOn: null | string;
             /** Format: date */
             midTermEndsOn: null | string;
+        };
+        UnpublishClassReportsCommand: {
+            /** Format: uuid */
+            classRoomId: string;
+            /** Format: uuid */
+            termId: string;
+            studentIds: null | string[];
+        };
+        UnpublishResult: {
+            /** Format: int32 */
+            unpublished: number;
         };
     };
     responses: never;
@@ -4135,6 +4396,448 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetClassReports: {
+        parameters: {
+            query: {
+                classRoomId: string;
+                termId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassReportSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetReportCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCard"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SetFormTeacherComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCard"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveReportAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAttendanceCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassReportSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SetPrincipalComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCard"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PublishClassReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishClassReportsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishResult"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UnpublishClassReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnpublishClassReportsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnpublishResult"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
