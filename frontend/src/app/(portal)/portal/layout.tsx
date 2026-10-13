@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { requireSessionUser } from "@/lib/auth/session";
+import { CurrentTermChip, CurrentTermChipFallback } from "@/components/shell/current-term-chip";
 import { portalNav } from "@/components/shell/nav";
 import { PortalNav } from "@/components/shell/portal-nav";
 import { UserMenu } from "@/components/shell/user-menu";
@@ -21,7 +23,14 @@ export default async function PortalLayout({ children }: { children: React.React
             <span className="font-display text-base font-semibold text-brand">Maydel</span>
           </Link>
           <PortalNav items={items} variant="top" />
-          <UserMenu fullName={user.fullName} userName={user.userName} roles={user.roles} />
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex">
+              <Suspense fallback={<CurrentTermChipFallback />}>
+                <CurrentTermChip />
+              </Suspense>
+            </span>
+            <UserMenu fullName={user.fullName} userName={user.userName} roles={user.roles} />
+          </div>
         </div>
       </header>
       <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-24 sm:px-6 md:pb-10">

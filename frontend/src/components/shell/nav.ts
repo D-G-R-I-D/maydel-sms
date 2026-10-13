@@ -34,10 +34,10 @@ export const consoleNav: NavGroup[] = [
   {
     label: "Academics",
     items: [
-      { label: "Classes", href: "/admin/classes", icon: "classes", roles: A },
+      { label: "Classes", href: "/admin/academics/classes", icon: "classes", roles: A, ready: true },
       { label: "My classes", href: "/admin/my-classes", icon: "classes", roles: ["Teacher"] },
-      { label: "Subjects", href: "/admin/subjects", icon: "subjects", roles: A },
-      { label: "Sessions & terms", href: "/admin/sessions", icon: "sessions", roles: A },
+      { label: "Subjects", href: "/admin/academics/subjects", icon: "subjects", roles: A, ready: true },
+      { label: "Sessions & terms", href: "/admin/academics/sessions", icon: "sessions", roles: STAFF, ready: true },
       { label: "Score entry", href: "/admin/scores", icon: "scores", roles: AT },
       { label: "Report cards", href: "/admin/reports", icon: "reports", roles: A },
       { label: "Report comments", href: "/admin/report-comments", icon: "reports", roles: ["Teacher"] },
