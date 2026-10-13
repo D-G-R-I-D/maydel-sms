@@ -53,7 +53,7 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E2.6** School profile: name, motto, logo, address, principal's signature image (used on report cards & receipts).
 
 ## E3 — Student information system
-- **E3.1** 🟡 *API ✅ 2026-10-13 except photo upload (next, with secure file storage); UI pending.* Create/edit student with biodata (name, DOB, sex, state/LGA, address, house, medical notes, photo). AC: admission number auto-generated `MSS/{year}/{seq}`, unique.
+- **E3.1** 🟡 *API ✅ 2026-10-13 incl. photos (re-encoded, private; ADR-006); UI pending.* Create/edit student with biodata (name, DOB, sex, state/LGA, address, house, medical notes, photo). AC: admission number auto-generated `MSS/{year}/{seq}`, unique.
 - **E3.2** 🟡 *API ✅ 2026-10-13 (reuse by normalised phone); UI pending.* Guardians: many-to-many with relationship, primary contact, authorised pick-up. AC: adding a guardian with an existing phone reuses that guardian (siblings share one parent account).
 - **E3.3** 🟡 *API ✅ 2026-10-13; UI pending.* Issue/reset logins for students and guardians; temporary password shown once. AC: never retrievable later; reset revokes sessions.
 - **E3.4** 🟡 *API ✅ 2026-10-13 (performance at 2k students not yet measured); UI pending.* Search & filter (name, admission no., class, status) with pagination. AC: < 300 ms for 2k students.

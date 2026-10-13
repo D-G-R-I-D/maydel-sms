@@ -7,7 +7,7 @@ namespace Maydel.Application.StaffMembers;
 
 public sealed record StaffListItem(
     Guid Id, string StaffNumber, string FullName, string Email, string? Phone, string? JobTitle,
-    IReadOnlyList<Role> Roles, bool IsActive, bool HasLogin, DateTimeOffset? LastLoginAt);
+    IReadOnlyList<Role> Roles, bool IsActive, bool HasLogin, DateTimeOffset? LastLoginAt, string? PhotoVersion);
 
 /// <summary>A class the staff member teaches. <c>SubjectId</c> null = they are its form teacher.</summary>
 public sealed record StaffAssignment(Guid ClassRoomId, string ClassRoom, Guid? SubjectId, string? Subject);
@@ -15,7 +15,7 @@ public sealed record StaffAssignment(Guid ClassRoomId, string ClassRoom, Guid? S
 public sealed record StaffDetail(
     Guid Id, string StaffNumber, string FullName, string Email, string? Phone, string? JobTitle,
     IReadOnlyList<Role> Roles, bool IsActive, bool HasLogin, bool MustChangePassword, DateTimeOffset? LastLoginAt,
-    IReadOnlyList<StaffAssignment> Assignments);
+    string? PhotoVersion, IReadOnlyList<StaffAssignment> Assignments);
 
 /// <summary>For teacher pickers: active staff only.</summary>
 public sealed record StaffLookupItem(Guid Id, string FullName, string? JobTitle);
@@ -65,7 +65,7 @@ public static class StaffQueries
         var staff = await db.Staff.AsNoTracking().Where(s => s.Id == id)
             .Select(s => new
             {
-                s.Id, s.StaffNumber, s.FullName, s.Email, s.Phone, s.JobTitle, s.IsActive, s.UserId,
+                s.Id, s.StaffNumber, s.FullName, s.Email, s.Phone, s.JobTitle, s.IsActive, s.UserId, s.PhotoPath,
                 User = db.Users.Where(u => u.Id == s.UserId).Select(u => new { u.MustChangePassword, u.LastLoginAt }).FirstOrDefault(),
             })
             .FirstOrDefaultAsync(ct);
@@ -81,7 +81,8 @@ public static class StaffQueries
 
         return new StaffDetail(
             staff.Id, staff.StaffNumber, staff.FullName, staff.Email, staff.Phone, staff.JobTitle, roles, staff.IsActive,
-            staff.UserId is not null, staff.User?.MustChangePassword ?? false, staff.User?.LastLoginAt, [.. formClasses, .. subjects]);
+            staff.UserId is not null, staff.User?.MustChangePassword ?? false, staff.User?.LastLoginAt,
+            Photos.PhotoStore.VersionOf(staff.PhotoPath), [.. formClasses, .. subjects]);
     }
 
     /// <summary>Next free number in the MSS-STF-001 sequence.</summary>

@@ -20,7 +20,7 @@ internal sealed class ListStaffHandler(IAppDbContext db) : IQueryHandler<ListSta
         var page = await staff.OrderBy(s => s.FullName)
             .Select(s => new
             {
-                s.Id, s.StaffNumber, s.FullName, s.Email, s.Phone, s.JobTitle, s.IsActive, s.UserId,
+                s.Id, s.StaffNumber, s.FullName, s.Email, s.Phone, s.JobTitle, s.IsActive, s.UserId, s.PhotoPath,
                 LastLoginAt = db.Users.Where(u => u.Id == s.UserId).Select(u => u.LastLoginAt).FirstOrDefault(),
             })
             .ToPagedAsync(q.Page, q.PageSize, ct);
@@ -29,7 +29,8 @@ internal sealed class ListStaffHandler(IAppDbContext db) : IQueryHandler<ListSta
         return new PagedResult<StaffListItem>(
             [.. page.Items.Select(s => new StaffListItem(
                 s.Id, s.StaffNumber, s.FullName, s.Email, s.Phone, s.JobTitle,
-                s.UserId is { } uid ? roles.GetValueOrDefault(uid, []) : [], s.IsActive, s.UserId is not null, s.LastLoginAt))],
+                s.UserId is { } uid ? roles.GetValueOrDefault(uid, []) : [], s.IsActive, s.UserId is not null, s.LastLoginAt,
+                Photos.PhotoStore.VersionOf(s.PhotoPath)))],
             page.Page, page.PageSize, page.TotalCount);
     }
 }

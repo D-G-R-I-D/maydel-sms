@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   // `npm run dev` only: let VS Code port-forwarding links load dev assets/HMR. `**` = any number of labels (abc-3000.uks1.devtunnels.ms); `*` would match only one.
-  allowedDevOrigins: ["**.devtunnels.ms"],
+  allowedDevOrigins: ["**.devtunnels.ms", "**.trycloudflare.com", "**.ngrok-free.app"],
   poweredByHeader: false,
   turbopack: {
     rules: {

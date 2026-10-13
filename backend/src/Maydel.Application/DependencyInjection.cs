@@ -34,6 +34,7 @@ public static class DependencyInjection
 
         services.AddScoped<AccessRules>();
         services.AddScoped<SessionService>();
+        services.AddScoped<Photos.PhotoStore>();
         return services;
     }
 }

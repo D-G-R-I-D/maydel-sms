@@ -26,8 +26,8 @@ export const consoleNav: NavGroup[] = [
   {
     label: "People",
     items: [
-      { label: "Students", href: "/admin/students", icon: "students", roles: STAFF, ready: true },
-      { label: "Guardians", href: "/admin/guardians", icon: "guardians", roles: A, ready: true },
+      { label: "Students", href: "/admin/students", icon: "students", roles: A },
+      { label: "Guardians", href: "/admin/guardians", icon: "guardians", roles: A },
       { label: "Staff", href: "/admin/staff", icon: "staff", roles: A, ready: true },
     ],
   },

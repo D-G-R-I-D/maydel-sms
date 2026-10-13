@@ -41,6 +41,9 @@ public sealed class ApiCollection : ICollectionFixture<PostgresFixture>;
 public class ApiFactory(string connectionString, IDictionary<string, string?>? settings = null) : WebApplicationFactory<Program>
 {
     public const string TestPassword = "Test#Pass2026";
+
+    /// <summary>Local file storage for this test run (photos etc.).</summary>
+    public static readonly string StorageRoot = Path.Combine(Path.GetTempPath(), "maydel-tests-" + Guid.NewGuid().ToString("N")[..8]);
     public FakeGoogleVerifier Google { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -52,6 +55,7 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             ["Jwt:SigningKey"] = "integration-tests-signing-key-0123456789abcdef",
             ["Database:MigrateOnStartup"] = "true",
             ["RateLimiting:AuthPermitLimit"] = "100000",
+            ["Storage:RootPath"] = StorageRoot,
         };
         foreach (var (key, value) in settings ?? new Dictionary<string, string?>()) all[key] = value;
         foreach (var (key, value) in all) builder.UseSetting(key, value);

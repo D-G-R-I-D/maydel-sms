@@ -29,15 +29,3 @@ export type StaffCreated = Schemas["StaffCreated"];
 export type StaffLookupItem = Schemas["StaffLookupItem"];
 export type IssuedCredentials = Schemas["IssuedCredentials"];
 export type PagedStaff = Schemas["PagedResultOfStaffListItem"];
-
-export type StudentListItem = Schemas["StudentListItem"];
-export type StudentDetail = Schemas["StudentDetail"];
-export type StudentStatus = Schemas["StudentStatus"];
-export type Sex = NonNullable<Schemas["Sex"]>;
-export type GuardianLink = Schemas["GuardianLink"];
-export type GuardianAdded = Schemas["GuardianAdded"];
-export type GuardianListItem = Schemas["GuardianListItem"];
-export type GuardianDetail = Schemas["GuardianDetail"];
-export type GuardianChild = Schemas["GuardianChild"];
-export type GuardianRelationship = Schemas["GuardianRelationship"];
-export type GuardianLoginIssued = Schemas["GuardianLoginIssued"];
