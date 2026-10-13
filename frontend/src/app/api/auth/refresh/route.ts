@@ -4,6 +4,7 @@ import { crossSiteRejection, problemResponse } from "@/lib/auth/bff";
 import { forwardingHeaders } from "@/lib/auth/forwarding";
 import { refreshSession, sessionIsDead } from "@/lib/auth/refresh";
 import { safeNext } from "@/lib/auth/roles";
+import { redirectTo } from "@/lib/http/redirect";
 
 /** Explicit refresh for client code: rotates the pair and returns only the user. */
 export async function POST(request: NextRequest) {
@@ -32,13 +33,13 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const next = safeNext(request.nextUrl.searchParams.get("next")) ?? "/";
   const loginUrl = (reason: string) => {
-    const url = new URL("/login", request.url);
-    if (next !== "/") url.searchParams.set("next", next);
-    url.searchParams.set("reason", reason);
-    return url;
+    const query = new URLSearchParams();
+    if (next !== "/") query.set("next", next);
+    query.set("reason", reason);
+    return `/login?${query.toString()}`;
   };
   const expired = () => {
-    const response = NextResponse.redirect(loginUrl("expired"), 303);
+    const response = redirectTo(loginUrl("expired"), 303);
     clearSession(response.cookies);
     return response;
   };
@@ -49,9 +50,9 @@ export async function GET(request: NextRequest) {
   const outcome = await refreshSession(refreshToken, forwardingHeaders(request.headers));
   if (!outcome.ok) {
     if (sessionIsDead(outcome.problem)) return expired();
-    return NextResponse.redirect(loginUrl(outcome.problem.status === 429 ? "busy" : "unavailable"), 303);
+    return redirectTo(loginUrl(outcome.problem.status === 429 ? "busy" : "unavailable"), 303);
   }
-  const response = NextResponse.redirect(new URL(next, request.url), 303);
+  const response = redirectTo(next, 303);
   writeSession(response.cookies, outcome.auth);
   markRefreshed(response.cookies);
   return response;

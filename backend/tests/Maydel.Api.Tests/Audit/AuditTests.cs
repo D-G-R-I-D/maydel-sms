@@ -30,12 +30,12 @@ public sealed class AuditTests(PostgresFixture fixture)
 
         var page = await SearchAsync($"?entityType=AppUser&entityId={user.Id}&pageSize=50");
 
-        var created = Assert.Single(page.Items, e => e.Action == "Added");
+        var created = Assert.Single(page.Items, e => e.Action == AuditAction.Added);
         Assert.Equal("***", created.Changes!.Value.GetProperty("PasswordHash").GetString());
         Assert.Equal(email, created.Changes.Value.GetProperty("Email").GetString());
 
         // The password change is attributed to the user who made it, and the hash never appears.
-        var passwordChange = Assert.Single(page.Items, e => e.Action == "Modified" && e.Changes!.Value.TryGetProperty("PasswordHash", out _));
+        var passwordChange = Assert.Single(page.Items, e => e.Action == AuditAction.Modified && e.Changes!.Value.TryGetProperty("PasswordHash", out _));
         Assert.Equal(user.Id, passwordChange.UserId);
         Assert.Equal(email, passwordChange.UserName);
         Assert.Equal("***", passwordChange.Changes!.Value.GetProperty("PasswordHash").GetString());
@@ -61,12 +61,27 @@ public sealed class AuditTests(PostgresFixture fixture)
     {
         var client = await AdminClientAsync();
 
-        var response = await client.GetAsync("/api/audit?pageSize=500&action=Exploded&from=2026-02-01T00:00:00Z&to=2026-01-01T00:00:00Z");
+        var response = await client.GetAsync("/api/audit?pageSize=500&from=2026-02-01T00:00:00Z&to=2026-01-01T00:00:00Z");
 
         var errors = (await response.AssertProblemAsync(HttpStatusCode.BadRequest, "validation")).GetProperty("errors");
         Assert.True(errors.TryGetProperty("pageSize", out _));
-        Assert.True(errors.TryGetProperty("action", out _));
         Assert.True(errors.TryGetProperty("to", out _));
+    }
+
+    [Fact]
+    public async Task Unknown_action_value_is_rejected()
+    {
+        var client = await AdminClientAsync();
+        await (await client.GetAsync("/api/audit?action=Exploded")).AssertProblemAsync(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Action_filter_returns_only_that_action()
+    {
+        await Api.CreateUserAsync(Roles.Parent, ApiFactory.UniqueEmail());
+        var page = await SearchAsync("?action=Added&pageSize=50");
+        Assert.NotEmpty(page.Items);
+        Assert.All(page.Items, e => Assert.Equal(AuditAction.Added, e.Action));
     }
 
     [Fact]
@@ -78,7 +93,7 @@ public sealed class AuditTests(PostgresFixture fixture)
         var filters = (await client.GetFromJsonAsync<AuditFilters>("/api/audit/filters", Json.Options))!;
 
         Assert.Contains("AppUser", filters.EntityTypes);
-        Assert.Equal(["Added", "Modified", "Deleted"], filters.Actions);
+        Assert.Equal([AuditAction.Added, AuditAction.Modified, AuditAction.Deleted], filters.Actions);
     }
 
     [Fact]

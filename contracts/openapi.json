@@ -362,7 +362,7 @@
             "name": "action",
             "in": "query",
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/AuditAction"
             }
           },
           {
@@ -485,6 +485,13 @@
   },
   "components": {
     "schemas": {
+      "AuditAction": {
+        "enum": [
+          "Added",
+          "Modified",
+          "Deleted"
+        ]
+      },
       "AuditFilters": {
         "required": [
           "entityTypes",
@@ -501,7 +508,7 @@
           "actions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/AuditAction"
             }
           }
         }
@@ -542,7 +549,7 @@
             ]
           },
           "action": {
-            "type": "string"
+            "$ref": "#/components/schemas/AuditAction"
           },
           "entityType": {
             "type": "string"
@@ -739,7 +746,7 @@
           "roles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Role"
             }
           },
           "mustChangePassword": {
@@ -833,6 +840,15 @@
             "type": "string"
           }
         }
+      },
+      "Role": {
+        "enum": [
+          "Admin",
+          "Teacher",
+          "Bursar",
+          "Parent",
+          "Student"
+        ]
       }
     }
   },

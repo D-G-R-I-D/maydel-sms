@@ -10,6 +10,6 @@ internal sealed class GetAuditFiltersHandler(IAppDbContext db) : IQueryHandler<G
     public async Task<Result<AuditFilters>> Handle(GetAuditFiltersQuery query, CancellationToken ct)
     {
         var entityTypes = await db.AuditLogs.AsNoTracking().Select(l => l.EntityType).Distinct().OrderBy(t => t).ToListAsync(ct);
-        return new AuditFilters(entityTypes, ["Added", "Modified", "Deleted"]);
+        return new AuditFilters(entityTypes, Enum.GetValues<AuditAction>());
     }
 }

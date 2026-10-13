@@ -2,6 +2,13 @@ using System.Text.Json;
 
 namespace Maydel.Application.Audit;
 
+public enum AuditAction
+{
+    Added,
+    Modified,
+    Deleted,
+}
+
 /// <summary>
 /// One recorded data change. <see cref="Changes"/> is an object keyed by property name: for creates and deletes the value,
 /// for updates <c>{ "from": …, "to": … }</c>. Secrets appear as <c>"***"</c>.
@@ -11,11 +18,11 @@ public sealed record AuditLogEntry(
     DateTimeOffset Timestamp,
     Guid? UserId,
     string? UserName,
-    string Action,
+    AuditAction Action,
     string EntityType,
     string? EntityId,
     string? IpAddress,
     JsonElement? Changes);
 
 /// <summary>Values for the viewer's filter dropdowns.</summary>
-public sealed record AuditFilters(IReadOnlyList<string> EntityTypes, IReadOnlyList<string> Actions);
+public sealed record AuditFilters(IReadOnlyList<string> EntityTypes, IReadOnlyList<AuditAction> Actions);

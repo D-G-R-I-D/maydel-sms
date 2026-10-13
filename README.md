@@ -21,6 +21,7 @@ docker compose up -d --build    # Postgres + API, migrated and seeded with demo 
 - Sign in (`POST /api/auth/login`) as `admin@maydel.test` / `Demo#Pass2026`. Other demo accounts are listed in [CLAUDE.md](CLAUDE.md).
 - Running the API outside Docker: `pwsh backend/scripts/dev-secrets.ps1` once, `docker compose up -d db`, then `dotnet run --project backend/src/Maydel.Api`.
 - Tests: `cd backend && dotnet test` (Docker must be running).
+- **Share a dev link** (VS Code → Ports → forward **3000 only**, set visibility to Public): the API stays on your machine; the forwarded Next.js server talks to it via `API_BASE_URL`. Any `*.devtunnels.ms` link is trusted in dev, so a new link tomorrow just works. Other tunnels (ngrok, Cloudflare): set `TRUSTED_ORIGINS=https://*.ngrok-free.app` in `frontend/.env.local`.
 
 ## Documentation
 | Doc | Purpose |

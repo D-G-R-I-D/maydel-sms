@@ -136,9 +136,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {unknown} */
+        AuditAction: "Added" | "Modified" | "Deleted";
         AuditFilters: {
             entityTypes: string[];
-            actions: string[];
+            actions: components["schemas"]["AuditAction"][];
         };
         AuditLogEntry: {
             /** Format: int64 */
@@ -148,7 +150,7 @@ export interface components {
             /** Format: uuid */
             userId: null | string;
             userName: null | string;
-            action: string;
+            action: components["schemas"]["AuditAction"];
             entityType: string;
             entityId: null | string;
             ipAddress: null | string;
@@ -199,7 +201,7 @@ export interface components {
             userName: string;
             fullName: string;
             email: null | string;
-            roles: string[];
+            roles: components["schemas"]["Role"][];
             mustChangePassword: boolean;
         };
         PagedResultOfAuditLogEntry: {
@@ -226,6 +228,8 @@ export interface components {
         RefreshSessionCommand: {
             refreshToken: string;
         };
+        /** @enum {unknown} */
+        Role: "Admin" | "Teacher" | "Bursar" | "Parent" | "Student";
     };
     responses: never;
     parameters: never;
@@ -523,7 +527,7 @@ export interface operations {
                 entityType?: string;
                 entityId?: string;
                 userId?: string;
-                action?: string;
+                action?: components["schemas"]["AuditAction"];
                 from?: string;
                 to?: string;
                 page?: number;

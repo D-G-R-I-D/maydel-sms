@@ -1,5 +1,6 @@
 using Maydel.Application.Abstractions;
 using Maydel.Application.Common;
+using Maydel.Domain.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -91,7 +92,7 @@ public sealed class SessionService(IAppDbContext db, UserManager<AppUser> users,
                 .SetProperty(t => t.RevokedReason, RefreshTokenRevocation.SignedOutEverywhere), ct);
 
     public static MeResponse ToMe(AppUser user, IEnumerable<string> roles) =>
-        new(user.Id, user.UserName!, user.FullName, user.Email, [.. roles.Order()], user.MustChangePassword);
+        new(user.Id, user.UserName!, user.FullName, user.Email, [.. roles.Select(Enum.Parse<Role>).Order()], user.MustChangePassword);
 
     private Task RevokeFamilyAsync(Guid familyId, RefreshTokenRevocation reason, CancellationToken ct) =>
         db.RefreshTokens.Where(t => t.FamilyId == familyId && (t.RevokedAt == null || t.RevokedReason == RefreshTokenRevocation.Rotated))

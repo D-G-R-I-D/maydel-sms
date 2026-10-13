@@ -1,3 +1,5 @@
+using Maydel.Domain.Common;
+
 namespace Maydel.Application.Identity;
 
 /// <summary>
@@ -15,7 +17,7 @@ public sealed record MeResponse(
     string UserName,
     string FullName,
     string? Email,
-    IReadOnlyList<string> Roles,
+    IReadOnlyList<Role> Roles,
     bool MustChangePassword);
 
 public static class IdentityErrors

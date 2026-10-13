@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // `npm run dev` only: let VS Code port-forwarding links (any *.devtunnels.ms subdomain) load dev assets/HMR.
+  allowedDevOrigins: ["*.devtunnels.ms"],
   poweredByHeader: false,
   turbopack: {
     rules: {
