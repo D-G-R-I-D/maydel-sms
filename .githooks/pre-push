@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks direct pushes to main: changes go through pull requests so CI must pass first.
+# GitHub branch protection needs a paid plan on private repos; this is the local stand-in.
+# Enable once per clone:  git config core.hooksPath .githooks
+# Emergency bypass (rare, and say why in the PR afterwards):  git push --no-verify
+while read local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "Direct pushes to main are blocked. Push a branch and open a PR:  gh pr create --fill" >&2
+    exit 1
+  fi
+done
+exit 0
