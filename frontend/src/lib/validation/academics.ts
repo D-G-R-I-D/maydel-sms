@@ -85,6 +85,8 @@ export function classroomSchema(minCapacity = 1) {
       .int("Use a whole number.")
       .min(Math.max(1, minCapacity), minCapacity > 1 ? `The class already has ${minCapacity} students.` : "At least 1.")
       .max(200, "At most 200."),
+    /** "" = no form teacher. */
+    formTeacherId: z.string().transform((v) => (v === "" ? null : v)),
   });
 }
 export type ClassroomInput = z.infer<ReturnType<typeof classroomSchema>>;

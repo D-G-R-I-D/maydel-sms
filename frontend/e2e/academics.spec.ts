@@ -38,6 +38,7 @@ test("classes are grouped by section and open their subject checklist", async ({
   await page.goto("/admin/academics/classes");
   await expect(page.getByRole("heading", { name: "Primary" })).toBeVisible();
   await page.getByRole("link", { name: "Year 3 A" }).first().click();
+  await page.waitForURL(/\/admin\/academics\/classes\/[0-9a-f-]+$/);
   await expect(page.getByRole("heading", { name: "Year 3 A" })).toBeVisible();
   await expect(page.getByRole("list", { name: /Subjects offered by Year 3 A/ })).toBeVisible();
 
