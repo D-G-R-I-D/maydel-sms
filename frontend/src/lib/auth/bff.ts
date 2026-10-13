@@ -55,7 +55,13 @@ export function crossSiteRejection(request: NextRequest): NextResponse | null {
   }
   // Tunnels/proxies that hide the public host (see origins.ts) must be listed explicitly.
   if (isTrustedOrigin(origin)) return null;
-  return problemResponse({ status: 403, title: "Cross-site request blocked." });
+  // Say exactly what was refused, so a tunnel/proxy domain missing from TRUSTED_ORIGINS is obvious in the server log.
+  console.warn(`[bff] Cross-site request blocked: Origin=${origin} Host=${host ?? "(none)"}. If this origin is yours, add it to TRUSTED_ORIGINS.`);
+  return problemResponse({
+    status: 403,
+    title: "Cross-site request blocked.",
+    detail: process.env.NODE_ENV === "production" ? undefined : `Origin ${origin} isn't trusted. Add it to TRUSTED_ORIGINS in frontend/.env.local and restart.`,
+  });
 }
 
 export async function readJson(request: NextRequest): Promise<Record<string, unknown> | null> {
