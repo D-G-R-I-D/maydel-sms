@@ -114,6 +114,26 @@ public sealed class AccessRulesTests(DatabaseFixture fixture)
         Assert.True(await Rules(Guid.NewGuid(), Roles.Admin).CanGradeAsync(school.ClassB, school.English, default));
     }
 
+    [Fact]
+    public async Task Non_active_children_drop_out_of_the_parent_portal_but_their_record_stays()
+    {
+        var school = await SeedSchoolAsync();
+        await using (var db = fixture.CreateContext(new TestUser()))
+        {
+            var child = await db.Students.SingleAsync(s => s.Id == school.OwnChildId);
+            Assert.Null(child.ChangeStatus(StudentStatus.Withdrawn));
+            await db.SaveChangesAsync();
+        }
+
+        var parent = Rules(school.ParentUserId, Roles.Parent);
+        Assert.False(await parent.CanViewStudentAsync(school.OwnChildId, default));
+        Assert.Empty(await parent.PortalStudents().ToListAsync());
+        Assert.True(await Rules(Guid.NewGuid(), Roles.Admin).CanViewStudentAsync(school.OwnChildId, default));
+    }
+
+    private static long _phone = Random.Shared.NextInt64(10_000_000, 90_000_000);
+    private static string UniquePhone() => $"+23480{Interlocked.Increment(ref _phone):00000000}";
+
     private AccessRules Rules(Guid userId, string role)
     {
         var user = new TestUser(userId, role);
@@ -146,7 +166,7 @@ public sealed class AccessRulesTests(DatabaseFixture fixture)
             new ClassSubject { ClassRoom = classB, Subject = maths },
             new ClassSubject { ClassRoom = classB, Subject = english });
 
-        var parent = new Guardian { FullName = "Parent", Phone = "+2340000000000", UserId = Guid.NewGuid() };
+        var parent = new Guardian { FullName = "Parent", Phone = UniquePhone(), UserId = Guid.NewGuid() };
         var ownChild = new Student
         {
             AdmissionNumber = $"A-{tag}", FirstName = "Own", LastName = "Child", ClassRoom = classA, UserId = Guid.NewGuid(),
@@ -155,7 +175,7 @@ public sealed class AccessRulesTests(DatabaseFixture fixture)
         var otherChild = new Student
         {
             AdmissionNumber = $"B-{tag}", FirstName = "Other", LastName = "Child", ClassRoom = classB, UserId = Guid.NewGuid(),
-            Guardians = [new StudentGuardian { Guardian = new Guardian { FullName = "Other Parent", Phone = "+2341111111111", UserId = Guid.NewGuid() } }],
+            Guardians = [new StudentGuardian { Guardian = new Guardian { FullName = "Other Parent", Phone = UniquePhone(), UserId = Guid.NewGuid() } }],
         };
         db.Students.AddRange(ownChild, otherChild);
         await db.SaveChangesAsync();
