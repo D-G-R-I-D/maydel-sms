@@ -52,5 +52,7 @@ See bottom of `docs/02-epics-and-features.md`. In short: authZ (role + row) test
 ## Backend ↔ frontend handoff
 A separate frontend session builds alongside. When a milestone's backend is done, write `docs/handoffs/<milestone>.md` (what shipped, endpoints, shapes, error codes, auth/cookie rules, demo data, what the UI should build) and give it to the user to paste into the frontend session. The contract source of truth is `contracts/openapi.json`.
 
-## Commits
+## Commits & pull requests
 Conventional commits (`feat(assessment): ...`, `fix(auth): ...`), one story per PR where practical, reference the story id (e.g. `E5.1`).
+- **Never push to `main`.** Work on a branch (`feat/e2-school-setup`, `fix/...`), push it, `gh pr create --fill`, merge with **squash** only once CI (`backend`, `frontend`, `secrets`) is green: `gh pr checks --watch && gh pr merge --squash`.
+- Once per clone: `git config core.hooksPath .githooks`. The pre-push hook blocks direct pushes to `main`. GitHub-side branch protection needs GitHub Pro for a private repo; until then this hook plus discipline is the guard.
