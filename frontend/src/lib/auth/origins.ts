@@ -7,7 +7,8 @@
  * subdomain, so a tunnel link that changes every day keeps working. In development it defaults to
  * VS Code dev tunnels; in production it defaults to nothing (the real domain matches Host already).
  */
-const DEV_DEFAULT = "https://*.devtunnels.ms";
+// Share-a-link tunnels for `npm run dev`: VS Code port forwarding, Cloudflare quick tunnels, ngrok.
+const DEV_DEFAULT = "https://*.devtunnels.ms,https://*.trycloudflare.com,https://*.ngrok-free.app";
 
 export function trustedOrigins(env: Record<string, string | undefined> = process.env): string[] {
   const raw = env.TRUSTED_ORIGINS ?? (env.NODE_ENV === "production" ? "" : DEV_DEFAULT);

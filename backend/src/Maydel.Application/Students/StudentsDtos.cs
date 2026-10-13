@@ -7,7 +7,7 @@ namespace Maydel.Application.Students;
 
 public sealed record StudentListItem(
     Guid Id, string AdmissionNumber, string FullName, string FirstName, string LastName, Sex? Sex,
-    Guid? ClassRoomId, string? ClassRoom, StudentStatus Status, bool HasLogin);
+    Guid? ClassRoomId, string? ClassRoom, StudentStatus Status, bool HasLogin, string? PhotoVersion);
 
 public sealed record GuardianLink(
     Guid GuardianId, string FullName, string Phone, string? Email, GuardianRelationship Relationship,
@@ -16,7 +16,8 @@ public sealed record GuardianLink(
 public sealed record StudentDetail(
     Guid Id, string AdmissionNumber, string FirstName, string? MiddleName, string LastName, string FullName,
     DateOnly? DateOfBirth, Sex? Sex, string? StateOfOrigin, string? Lga, string? HomeAddress, string? House, string? MedicalNotes,
-    DateOnly AdmittedOn, StudentStatus Status, Guid? ClassRoomId, string? ClassRoom, bool HasLogin, IReadOnlyList<GuardianLink> Guardians);
+    DateOnly AdmittedOn, StudentStatus Status, Guid? ClassRoomId, string? ClassRoom, bool HasLogin, string? PhotoVersion,
+    IReadOnlyList<GuardianLink> Guardians);
 
 /// <summary>Create/update body. <c>AdmittedOn</c> also fixes the admission-number year on create.</summary>
 public sealed record StudentRequest(
@@ -75,6 +76,7 @@ public static class StudentQueries
                 s.HomeAddress, s.House, s.MedicalNotes, s.AdmittedOn, s.Status, s.ClassRoomId,
                 ClassRoom = s.ClassRoom != null ? s.ClassRoom.ClassLevel.Name + " " + s.ClassRoom.Arm : null,
                 HasLogin = s.UserId != null,
+                s.PhotoPath,
                 Guardians = s.Guardians.OrderByDescending(g => g.IsPrimaryContact).ThenBy(g => g.Guardian.FullName)
                     .Select(g => new GuardianLink(g.GuardianId, g.Guardian.FullName, g.Guardian.Phone, g.Guardian.Email, g.Relationship,
                         g.IsPrimaryContact, g.CanPickUp, g.Guardian.UserId != null))
@@ -87,7 +89,7 @@ public static class StudentQueries
         return new StudentDetail(
             student.Id, student.AdmissionNumber, student.FirstName, student.MiddleName, student.LastName, fullName, student.DateOfBirth,
             student.Sex, student.StateOfOrigin, student.Lga, student.HomeAddress, student.House, student.MedicalNotes, student.AdmittedOn,
-            student.Status, student.ClassRoomId, student.ClassRoom, student.HasLogin, student.Guardians);
+            student.Status, student.ClassRoomId, student.ClassRoom, student.HasLogin, Photos.PhotoStore.VersionOf(student.PhotoPath), student.Guardians);
     }
 
     public static async Task<GuardianDetail?> GetGuardianDetailAsync(this IAppDbContext db, Guid id, CancellationToken ct) =>

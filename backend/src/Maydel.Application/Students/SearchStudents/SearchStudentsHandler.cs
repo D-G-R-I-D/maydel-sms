@@ -23,7 +23,9 @@ internal sealed class SearchStudentsHandler(IAppDbContext db) : IQueryHandler<Se
             .OrderBy(s => s.ClassRoom == null ? int.MaxValue : s.ClassRoom.ClassLevel.Order).ThenBy(s => s.LastName).ThenBy(s => s.FirstName)
             .Select(s => new StudentListItem(
                 s.Id, s.AdmissionNumber, s.FirstName + " " + s.LastName, s.FirstName, s.LastName, s.Sex, s.ClassRoomId,
-                s.ClassRoom != null ? s.ClassRoom.ClassLevel.Name + " " + s.ClassRoom.Arm : null, s.Status, s.UserId != null))
+                s.ClassRoom != null ? s.ClassRoom.ClassLevel.Name + " " + s.ClassRoom.Arm : null, s.Status, s.UserId != null,
+                // Key is "students/{32 hex}.jpg"; the hex part is the version (see PhotoStore.VersionOf).
+                s.PhotoPath != null ? s.PhotoPath.Substring(s.PhotoPath.IndexOf("/") + 1, 32) : null))
             .ToPagedAsync(q.Page, q.PageSize, ct);
     }
 }

@@ -3,7 +3,7 @@ import { isTrustedOrigin, trustedOrigins } from "./origins";
 
 describe("trusted origins", () => {
   it("defaults to VS Code dev tunnels in development and to nothing in production", () => {
-    expect(trustedOrigins({ NODE_ENV: "development" })).toEqual(["https://*.devtunnels.ms"]);
+    expect(trustedOrigins({ NODE_ENV: "development" })).toEqual(["https://*.devtunnels.ms", "https://*.trycloudflare.com", "https://*.ngrok-free.app"]);
     expect(trustedOrigins({ NODE_ENV: "production" })).toEqual([]);
     expect(trustedOrigins({ NODE_ENV: "production", TRUSTED_ORIGINS: "https://Portal.Example.com, " })).toEqual(["https://portal.example.com"]);
   });

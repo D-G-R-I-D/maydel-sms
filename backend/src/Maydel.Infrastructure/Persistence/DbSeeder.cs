@@ -42,7 +42,11 @@ public sealed class DbSeeder(
         await SeedAdminAsync();
         await SeedAcademicStructureAsync(ct);
         await SeedAssessmentAsync(ct);
-        if (_options.DemoData) await SeedDemoDataAsync(ct);
+        if (_options.DemoData)
+        {
+            await SeedDemoDataAsync(ct);
+            await ResetDemoAccountsAsync();
+        }
     }
 
     private async Task SeedAdminAsync()
@@ -152,10 +156,41 @@ public sealed class DbSeeder(
         await db.SaveChangesAsync(ct);
     }
 
+    private const string DemoPassword = "Demo#Pass2026";
+
+    /// <summary>
+    /// Demo accounts and whether each must change its password at first sign-in. Restored on every start-up (demo data
+    /// only, never production) so e2e/smoke runs and manual testing always find them in a known state.
+    /// </summary>
+    private static readonly (string UserName, bool MustChangePassword)[] DemoAccounts =
+    [
+        ("admin@maydel.test", false), ("teacher@maydel.test", false), ("bursar@maydel.test", false),
+        ("parent@maydel.test", false), ("newteacher@maydel.test", true),
+        ("MSS/2026/0001", false), ("MSS/2026/0002", false), ("MSS/2026/0003", false), ("MSS/2026/0004", false), ("MSS/2026/0005", false),
+    ];
+
+    private async Task ResetDemoAccountsAsync()
+    {
+        foreach (var (userName, mustChange) in DemoAccounts)
+        {
+            if (await users.FindByNameAsync(userName) is not { } user) continue;
+            if (!await users.CheckPasswordAsync(user, DemoPassword))
+            {
+                if (await users.HasPasswordAsync(user)) await users.RemovePasswordAsync(user);
+                await users.AddPasswordAsync(user, DemoPassword);
+            }
+            user.MustChangePassword = mustChange;
+            user.IsActive = true;
+            user.AccessFailedCount = 0;
+            user.LockoutEnd = null;
+            await users.UpdateAsync(user);
+        }
+    }
+
     private async Task SeedDemoDataAsync(CancellationToken ct)
     {
         if (await db.Students.AnyAsync(ct)) return;
-        const string demoPassword = "Demo#Pass2026";
+        const string demoPassword = DemoPassword;
 
         var teacherUser = await CreateUserAsync("teacher@maydel.test", "Mrs. Grace Okafor", Roles.Teacher, demoPassword);
         var teacher = new Staff

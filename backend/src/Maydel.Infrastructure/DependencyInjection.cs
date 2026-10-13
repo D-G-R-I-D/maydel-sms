@@ -54,8 +54,14 @@ public static class DependencyInjection
         services.AddOptions<SeedOptions>().BindConfiguration(SeedOptions.Section);
         services.AddScoped<DbSeeder>();
 
-        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.Section);
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.Section)
+            .Validate(o => o.Provider is "Local" or "S3", "Storage:Provider must be Local or S3.")
+            .ValidateOnStart();
+        services.AddSingleton<IFileStorage>(sp =>
+            sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StorageOptions>>().Value.Provider == "S3"
+                ? ActivatorUtilities.CreateInstance<S3FileStorage>(sp)
+                : ActivatorUtilities.CreateInstance<LocalFileStorage>(sp));
+        services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
 
         return services;
     }
