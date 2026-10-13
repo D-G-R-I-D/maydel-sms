@@ -46,24 +46,36 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('frontend/package.json') != '' }}
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Skips every step until frontend/ exists (hashFiles isn't allowed in a job-level `if`).
+      - id: detect
+        run: echo "present=$([ -f frontend/package.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - if: steps.detect.outputs.present == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
+      - if: steps.detect.outputs.present == 'true'
+        working-directory: frontend
+        run: npm ci
       - name: Generated API types match the committed contract
+        if: steps.detect.outputs.present == 'true'
+        working-directory: frontend
         run: npm run api:types && git diff --exit-code -- src/lib/api/schema.d.ts
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm audit --audit-level=high
+      - if: steps.detect.outputs.present == 'true'
+        working-directory: frontend
+        run: npm run lint
+      - if: steps.detect.outputs.present == 'true'
+        working-directory: frontend
+        run: npm run typecheck
+      - if: steps.detect.outputs.present == 'true'
+        working-directory: frontend
+        run: npm test
+      - if: steps.detect.outputs.present == 'true'
+        working-directory: frontend
+        run: npm audit --audit-level=high
 
   secrets:
     runs-on: ubuntu-latest
