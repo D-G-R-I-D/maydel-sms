@@ -8,5 +8,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Maydel.Api.Tests/Maydel.Api.Tests.csproj" />
     <Project Path="tests/Maydel.Application.Tests/Maydel.Application.Tests.csproj" />
+    <Project Path="tests/Maydel.Domain.Tests/Maydel.Domain.Tests.csproj" />
   </Folder>
 </Solution>

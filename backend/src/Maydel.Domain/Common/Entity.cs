@@ -7,6 +7,12 @@ public abstract class Entity
     public DateTimeOffset? UpdatedAt { get; set; }
 }
 
+/// <summary>
+/// A violated invariant, returned (not thrown) by domain methods. With <see cref="Field"/> it's a field validation
+/// error (HTTP 400), otherwise a business-rule failure (HTTP 422). <see cref="Message"/> is shown to users.
+/// </summary>
+public sealed record DomainError(string Code, string Message, string? Field = null);
+
 /// <summary>Raised when a business rule is violated. The API maps it to HTTP 422.</summary>
 public class DomainException(string message) : Exception(message);
 

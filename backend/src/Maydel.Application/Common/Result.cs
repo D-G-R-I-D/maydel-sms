@@ -1,3 +1,5 @@
+using Maydel.Domain.Common;
+
 namespace Maydel.Application.Common;
 
 public enum ErrorType
@@ -21,6 +23,13 @@ public record Error(ErrorType Type, string Code, string Message)
     public static Error Conflict(string code, string message) => new(ErrorType.Conflict, code, message);
     public static Error Rule(string code, string message) => new(ErrorType.Rule, code, message);
     public static ValidationError Validation(string field, string message) => new(new Dictionary<string, string[]> { [field] = [message] });
+}
+
+public static class DomainErrorExtensions
+{
+    /// <summary>A domain error with a field becomes a 400 field error; without one, a 422 business-rule failure.</summary>
+    public static Error ToError(this DomainError error) =>
+        error.Field is { } field ? Error.Validation(field, error.Message) : Error.Rule(error.Code, error.Message);
 }
 
 /// <summary>Field-level validation failures, keyed by camelCase field name.</summary>

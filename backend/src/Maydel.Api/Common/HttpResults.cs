@@ -15,6 +15,10 @@ public static class HttpResults
     public static Results<Ok<T>, ProblemHttpResult> ToHttpResult<T>(this Result<T> result) =>
         result.IsSuccess ? TypedResults.Ok(result.Value) : result.Error!.ToProblem();
 
+    /// <summary>201 with a Location built from the created value, e.g. <c>r.ToCreatedResult(s => $"/api/academics/sessions/{s.Id}")</c>.</summary>
+    public static Results<Created<T>, ProblemHttpResult> ToCreatedResult<T>(this Result<T> result, Func<T, string> location) =>
+        result.IsSuccess ? TypedResults.Created(location(result.Value), result.Value) : result.Error!.ToProblem();
+
     public static Results<NoContent, ProblemHttpResult> ToHttpResult(this Result result) =>
         result.IsSuccess ? TypedResults.NoContent() : result.Error!.ToProblem();
 
