@@ -43,8 +43,8 @@ public sealed class GradeSheetTests(PostgresFixture fixture)
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var row = (await saved.Content.ReadFromJsonAsync<GradeSheet>(Json.Options))!.Rows.Single(r => r.StudentId == school.Students[0]);
         Assert.Equal(63.5m, row.Total);
-        Assert.Equal("B", row.Grade);
-        Assert.Equal("Very Good", row.Remark);
+        Assert.Equal("C+", row.Grade);          // school standard scale: 60–69.99
+        Assert.Equal("Fairly Good", row.Remark);
         Assert.Equal("Good effort", row.Comment);
         Assert.Equal(38.5m, row.Scores.Single(s => s.ComponentId == exams.Id).Score);
     }

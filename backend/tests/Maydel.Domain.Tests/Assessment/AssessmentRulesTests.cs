@@ -96,3 +96,26 @@ public sealed class AssessmentRulesTests
         Assert.Equal([1, 2, 2, 4], new[] { ranks[a], ranks[b], ranks[c], ranks[d] });
     }
 }
+
+public sealed class GradingPresetTests
+{
+    [Fact]
+    public void Every_preset_is_a_valid_scale() =>
+        Assert.All(GradingPresets.All, p => Assert.Null(AssessmentRules.CheckBands(p.Bands)));
+
+    [Theory]
+    [InlineData(95, "A+", "Distinction")]
+    [InlineData(94.99, "A", "Excellent")]
+    [InlineData(80, "B+", "Very Good")]
+    [InlineData(70, "B", "Good")]
+    [InlineData(69.5, "C+", "Fairly Good")]
+    [InlineData(50, "C", "Average")]
+    [InlineData(40, "D", "Below Average")]
+    [InlineData(39.99, "F", "Weak")]
+    public void School_standard_matches_the_excel_result_sheet(decimal total, string grade, string remark)
+    {
+        var scale = new GradingScale(GradingPresets.SchoolStandard.Bands.Select(b => new GradeBand { Grade = b.Grade, MinScore = b.MinScore, MaxScore = b.MaxScore, Remark = b.Remark }));
+        var band = scale.BandFor(total)!;
+        Assert.Equal((grade, remark), (band.Grade, band.Remark));
+    }
+}
