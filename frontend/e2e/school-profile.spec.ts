@@ -25,7 +25,9 @@ test("admin edits the details and the change is saved", async ({ page }) => {
   const motto = page.getByLabel("Motto (optional)");
   await expect(page.getByLabel("School name")).not.toHaveValue("");
   const current = await motto.inputValue();
-  const original = current.replace(/\s*E2E motto \d+$/, ""); // drop a probe an aborted run left behind
+  // A probe left by an aborted run isn't the original; fall back to the seeded motto then.
+  const stripped = current.replace(/\s*E2E (draft|motto|unsaved) \d+.*$/, "");
+  const original = stripped === current ? current : stripped || "The Well Spring of Knowledge";
   const save = page.getByRole("button", { name: "Save details" });
 
   // Client validation mirrors the API.
@@ -35,7 +37,12 @@ test("admin edits the details and the change is saved", async ({ page }) => {
   }).toPass({ timeout: 60_000 });
   await save.click();
   await expect(page.getByText("Enter a valid email address.")).toBeVisible();
+  // The unsaved bad email is kept as a draft across the reload; throw it away.
+  await expect.poll(() => page.evaluate(() => Object.keys(sessionStorage).some((k) => k.includes(":school-profile")))).toBe(true);
   await page.reload();
+  await expect(page.getByText("Restored your unsaved changes from")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Discard" }).click();
+  await expect(page.getByLabel("Email (optional)")).not.toHaveValue("not-an-email");
 
   const probe = `E2E motto ${Date.now()}`;
   await expect(async () => {

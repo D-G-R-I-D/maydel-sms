@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Unsaved edits survive a reload (sessionStorage drafts). Uses a Year 3 A draft report's principal's
-// comment and puts the original text back at the end.
+// Unsaved edits survive a reload (sessionStorage drafts). Uses the school profile's motto, which an
+// admin can always edit (report comments lock once published), and puts the original back.
 const PASSWORD = "Demo#Pass2026";
 test.setTimeout(150_000);
 
@@ -13,53 +13,55 @@ async function signIn(page: Page, userName: string) {
   await page.waitForURL(/\/(admin|portal)/);
 }
 
-const draftKeys = (page: Page) => page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith("draft:") && k.includes(":comment:principal:")));
+const drafts = (page: Page) => page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith("draft:")));
 
-test("a typed comment is restored after a reload and the draft is cleared on save", async ({ page }) => {
+test("unsaved edits are restored after a reload; saving or discarding clears the draft", async ({ page }) => {
   page.on("dialog", (d) => void d.accept()); // "leave with unsaved changes?" → yes
   await signIn(page, "admin@maydel.test");
-  await page.goto("/admin/reports");
-  await page.getByRole("link", { name: /Year 3 A/ }).first().click();
-  await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\?termId=/);
-  await page.locator("tbody tr").first().getByRole("link").first().click();
-  await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\/[0-9a-f-]+\?termId=/);
-  const box = page.getByLabel("Principal's comment");
-  test.skip((await box.count()) === 0, "report already published");
+  await page.goto("/admin/settings/school");
+  const motto = page.getByLabel("Motto (optional)");
+  await expect(page.getByLabel("School name")).not.toHaveValue("");
+  const current = await motto.inputValue();
+  // A probe left by an aborted run isn't the original; fall back to the seeded motto then.
+  const stripped = current.replace(/\s*E2E (draft|motto|unsaved) \d+.*$/, "");
+  const original = stripped === current ? current : stripped || "The Well Spring of Knowledge";
+  const save = page.getByRole("button", { name: "Save details" });
+  const banner = page.getByText("Restored your unsaved changes from");
 
-  const current = await box.inputValue();
-  const original = current.startsWith("E2E draft") ? "" : current;
-  const probe = `E2E draft ${Date.now()}: kept across a reload.`;
-  const save = page.getByRole("button", { name: "Save", exact: true }).nth(1);
+  const probe = `E2E draft ${Date.now()}`;
   await expect(async () => {
-    await box.fill(probe);
+    await motto.fill(probe);
     await expect(save).toBeEnabled({ timeout: 2_000 });
   }).toPass({ timeout: 60_000 });
-  await expect.poll(() => draftKeys(page)).toHaveLength(1); // written after the debounce
+  await expect.poll(() => drafts(page)).toHaveLength(1); // written after the debounce
 
   await page.reload();
-  await expect(page.getByText("Restored your unsaved changes from")).toBeVisible({ timeout: 30_000 });
-  await expect(box).toHaveValue(probe);
+  await expect(banner).toBeVisible({ timeout: 30_000 });
+  await expect(motto).toHaveValue(probe);
 
   await save.click();
-  await expect(page.getByText("Principal's comment saved")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Restored your unsaved changes from")).toBeHidden();
-  await expect.poll(() => draftKeys(page)).toHaveLength(0);
+  await expect(page.getByText("School profile saved")).toBeVisible({ timeout: 30_000 });
+  await expect(banner).toBeHidden();
+  await expect.poll(() => drafts(page)).toHaveLength(0);
 
   // Discard puts the saved text back and forgets the draft.
-  await box.fill(`${probe} more`);
-  await expect.poll(() => draftKeys(page)).toHaveLength(1);
+  await motto.fill(`${probe} more`);
+  await expect.poll(() => drafts(page)).toHaveLength(1);
   await page.reload();
-  await page.getByRole("button", { name: "Discard" }).first().click();
-  await expect(box).toHaveValue(probe);
-  await expect.poll(() => draftKeys(page)).toHaveLength(0);
+  await expect(banner).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Discard" }).click();
+  await expect(motto).toHaveValue(probe);
+  await expect.poll(() => drafts(page)).toHaveLength(0);
 
-  // Restore the original comment.
+  // Put the original motto back.
   await expect(async () => {
-    await box.fill(original);
+    await motto.fill(original);
     await expect(save).toBeEnabled({ timeout: 2_000 });
   }).toPass({ timeout: 60_000 });
   await save.click();
-  await expect(page.getByText("Principal's comment saved").last()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("School profile saved").last()).toBeVisible({ timeout: 30_000 });
+  await page.reload();
+  await expect(motto).toHaveValue(original);
 });
 
 test("signing out wipes drafts", async ({ page }) => {
@@ -71,9 +73,9 @@ test("signing out wipes drafts", async ({ page }) => {
     await motto.fill(`E2E unsaved ${Date.now()}`);
     await expect(page.getByRole("button", { name: "Save details" })).toBeEnabled({ timeout: 2_000 });
   }).toPass({ timeout: 60_000 });
-  await expect.poll(() => page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith("draft:")).length)).toBe(1);
+  await expect.poll(() => drafts(page)).toHaveLength(1);
   await page.getByRole("button", { name: /Account menu/ }).click();
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await page.waitForURL(/\/login/);
-  expect(await page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith("draft:")).length)).toBe(0);
+  expect(await drafts(page)).toHaveLength(0);
 });
