@@ -38,7 +38,7 @@ public static class PhotoEndpoints
     /// Successful photo responses may be cached by this user's browser only (never shared caches). Clients add the
     /// record's <c>photoVersion</c> as <c>?v=</c>, so a replaced photo is a new URL and long caching is safe.
     /// </summary>
-    private static RouteHandlerBuilder PrivateCache(this RouteHandlerBuilder builder) => builder.AddEndpointFilter(async (context, next) =>
+    internal static RouteHandlerBuilder PrivateCache(this RouteHandlerBuilder builder) => builder.AddEndpointFilter(async (context, next) =>
     {
         var response = context.HttpContext.Response;
         response.OnStarting(() =>
@@ -93,7 +93,7 @@ public static class PhotoEndpoints
         return buffer.ToArray();
     }
 
-    private static Results<FileStreamHttpResult, ProblemHttpResult> ToFile(Result<PhotoContent> result)
+    internal static Results<FileStreamHttpResult, ProblemHttpResult> ToFile(Result<PhotoContent> result)
     {
         if (result.IsFailure) return result.Error!.ToProblem();
         var photo = result.Value;
