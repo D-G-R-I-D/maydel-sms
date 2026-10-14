@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, CalendarCheck, CalendarDays, Command, FileText, GraduationCap, KeyRound, Layers, ScrollText, SlidersHorizontal, TableProperties, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, CalendarDays, Command, FileText, GraduationCap, KeyRound, Layers, School, ScrollText, SlidersHorizontal, TableProperties, Wallet, type LucideIcon } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { hasAnyRole, type Role } from "@/lib/auth/roles";
 import { firstName } from "@/lib/flash";
@@ -24,6 +24,7 @@ const tiles: Tile[] = [
   { title: "Students & guardians", body: "Admissions, class lists, guardians and sign-in slips.", icon: GraduationCap, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/students" },
   { title: "School calendar", body: "Sessions, terms and mid-term breaks, and which term is current.", icon: CalendarDays, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/academics/sessions" },
   { title: "Classes & subjects", body: "Year groups and arms, capacity, and the subjects each class offers.", icon: Layers, roles: ["Admin"], href: "/admin/academics/classes" },
+  { title: "School profile", body: "Name, contacts, logo and the principal's signature for report cards.", icon: School, roles: ["Admin"], href: "/admin/settings/school" },
   { title: "Assessment settings", body: "Score components and the grading scale.", icon: SlidersHorizontal, roles: ["Admin"], href: "/admin/settings/assessment" },
   { title: "Audit log", body: "Every change to school records: who, what, when and from where.", icon: ScrollText, roles: ["Admin"], href: "/admin/audit" },
   { title: "Change password", body: "Keep your account safe. Other devices get signed out.", icon: KeyRound, roles: ["Admin", "Teacher", "Bursar"], href: "/change-password" },

@@ -64,7 +64,7 @@ export const consoleNav: NavGroup[] = [
   {
     label: "Settings",
     items: [
-      { label: "School profile", href: "/admin/settings/school", icon: "school", roles: A },
+      { label: "School profile", href: "/admin/settings/school", icon: "school", roles: A, ready: true },
       { label: "Assessment", href: "/admin/settings/assessment", icon: "assessment", roles: AT, ready: true },
       { label: "Users", href: "/admin/settings/users", icon: "users", roles: A },
     ],
