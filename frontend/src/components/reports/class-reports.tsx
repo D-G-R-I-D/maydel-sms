@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertTriangle, CalendarCheck, Check, ChevronRight, LockOpen, Minus, Send } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Check, ChevronRight, LockOpen, Minus, Printer, Send } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import type { ClassReportSummary, PublishResult } from "@/lib/api/types";
 import { publishClass, unpublishReports } from "@/lib/reports/actions";
-import { attendanceText, formatAverage, ordinal, publishPreview } from "@/lib/reports/rules";
+import { attendanceText, classPdfHref, formatAverage, ordinal, publishPreview } from "@/lib/reports/rules";
 import { runAction } from "@/lib/client/action";
 import { Badge, Button, buttonClasses, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
@@ -69,8 +69,11 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
         </Alert>
       )}
 
-      {(isAdmin || canAttendance) && (
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+          <a href={classPdfHref(summary.classRoomId, summary.termId)} target="_blank" rel="noopener" className={buttonClasses("secondary")}>
+            <Printer className="size-4" aria-hidden />
+            Download class PDF (print)
+          </a>
           {canAttendance && (
             <Link href={attendanceHref} className={buttonClasses("secondary")}>
               <CalendarCheck className="size-4" aria-hidden />
@@ -142,8 +145,7 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
               )}
             </>
           )}
-        </div>
-      )}
+      </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-surface shadow-low">
         <table className="w-full min-w-[44rem] text-left text-sm">
