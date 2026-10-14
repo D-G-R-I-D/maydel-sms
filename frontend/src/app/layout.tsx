@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { cookies } from "next/headers";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toast";
+import { NavigationProgress } from "@/components/ui/navigation-progress";
 import "./globals.css";
 
 // Self-hosted variable fonts (OFL, from @fontsource-variable): no build-time or runtime Google request.
@@ -40,6 +42,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         >
           Skip to content
         </a>
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
         <Toaster />
       </body>

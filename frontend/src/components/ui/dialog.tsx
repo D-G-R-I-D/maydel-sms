@@ -87,6 +87,7 @@ export function ConfirmDialog({
   title,
   children,
   confirmLabel,
+  pendingLabel = "Working…",
   tone = "primary",
   onConfirm,
   open: controlledOpen,
@@ -98,6 +99,8 @@ export function ConfirmDialog({
   title: string;
   children: ReactNode;
   confirmLabel: string;
+  /** Shown with the crest loader while onConfirm runs, e.g. "Publishing…". */
+  pendingLabel?: string;
   tone?: "primary" | "destructive";
   onConfirm: () => Promise<boolean>;
 }) {
@@ -134,6 +137,7 @@ export function ConfirmDialog({
             <Button
               variant={tone}
               loading={busy}
+              loadingText={pendingLabel}
               onClick={async () => {
                 setBusy(true);
                 const ok = await onConfirm().finally(() => setBusy(false));

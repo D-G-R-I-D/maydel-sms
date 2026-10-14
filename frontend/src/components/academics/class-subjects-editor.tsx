@@ -202,7 +202,7 @@ export function ClassSubjectsEditor({
               <Button variant="secondary" onClick={discard} disabled={saving}>
                 Discard
               </Button>
-              <Button onClick={save} loading={saving} className="flex-1 sm:flex-none">
+              <Button onClick={save} loading={saving} loadingText="Saving…" className="flex-1 sm:flex-none">
                 <Check className="size-4" aria-hidden />
                 Save subjects
               </Button>

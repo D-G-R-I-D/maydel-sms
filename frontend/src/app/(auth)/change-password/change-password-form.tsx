@@ -131,7 +131,7 @@ export function ChangePasswordForm() {
           </p>
         )}
       </Field>
-      <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
+      <Button type="submit" size="lg" className="w-full" loading={isSubmitting} loadingText="Changing…">
         Change password
       </Button>
     </form>

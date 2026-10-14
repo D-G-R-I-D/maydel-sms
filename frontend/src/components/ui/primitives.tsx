@@ -1,13 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
-import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
-import { Loader2 } from "lucide-react";
+import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
+import { PendingButton, type ButtonProps, type ButtonSize, type ButtonVariant } from "./button";
 
 export function cn(...values: ClassValue[]) {
   return clsx(values);
 }
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive" | "link";
-type ButtonSize = "sm" | "md" | "lg";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-brand text-on-brand hover:bg-brand-strong",
@@ -26,38 +24,37 @@ const sizeClasses: Record<ButtonSize, string> = {
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
   return cn(
     "inline-flex items-center justify-center gap-2 rounded-input font-medium transition-colors duration-150 ease-out",
-    "disabled:cursor-not-allowed disabled:opacity-60",
+    "disabled:cursor-not-allowed disabled:opacity-60 aria-busy:cursor-progress aria-busy:opacity-100",
     variantClasses[variant],
     variant !== "link" && sizeClasses[size],
     className,
   );
 }
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: ButtonSize; loading?: boolean };
-
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = "primary", size = "md", loading = false, className, children, disabled, type = "button", ...rest },
-  ref,
-) {
-  return (
-    <button ref={ref} type={type} className={buttonClasses(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-      {loading && <Loader2 className="size-4 animate-spin" aria-hidden />}
-      {children}
-    </button>
-  );
+/** Primary/secondary/… button. Pending state (crest + verb, width pinned) lives in the client PendingButton. */
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = "primary", size = "md", className, ...rest }, ref) {
+  return <PendingButton ref={ref} classes={buttonClasses(variant, size, className)} {...rest} />;
 });
 
 const controlClasses =
-  "block w-full min-h-11 rounded-input border border-border bg-surface px-3 text-base text-text placeholder:text-muted " +
+  "block min-h-11 rounded-input border border-border bg-surface px-3 text-base text-text placeholder:text-muted " +
   "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-brand " +
   "aria-[invalid=true]:border-danger sm:text-sm";
 
+/**
+ * Controls are full width unless the caller sets a width. (Class strings are concatenated, not
+ * merged, so a default w-full would otherwise compete with e.g. w-20 by stylesheet order.)
+ */
+function controlWidth(className?: string) {
+  return className && /(^|\s)(sm:|md:|lg:)?w-/.test(className) ? undefined : "w-full";
+}
+
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...rest }, ref) {
-  return <input ref={ref} className={cn(controlClasses, className)} {...rest} />;
+  return <input ref={ref} className={cn(controlClasses, controlWidth(className), className)} {...rest} />;
 });
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select({ className, ...rest }, ref) {
-  return <select ref={ref} className={cn(controlClasses, "pr-8", className)} {...rest} />;
+  return <select ref={ref} className={cn(controlClasses, controlWidth(className), "pr-8", className)} {...rest} />;
 });
 
 /** Label + control + hint + error, wired up for screen readers via ids. */

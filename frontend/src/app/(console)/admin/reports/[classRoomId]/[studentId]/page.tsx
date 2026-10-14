@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Download, Lock } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
@@ -12,6 +12,7 @@ import { Badge, Card, buttonClasses, cn } from "@/components/ui/primitives";
 import { Alert, ProblemState } from "@/components/ui/states";
 import { CommentEditor } from "@/components/reports/comment-editor";
 import { ReportCardView } from "@/components/reports/report-card";
+import { PdfDownloadButton } from "@/components/reports/pdf-download";
 
 export const metadata: Metadata = { title: "Report card" };
 
@@ -66,10 +67,7 @@ export default async function ReportPreviewPage({
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {back}
         <span className="flex-1" />
-        <a href={reportPdfHref(studentId, termId)} target="_blank" rel="noopener" className={buttonClasses("secondary", "sm")}>
-          <Download className="size-4" aria-hidden />
-          Download PDF
-        </a>
+        <PdfDownloadButton href={reportPdfHref(studentId, termId)} label="Download PDF" size="sm" fallbackName={`${c.studentName} - ${c.term} ${c.session}.pdf`} />
         {published ? (
           <Badge tone="success">
             <Lock className="size-3" aria-hidden />

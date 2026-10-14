@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertTriangle, CalendarCheck, Check, ChevronRight, LockOpen, Minus, Printer, Send } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Check, ChevronRight, LockOpen, Minus, Send } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import type { ClassReportSummary, PublishResult } from "@/lib/api/types";
 import { publishClass, unpublishReports } from "@/lib/reports/actions";
@@ -11,6 +11,7 @@ import { runAction } from "@/lib/client/action";
 import { Badge, Button, buttonClasses, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { ConfirmDialog } from "@/components/ui/dialog";
+import { PdfDownloadButton } from "./pdf-download";
 
 function Tick({ on, label }: { on: boolean; label: string }) {
   return on ? (
@@ -70,10 +71,7 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-          <a href={classPdfHref(summary.classRoomId, summary.termId)} target="_blank" rel="noopener" className={buttonClasses("secondary")}>
-            <Printer className="size-4" aria-hidden />
-            Download class PDF (print)
-          </a>
+          <PdfDownloadButton href={classPdfHref(summary.classRoomId, summary.termId)} label="Download class PDF (print)" icon="print" fallbackName={`${summary.classRoom} - ${summary.term}.pdf`} />
           {canAttendance && (
             <Link href={attendanceHref} className={buttonClasses("secondary")}>
               <CalendarCheck className="size-4" aria-hidden />
@@ -86,6 +84,7 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
               <ConfirmDialog
                 title={`Publish ${summary.classRoom} reports?`}
                 confirmLabel="Publish"
+                pendingLabel="Publishing…"
                 trigger={
                   <Button disabled={preview.willPublish === 0}>
                     <Send className="size-4" aria-hidden />
@@ -124,6 +123,7 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
                 <ConfirmDialog
                   title={publishedSelected.length > 0 ? `Unpublish ${publishedSelected.length} selected?` : `Unpublish all of ${summary.classRoom}?`}
                   confirmLabel="Unpublish"
+                  pendingLabel="Unpublishing…"
                   tone="destructive"
                   trigger={
                     <Button variant="secondary">

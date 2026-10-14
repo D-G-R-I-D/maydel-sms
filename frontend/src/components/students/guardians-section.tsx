@@ -172,7 +172,7 @@ function AddGuardianForm({ studentId, isFirst, close }: { studentId: string; isF
       <LinkSwitches control={control as unknown as Control<GuardianLinkValues>} />
       <DialogActions>
         <CancelButton />
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           {existing ? "Link guardian" : "Add guardian"}
         </Button>
       </DialogActions>
@@ -218,7 +218,7 @@ function EditLinkForm({ studentId, guardian, close }: { studentId: string; guard
       </p>
       <DialogActions>
         <CancelButton />
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           Save
         </Button>
       </DialogActions>
@@ -305,6 +305,7 @@ export function GuardiansSection({ studentId, studentName, guardians, canEdit }:
                     <ConfirmDialog
                       title={`Remove ${g.fullName}?`}
                       confirmLabel="Remove"
+                      pendingLabel="Removing…"
                       tone="destructive"
                       trigger={
                         <Button variant="ghost" size="sm" aria-label={`Remove ${g.fullName}`}>

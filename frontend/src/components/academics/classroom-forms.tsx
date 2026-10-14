@@ -154,7 +154,7 @@ function ClassroomForm({
       />
       <DialogActions>
         <CancelButton />
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           {classroom ? "Save changes" : "Create class"}
         </Button>
       </DialogActions>

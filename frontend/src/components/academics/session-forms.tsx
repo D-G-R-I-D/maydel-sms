@@ -63,7 +63,7 @@ function SessionForm({ session, suggestedName, close }: { session?: SessionDto; 
       </div>
       <DialogActions>
         <CancelButton />
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           {session ? "Save changes" : "Create session"}
         </Button>
       </DialogActions>
@@ -170,7 +170,7 @@ function TermForm({ session, term, number, close }: { session: SessionDto; term?
       </fieldset>
       <DialogActions>
         <CancelButton />
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           {term ? "Save changes" : "Add term"}
         </Button>
       </DialogActions>
@@ -215,6 +215,7 @@ export function MakeCurrentButton({ term, current }: { term: TermDto; current?: 
     <ConfirmDialog
       title={`Make ${term.name} current?`}
       confirmLabel="Make current"
+      pendingLabel="Updating…"
       onConfirm={async () => (await runAction(() => makeTermCurrent(term.id), { success: `${term.name} is now the current term` })) !== null}
       trigger={
         <Button variant="secondary" size="sm">

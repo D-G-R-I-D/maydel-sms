@@ -46,6 +46,7 @@ export function StatusMenu({ studentId, fullName, status }: { studentId: string;
         onOpenChange={(v) => !v && setTarget(null)}
         title={target ? `${statusActionLabel[target]}: ${fullName}?` : ""}
         confirmLabel={target ? statusActionLabel[target] : "Confirm"}
+        pendingLabel="Updating…"
         tone={target === "Active" ? "primary" : "destructive"}
         onConfirm={async () => {
           if (!target) return true;

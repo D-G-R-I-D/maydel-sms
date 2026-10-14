@@ -80,7 +80,7 @@ function SubjectForm({ subject, close }: { subject?: SubjectDto; close: () => vo
       />
       <DialogActions>
         <CancelButton />
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           {subject ? "Save changes" : "Add subject"}
         </Button>
       </DialogActions>

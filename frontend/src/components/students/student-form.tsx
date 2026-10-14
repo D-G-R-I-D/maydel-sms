@@ -171,7 +171,7 @@ export function StudentForm({
             Cancel
           </Button>
         )}
-        <Button type="submit" loading={isSubmitting}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…">
           {student ? "Save changes" : "Admit student"}
         </Button>
       </div>

@@ -77,3 +77,12 @@ describe("term comparison helpers", () => {
     expect(classPdfHref("c", "t")).toBe("/api/media/reports/class/pdf?classRoomId=c&termId=t");
   });
 });
+
+describe("PDF file names", () => {
+  it("prefers filename* and falls back to filename", async () => {
+    const { filenameFromDisposition } = await import("./rules");
+    expect(filenameFromDisposition(`attachment; filename="Ada Eze - First Term 2026-2027.pdf"; filename*=UTF-8''Ada%20Eze%20-%20First%20Term%202026-2027.pdf`)).toBe("Ada Eze - First Term 2026-2027.pdf");
+    expect(filenameFromDisposition(`attachment; filename=report.pdf`)).toBe("report.pdf");
+    expect(filenameFromDisposition(null)).toBeNull();
+  });
+});

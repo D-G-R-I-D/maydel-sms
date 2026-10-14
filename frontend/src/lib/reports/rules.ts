@@ -74,3 +74,18 @@ export function reportPdfHref(studentId: string, termId: string): string {
 export function classPdfHref(classRoomId: string, termId: string): string {
   return `/api/media/reports/class/pdf?${new URLSearchParams({ classRoomId, termId }).toString()}`;
 }
+
+/** File name from a Content-Disposition header (RFC 6266: filename* wins over filename). */
+export function filenameFromDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const star = /filename\*\s*=\s*(?:UTF-8|utf-8)''([^;]+)/.exec(header);
+  if (star) {
+    try {
+      return decodeURIComponent(star[1].trim().replace(/^"|"$/g, ""));
+    } catch {
+      // fall through to the plain filename
+    }
+  }
+  const plain = /filename\s*=\s*"?([^";]+)"?/i.exec(header);
+  return plain ? plain[1].trim() : null;
+}

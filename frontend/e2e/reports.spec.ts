@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 // M1.2 part 2: class reports, attendance, report preview, comments, publish guard.
@@ -82,18 +83,17 @@ test("teachers can't write the principal's comment", async ({ page }) => {
 test("report and class PDFs download through the BFF", async ({ page }) => {
   await signIn(page, "admin@maydel.test");
   await openClass(page);
-  const classPdf = await page.getByRole("link", { name: "Download class PDF (print)" }).getAttribute("href");
-  const res = await page.request.get(classPdf!);
-  expect(res.status()).toBe(200);
-  expect(res.headers()["content-type"]).toContain("application/pdf");
-  expect((await res.body()).subarray(0, 4).toString()).toBe("%PDF");
+  const classDownload = page.waitForEvent("download", { timeout: 60_000 });
+  await page.getByRole("button", { name: "Download class PDF (print)" }).click();
+  const classFile = await classDownload;
+  expect(classFile.suggestedFilename()).toMatch(/\.pdf$/);
+  expect(readFileSync((await classFile.path())!).subarray(0, 4).toString()).toBe("%PDF");
 
   await page.locator("tbody tr").first().getByRole("link").first().click();
   await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\/[0-9a-f-]+\?termId=/);
-  const one = await page.getByRole("link", { name: "Download PDF" }).getAttribute("href");
-  const pdf = await page.request.get(one!);
-  expect(pdf.status()).toBe(200);
-  expect(pdf.headers()["content-disposition"] ?? "").toMatch(/\.pdf/);
+  const one = page.waitForEvent("download", { timeout: 60_000 });
+  await page.getByRole("button", { name: "Download PDF" }).click();
+  expect((await one).suggestedFilename()).toMatch(/\.pdf$/);
 });
 
 test("first-term reports show no comparison", async ({ page }) => {

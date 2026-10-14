@@ -100,7 +100,7 @@ export function CommentEditor({
             </span>
           )}
         </span>
-        <Button size="sm" onClick={save} loading={busy} disabled={!dirty || tooLong}>
+        <Button size="sm" onClick={save} loading={busy} loadingText="Saving…" disabled={!dirty || tooLong}>
           <Save className="size-3.5" aria-hidden />
           Save
         </Button>

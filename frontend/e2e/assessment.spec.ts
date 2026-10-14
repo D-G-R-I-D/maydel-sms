@@ -85,3 +85,18 @@ test("settings: admins edit with a live total; teachers only read", async ({ pag
   await expect(page.getByText("View only.", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save settings" })).toHaveCount(0);
 });
+
+test("grading presets fill the scale without saving", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await page.goto("/admin/settings/assessment");
+  await expect(page.getByLabel("Component name").first()).not.toHaveValue("");
+  await page.getByRole("button", { name: "Use a preset" }).click();
+  const picker = page.getByRole("dialog", { name: "Choose a grading preset" });
+  await expect(picker.getByText("In use")).toBeVisible();
+  await picker.getByRole("button", { name: "Use this preset" }).first().click();
+  await expect(picker).toBeHidden();
+  await expect(page.getByText("Applies to new and draft reports; published reports keep their figures.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save settings" })).toBeEnabled();
+  await page.getByRole("button", { name: "Undo changes" }).click();
+  await expect(page.getByRole("button", { name: "Save settings" })).toBeDisabled();
+});

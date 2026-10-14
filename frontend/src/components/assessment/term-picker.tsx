@@ -2,7 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { CalendarDays, Loader2 } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { SchoolLoader } from "@/components/ui/school-loader";
 import { Select } from "@/components/ui/primitives";
 
 export type TermOption = { id: string; label: string; session: string; isCurrent: boolean };
@@ -17,7 +18,7 @@ export function TermPicker({ terms, value }: { terms: TermOption[]; value: strin
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      {pending ? <Loader2 className="size-4 animate-spin text-muted" aria-hidden /> : <CalendarDays className="size-4 text-muted" aria-hidden />}
+      {pending ? <SchoolLoader size="xs" /> : <CalendarDays className="size-4 text-muted" aria-hidden />}
       <span className="sr-only">Term</span>
       <Select
         value={value}
