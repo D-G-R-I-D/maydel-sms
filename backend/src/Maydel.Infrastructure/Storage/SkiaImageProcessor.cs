@@ -14,7 +14,11 @@ internal sealed class SkiaImageProcessor : IImageProcessor
     private const long MaxSourcePixels = 50_000_000;
     private const int JpegQuality = 85;
 
-    public ProcessedImage? ToJpeg(ReadOnlySpan<byte> upload, int maxDimension)
+    public ProcessedImage? ToJpeg(ReadOnlySpan<byte> upload, int maxDimension) => Render(upload, maxDimension, png: false);
+
+    public ProcessedImage? ToPng(ReadOnlySpan<byte> upload, int maxDimension) => Render(upload, maxDimension, png: true);
+
+    private static ProcessedImage? Render(ReadOnlySpan<byte> upload, int maxDimension, bool png)
     {
         if (ImageSignature.Detect(upload) == ImageSignature.Kind.Unknown) return null;
 
@@ -41,7 +45,7 @@ internal sealed class SkiaImageProcessor : IImageProcessor
 
         using var surface = SKSurface.Create(new SKImageInfo(w, h, SKColorType.Rgba8888, SKAlphaType.Premul));
         var canvas = surface.Canvas;
-        canvas.Clear(SKColors.White); // transparent PNG areas become white, not black, in the JPEG
+        canvas.Clear(png ? SKColors.Transparent : SKColors.White); // JPEG: transparent areas become white, not black
         canvas.Translate(w / 2f, h / 2f);
         canvas.RotateDegrees(90 * quarterTurns);
         var (drawW, drawH) = quarterTurns % 2 == 1 ? (h, w) : (w, h);
@@ -51,7 +55,10 @@ internal sealed class SkiaImageProcessor : IImageProcessor
         canvas.Flush();
 
         using var snapshot = surface.Snapshot();
-        using var encoded = snapshot.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
-        return encoded is null ? null : new ProcessedImage(encoded.ToArray(), "image/jpeg", "jpg", w, h);
+        using var encoded = png ? snapshot.Encode(SKEncodedImageFormat.Png, 100) : snapshot.Encode(SKEncodedImageFormat.Jpeg, JpegQuality);
+        if (encoded is null) return null;
+        return png
+            ? new ProcessedImage(encoded.ToArray(), "image/png", "png", w, h)
+            : new ProcessedImage(encoded.ToArray(), "image/jpeg", "jpg", w, h);
     }
 }

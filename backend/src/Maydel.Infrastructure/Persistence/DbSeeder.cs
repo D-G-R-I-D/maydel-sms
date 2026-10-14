@@ -29,6 +29,7 @@ public sealed class DbSeeder(
     UserManager<AppUser> users,
     RoleManager<AppRole> roles,
     IOptions<SeedOptions> options,
+    IOptions<Application.Abstractions.SchoolProfileOptions> school,
     ILogger<DbSeeder> logger)
 {
     private readonly SeedOptions _options = options.Value;
@@ -42,6 +43,7 @@ public sealed class DbSeeder(
         await SeedAdminAsync();
         await SeedAcademicStructureAsync(ct);
         await SeedAssessmentAsync(ct);
+        await SeedSchoolProfileAsync(ct);
         if (_options.DemoData)
         {
             await SeedDemoDataAsync(ct);
@@ -128,6 +130,19 @@ public sealed class DbSeeder(
             db.ClassSubjects.AddRange(rooms.SelectMany(r => subjectIds.Select(s => new ClassSubject { ClassRoomId = r, SubjectId = s })));
             await db.SaveChangesAsync(ct);
         }
+    }
+
+    /// <summary>The first start-up copies the <c>School</c> configuration into the editable profile (E2.6); after that the admin owns it.</summary>
+    private async Task SeedSchoolProfileAsync(CancellationToken ct)
+    {
+        if (await db.SchoolProfiles.AnyAsync(ct)) return;
+        var defaults = school.Value;
+        db.SchoolProfiles.Add(new Domain.Settings.SchoolProfile
+        {
+            Name = defaults.Name, Motto = defaults.Motto, Address = defaults.Address, Phone = defaults.Phone,
+            Email = defaults.Email, Website = defaults.Website, PrincipalName = defaults.PrincipalName,
+        });
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task SeedAssessmentAsync(CancellationToken ct)

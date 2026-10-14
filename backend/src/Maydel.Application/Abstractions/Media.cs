@@ -28,9 +28,16 @@ public interface IImageProcessor
     /// or null if the bytes aren't a decodable JPEG/PNG/WebP within size limits.
     /// </summary>
     ProcessedImage? ToJpeg(ReadOnlySpan<byte> upload, int maxDimension);
+
+    /// <summary>Like <see cref="ToJpeg"/> but a PNG that keeps transparency (logos, signatures).</summary>
+    ProcessedImage? ToPng(ReadOnlySpan<byte> upload, int maxDimension);
 }
 
 /// <summary>School details printed on report cards. From configuration (<c>School</c> section) until the school profile (E2.6) is editable.</summary>
+/// <summary>
+/// Defaults for the school profile, copied into the database on first start-up (E2.6). After that the admin edits the
+/// profile in Settings → School profile and these values are no longer read.
+/// </summary>
 public sealed class SchoolProfileOptions
 {
     public const string Section = "School";
@@ -48,7 +55,12 @@ public sealed class SchoolProfileOptions
 public sealed record ReportCardDocument(Reports.ReportCard Card, byte[]? Photo);
 
 /// <summary>Renders report cards to PDF (E5.6). One page per card; several cards make one printable document (E5.6b).</summary>
+/// <summary>The school's details and images for the report header and signature (E2.6). Null images use the built-in crest / no signature.</summary>
+public sealed record ReportBranding(
+    string Name, string? Motto, string Address, string? Phone, string? Email, string? Website, string? PrincipalName,
+    byte[]? Logo, byte[]? Signature);
+
 public interface IReportCardRenderer
 {
-    byte[] Render(IReadOnlyList<ReportCardDocument> cards);
+    byte[] Render(IReadOnlyList<ReportCardDocument> cards, ReportBranding school);
 }

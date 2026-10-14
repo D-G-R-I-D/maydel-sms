@@ -2,7 +2,6 @@ using System.Globalization;
 using Maydel.Application.Abstractions;
 using Maydel.Application.Reports;
 using Maydel.Domain.Assessment;
-using Microsoft.Extensions.Options;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -15,7 +14,7 @@ namespace Maydel.Infrastructure.Reports;
 /// comparison, attendance, the grading key, behaviour ratings and clubs, and comments. A4 portrait, one student per page. Drafts carry a watermark.
 /// QuestPDF is used under its Community licence (free for organisations under US$1M annual revenue).
 /// </summary>
-internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> school) : IReportCardRenderer
+internal sealed class QuestPdfReportCardRenderer : IReportCardRenderer
 {
     private static readonly Lazy<byte[]> Logo = new(() =>
     {
@@ -32,9 +31,8 @@ internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> 
 
     static QuestPdfReportCardRenderer() => QuestPDF.Settings.License = LicenseType.Community;
 
-    public byte[] Render(IReadOnlyList<ReportCardDocument> cards)
+    public byte[] Render(IReadOnlyList<ReportCardDocument> cards, ReportBranding profile)
     {
-        var profile = school.Value;
         return Document.Create(doc =>
         {
             foreach (var card in cards) doc.Page(page => ComposePage(page, card, profile));
@@ -43,7 +41,7 @@ internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> 
         .GeneratePdf();
     }
 
-    private static void ComposePage(PageDescriptor page, ReportCardDocument document, SchoolProfileOptions school)
+    private static void ComposePage(PageDescriptor page, ReportCardDocument document, ReportBranding school)
     {
         var card = document.Card;
         page.Size(PageSizes.A4);
@@ -80,10 +78,10 @@ internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> 
         });
     }
 
-    private static void ComposeHeader(IContainer container, ReportCard card, byte[]? photo, SchoolProfileOptions school) =>
+    private static void ComposeHeader(IContainer container, ReportCard card, byte[]? photo, ReportBranding school) =>
         container.BorderBottom(2).BorderColor(Navy).PaddingBottom(6).Row(row =>
         {
-            row.ConstantItem(62).Height(62).Image(Logo.Value).FitArea();
+            row.ConstantItem(62).Height(62).Image(school.Logo ?? Logo.Value).FitArea();
             row.RelativeItem().PaddingHorizontal(8).AlignMiddle().Column(c =>
             {
                 c.Item().AlignCenter().Text(school.Name.ToUpperInvariant()).FontSize(15).Bold().FontColor(Navy);
@@ -276,18 +274,19 @@ internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> 
         table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(1.2f).AlignCenter().Text(trait.Rating ?? "").FontSize(7).Bold();
     }
 
-    private static void ComposeComments(IContainer container, ReportCard card, SchoolProfileOptions school) =>
+    private static void ComposeComments(IContainer container, ReportCard card, ReportBranding school) =>
         container.Row(row =>
         {
-            void Box(string title, string? comment, string? signer) => row.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(5).Column(c =>
+            void Box(string title, string? comment, string? signer, byte[]? signature = null) => row.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(5).Column(c =>
             {
                 c.Item().Text(title).FontSize(7).Bold().FontColor(Navy);
                 c.Item().PaddingTop(2).MinHeight(30).Text(comment ?? "");
+                if (signature is { Length: > 0 }) c.Item().PaddingTop(2).Height(22).Image(signature).FitArea();
                 c.Item().PaddingTop(4).BorderTop(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingTop(2).Text(signer ?? " ").FontSize(7).Italic();
             });
             Box("FORM TEACHER'S COMMENT", card.FormTeacherComment, card.FormTeacher);
             row.ConstantItem(6);
-            Box("PRINCIPAL'S COMMENT", card.PrincipalComment, school.PrincipalName);
+            Box("PRINCIPAL'S COMMENT", card.PrincipalComment, school.PrincipalName, school.Signature);
         });
 
     private static void Change(IContainer container, decimal? change, Trend? trend)

@@ -49,7 +49,7 @@ public static class PhotoEndpoints
         return await next(context);
     });
 
-    private static RouteHandlerBuilder Upload(this RouteHandlerBuilder builder) => builder
+    internal static RouteHandlerBuilder Upload(this RouteHandlerBuilder builder) => builder
         // Bearer-token API: no cookies, so there's no CSRF to defend against on multipart posts.
         .DisableAntiforgery()
         .WithMetadata(new RequestSizeLimitAttribute(PhotoStore.MaxUploadBytes + 64 * 1024))
@@ -85,7 +85,7 @@ public static class PhotoEndpoints
         (await handler.Handle(new RemoveStaffPhotoCommand(id), ct)).ToHttpResult();
 
     /// <summary>The upload's bytes, or null when missing or over the size cap. Content checks happen in the image processor.</summary>
-    private static async Task<byte[]?> ReadAsync(IFormFile? file, CancellationToken ct)
+    internal static async Task<byte[]?> ReadAsync(IFormFile? file, CancellationToken ct)
     {
         if (file is null || file.Length == 0 || file.Length > PhotoStore.MaxUploadBytes) return null;
         using var buffer = new MemoryStream((int)file.Length);
