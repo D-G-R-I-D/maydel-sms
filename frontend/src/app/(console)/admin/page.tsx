@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, CalendarCheck, CalendarDays, Layers, Command, GraduationCap, KeyRound, ScrollText, TableProperties, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, CalendarDays, Command, FileText, GraduationCap, KeyRound, Layers, ScrollText, SlidersHorizontal, TableProperties, Wallet, type LucideIcon } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { hasAnyRole, type Role } from "@/lib/auth/roles";
 import { firstName } from "@/lib/flash";
@@ -19,13 +19,15 @@ function greeting(now: Date): string {
 type Tile = { title: string; body: string; icon: LucideIcon; roles: Role[]; href?: string };
 
 const tiles: Tile[] = [
+  { title: "Score entry", body: "Spreadsheet-style entry for CA and exams, saved as you type.", icon: TableProperties, roles: ["Admin", "Teacher"], href: "/admin/assessment" },
+  { title: "Reports", body: "Comments, attendance, preview, publish and PDF report cards.", icon: FileText, roles: ["Admin", "Teacher"], href: "/admin/reports" },
+  { title: "Students & guardians", body: "Admissions, class lists, guardians and sign-in slips.", icon: GraduationCap, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/students" },
+  { title: "School calendar", body: "Sessions, terms and mid-term breaks, and which term is current.", icon: CalendarDays, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/academics/sessions" },
+  { title: "Classes & subjects", body: "Year groups and arms, capacity, and the subjects each class offers.", icon: Layers, roles: ["Admin"], href: "/admin/academics/classes" },
+  { title: "Assessment settings", body: "Score components and the grading scale.", icon: SlidersHorizontal, roles: ["Admin"], href: "/admin/settings/assessment" },
   { title: "Audit log", body: "Every change to school records: who, what, when and from where.", icon: ScrollText, roles: ["Admin"], href: "/admin/audit" },
   { title: "Change password", body: "Keep your account safe. Other devices get signed out.", icon: KeyRound, roles: ["Admin", "Teacher", "Bursar"], href: "/change-password" },
-  { title: "Classes & subjects", body: "Year groups and arms, capacity, and the subjects each class offers.", icon: Layers, roles: ["Admin"], href: "/admin/academics/classes" },
-  { title: "School calendar", body: "Sessions, terms and mid-term breaks, and which term is current.", icon: CalendarDays, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/academics/sessions" },
-  { title: "Students & guardians", body: "Admissions, class lists, guardians and sign-in slips.", icon: GraduationCap, roles: ["Admin", "Teacher", "Bursar"], href: "/admin/students" },
-  { title: "Score entry", body: "Spreadsheet-style entry for CA and exams.", icon: TableProperties, roles: ["Admin", "Teacher"] },
-  { title: "Attendance", body: "Morning register in a couple of taps.", icon: CalendarCheck, roles: ["Admin", "Teacher"] },
+  { title: "Attendance", body: "Daily register in a couple of taps. Term attendance is on the Reports page for now.", icon: CalendarCheck, roles: ["Admin", "Teacher"] },
   { title: "Fees & payments", body: "Invoices, receipts and who still owes.", icon: Wallet, roles: ["Admin", "Bursar"] },
 ];
 

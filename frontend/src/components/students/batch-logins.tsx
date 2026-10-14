@@ -127,7 +127,7 @@ export function BatchLoginsButton({ className, students }: { className: string; 
               </div>
             )}
             <div className="flex justify-end">
-              <Button onClick={run} loading={progress !== null} disabled={chosen.size === 0}>
+              <Button onClick={run} loading={progress !== null} loadingText="Issuing…" disabled={chosen.size === 0}>
                 Issue {chosen.size} login{chosen.size === 1 ? "" : "s"}
               </Button>
             </div>

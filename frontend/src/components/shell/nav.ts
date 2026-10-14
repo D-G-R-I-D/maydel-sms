@@ -35,7 +35,6 @@ export const consoleNav: NavGroup[] = [
     label: "Academics",
     items: [
       { label: "Classes", href: "/admin/academics/classes", icon: "classes", roles: A, ready: true },
-      { label: "My classes", href: "/admin/my-classes", icon: "classes", roles: ["Teacher"] },
       { label: "Subjects", href: "/admin/academics/subjects", icon: "subjects", roles: A, ready: true },
       { label: "Sessions & terms", href: "/admin/academics/sessions", icon: "sessions", roles: STAFF, ready: true },
       { label: "Score entry", href: "/admin/assessment", icon: "scores", roles: AT, ready: true },

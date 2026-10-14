@@ -68,7 +68,7 @@ export function GuardianForm({ guardian }: { guardian: GuardianDetail }) {
         </Field>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…" disabled={!isDirty}>
           Save changes
         </Button>
       </div>

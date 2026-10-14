@@ -54,6 +54,7 @@ export function IssueLoginButton({
       <ConfirmDialog
         title={hasLogin ? `Reset ${fullName}'s password?` : `Issue a login for ${fullName}?`}
         confirmLabel={action}
+        pendingLabel={hasLogin ? "Resetting…" : "Issuing…"}
         tone={hasLogin ? "destructive" : "primary"}
         trigger={
           <Button variant={variant} size={size}>

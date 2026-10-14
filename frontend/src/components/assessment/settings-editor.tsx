@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, GripVertical, Lock, Plus, Save, Trash2, Undo2 } from "lucide-react";
+import * as Menu from "@radix-ui/react-dropdown-menu";
+import { ArrowDown, ArrowUp, ChevronDown, GripVertical, Lock, Plus, Save, Trash2, Undo2, Wand2 } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
-import type { AssessmentSettings } from "@/lib/api/types";
+import type { AssessmentSettings, GradingPreset } from "@/lib/api/types";
 import { saveAssessmentSettings } from "@/lib/assessment/actions";
 import { activeTotal, blankBand, blankComponent, move, settingsIssues, toPayload, toRows, type BandRow, type ComponentRow } from "@/lib/assessment/settings";
 import { runAction } from "@/lib/client/action";
@@ -14,13 +15,19 @@ import { Switch } from "@/components/ui/switch";
 const cellInput = "h-10 min-h-0 px-2 sm:text-sm";
 
 /** Components (reorderable, must total 100) and the grading scale. Admin edits; teachers read. */
-export function SettingsEditor({ initial, canEdit }: { initial: AssessmentSettings; canEdit: boolean }) {
+export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: AssessmentSettings; canEdit: boolean; presets?: GradingPreset[] }) {
   const [base, setBase] = useState(() => toRows(initial));
   const [components, setComponents] = useState<ComponentRow[]>(base.components);
   const [bands, setBands] = useState<BandRow[]>(base.bands);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState<number | null>(null);
+  const [appliedPreset, setAppliedPreset] = useState<GradingPreset | null>(null);
+
+  const applyPreset = (preset: GradingPreset) => {
+    setBands(toRows({ components: [], bands: preset.bands }).bands);
+    setAppliedPreset(preset);
+  };
 
   const total = activeTotal(components);
   const issues = settingsIssues(components, bands);
@@ -48,6 +55,7 @@ export function SettingsEditor({ initial, canEdit }: { initial: AssessmentSettin
   const reset = () => {
     setComponents(base.components);
     setBands(base.bands);
+    setAppliedPreset(null);
     setProblem(null);
   };
 
@@ -94,8 +102,13 @@ export function SettingsEditor({ initial, canEdit }: { initial: AssessmentSettin
                       <ArrowDown className="size-3.5" aria-hidden />
                     </button>
                   </div>
-                  <Input value={c.name} onChange={(e) => setComp(i, { name: e.target.value })} aria-label="Component name" placeholder="e.g. CAT" className={cn(cellInput, "min-w-0 flex-1")} maxLength={50} />
-                  <Input value={c.maxScore} onChange={(e) => setComp(i, { maxScore: e.target.value })} aria-label={`Max score for ${c.name || "component"}`} inputMode="decimal" className={cn(cellInput, "tabular w-20 text-center")} />
+                  {/* Width lives on wrappers: Input carries w-full, which would win over a width class here. */}
+                  <div className="min-w-0 flex-1">
+                    <Input value={c.name} onChange={(e) => setComp(i, { name: e.target.value })} aria-label="Component name" placeholder="e.g. CAT" className={cellInput} maxLength={50} />
+                  </div>
+                  <div className="w-20 shrink-0">
+                    <Input value={c.maxScore} onChange={(e) => setComp(i, { maxScore: e.target.value })} aria-label={`Max score for ${c.name || "component"}`} inputMode="decimal" className={cn(cellInput, "tabular text-center")} />
+                  </div>
                   <label className="flex items-center gap-2 text-sm text-muted">
                     <Switch checked={c.isActive} onCheckedChange={(v) => setComp(i, { isActive: v })} label={`${c.name || "Component"} active`} />
                     <span className="w-14">{c.isActive ? "Active" : "Inactive"}</span>
@@ -132,10 +145,39 @@ export function SettingsEditor({ initial, canEdit }: { initial: AssessmentSettin
       </Card>
 
       <Card className="overflow-hidden">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="font-display text-lg font-semibold">Grading scale</h2>
-          <p className="text-sm text-muted">Highest first. The lowest band must start at 0.</p>
+        <div className="flex flex-wrap items-start gap-3 border-b border-border px-5 py-4">
+          <div className="flex-1">
+            <h2 className="font-display text-lg font-semibold">Grading scale</h2>
+            <p className="text-sm text-muted">Highest first. The lowest band must start at 0. Only one scale is active at a time.</p>
+          </div>
+          {canEdit && presets.length > 0 && (
+            <Menu.Root>
+              <Menu.Trigger asChild>
+                <Button variant="secondary" size="sm">
+                  <Wand2 className="size-4" aria-hidden />
+                  Use a preset
+                  <ChevronDown className="size-4" aria-hidden />
+                </Button>
+              </Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Content align="end" sideOffset={6} className="z-50 w-80 rounded-card border border-border bg-surface p-1.5 text-text shadow-low">
+                  {presets.map((p) => (
+                    <Menu.Item key={p.key} onSelect={() => applyPreset(p)} className="cursor-pointer rounded-input px-3 py-2 outline-none data-[highlighted]:bg-surface-2">
+                      <p className="text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted">{p.description}</p>
+                      <p className="mt-1 text-xs text-muted">{p.bands.map((b) => b.grade).join(" · ")}</p>
+                    </Menu.Item>
+                  ))}
+                </Menu.Content>
+              </Menu.Portal>
+            </Menu.Root>
+          )}
         </div>
+        {appliedPreset && dirty && (
+          <Alert tone="info" className="mx-5 mt-4" title={`${appliedPreset.name} filled in (not saved yet)`}>
+            Applies to new and draft reports; published reports keep their figures. Review the bands, then save.
+          </Alert>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
@@ -212,7 +254,7 @@ export function SettingsEditor({ initial, canEdit }: { initial: AssessmentSettin
                 <Undo2 className="size-4" aria-hidden />
                 Undo changes
               </Button>
-              <Button onClick={save} loading={saving} disabled={!dirty || issues.length > 0}>
+              <Button onClick={save} loading={saving} loadingText="Saving…" disabled={!dirty || issues.length > 0}>
                 <Save className="size-4" aria-hidden />
                 Save settings
               </Button>

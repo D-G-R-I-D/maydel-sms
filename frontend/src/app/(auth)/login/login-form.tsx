@@ -109,7 +109,7 @@ export function LoginForm({ next, googleClientId, showDemo }: { next: string | n
         <Field id="password" label="Password" error={errors.password?.message}>
           <PasswordInput {...describedBy("password", errors.password?.message)} {...register("password")} autoComplete="current-password" />
         </Field>
-        <Button type="submit" size="lg" className="w-full" loading={busy}>
+        <Button type="submit" size="lg" className="w-full" loading={busy} loadingText="Signing in…">
           {redirecting ? "Signing you in…" : "Sign in"}
         </Button>
       </form>

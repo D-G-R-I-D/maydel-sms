@@ -191,7 +191,7 @@ export function StaffForm(props: Props) {
 
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
         {props.mode === "create" ? props.footer : null}
-        <Button type="submit" loading={isSubmitting} disabled={props.mode === "edit" && !isDirty}>
+        <Button type="submit" loading={isSubmitting} loadingText="Saving…" disabled={props.mode === "edit" && !isDirty}>
           {props.mode === "create" ? "Add staff member" : "Save changes"}
         </Button>
       </div>

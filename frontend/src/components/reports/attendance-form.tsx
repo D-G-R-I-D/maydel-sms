@@ -149,7 +149,7 @@ export function AttendanceForm({ summary }: { summary: ClassReportSummary }) {
 
       {!allLocked && (
         <div className="sticky bottom-4 z-10 flex justify-end">
-          <Button onClick={save} loading={saving} className="shadow-lg">
+          <Button onClick={save} loading={saving} loadingText="Saving…" className="shadow-lg">
             <Save className="size-4" aria-hidden />
             Save attendance
           </Button>

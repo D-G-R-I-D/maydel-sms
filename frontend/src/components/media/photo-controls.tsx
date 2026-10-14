@@ -137,7 +137,7 @@ export function PhotoControls({
               ) : (
                 <CancelButton />
               )}
-              <Button onClick={upload} loading={busy} disabled={Boolean(error)}>
+              <Button onClick={upload} loading={busy} loadingText="Uploading…" disabled={Boolean(error)}>
                 <Upload className="size-4" aria-hidden />
                 Upload photo
               </Button>
@@ -151,6 +151,7 @@ export function PhotoControls({
         onOpenChange={setConfirmRemove}
         title={`Remove ${name}'s photo?`}
         confirmLabel="Remove photo"
+        pendingLabel="Removing…"
         tone="destructive"
         onConfirm={async () => {
           const problem = await send("DELETE", kind, id);

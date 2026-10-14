@@ -27,7 +27,7 @@ export default async function GradeSheetPage({
   const back = (
     <Link href="/admin/assessment" className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-brand hover:underline">
       <ArrowLeft className="size-4" aria-hidden />
-      My classes
+      Score entry
     </Link>
   );
   if (!hasAnyRole(user.roles, ["Admin", "Teacher"])) {

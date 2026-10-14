@@ -23,7 +23,10 @@ export default async function AssessmentSettingsPage() {
     );
   }
   const isAdmin = hasAnyRole(user.roles, ["Admin"]);
-  const settings = await load((api) => api.GET("/api/assessment/settings"));
+  const [settings, presets] = await Promise.all([
+    load((api) => api.GET("/api/assessment/settings")),
+    isAdmin ? load((api) => api.GET("/api/assessment/grading-presets")) : Promise.resolve(null),
+  ]);
   return (
     <>
       {header}
@@ -34,7 +37,7 @@ export default async function AssessmentSettingsPage() {
         </p>
       )}
       {settings.ok ? (
-        <SettingsEditor initial={settings.data} canEdit={isAdmin} />
+        <SettingsEditor initial={settings.data} canEdit={isAdmin} presets={presets?.ok ? presets.data : []} />
       ) : (
         <Card>
           <ProblemState problem={settings.problem} />

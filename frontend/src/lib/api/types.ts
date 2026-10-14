@@ -61,3 +61,4 @@ export type UnpublishResult = Schemas["UnpublishResult"];
 export type Trend = NonNullable<Schemas["Trend"]>;
 export type PreviousTermResult = Schemas["PreviousTermResult"];
 export type PreviousSubjectResult = Schemas["PreviousSubjectResult"];
+export type GradingPreset = Schemas["GradingPresetDto"];
