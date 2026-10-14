@@ -1,4 +1,5 @@
 import { problemMessage, type Problem } from "@/lib/api/problem";
+import { unreachableProblem } from "./unreachable";
 import type { Loaded } from "@/lib/api/server";
 import { toast } from "@/components/ui/toast";
 import { applyFieldErrors } from "./bff";
@@ -25,7 +26,7 @@ export async function runAction<T, F extends string>(
   } catch (error) {
     // redirect() from the action (session refresh / password change) must propagate.
     if (error && typeof error === "object" && "digest" in error && String((error as { digest: unknown }).digest).startsWith("NEXT_REDIRECT")) throw error;
-    const problem: Problem = { status: 0, title: "You appear to be offline. Check your connection and try again." };
+    const problem: Problem = unreachableProblem();
     toast.error(problemMessage(problem));
     opts.onProblem?.(problem);
     return null;
