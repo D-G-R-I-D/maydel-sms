@@ -29,3 +29,26 @@ public interface IImageProcessor
     /// </summary>
     ProcessedImage? ToJpeg(ReadOnlySpan<byte> upload, int maxDimension);
 }
+
+/// <summary>School details printed on report cards. From configuration (<c>School</c> section) until the school profile (E2.6) is editable.</summary>
+public sealed class SchoolProfileOptions
+{
+    public const string Section = "School";
+    public string Name { get; set; } = "Maydel Spring Schools, Abuja";
+    public string? Motto { get; set; } = "The Well Spring of Knowledge";
+    public string Address { get; set; } = "Plot D57 Cajaah Estate, Orozo, Abuja";
+    public string? Phone { get; set; } = "09133595634";
+    public string? Email { get; set; } = "admin@maydelspringschools.com";
+    public string? Website { get; set; } = "www.maydelspringschools.com";
+    /// <summary>Printed under the principal's comment.</summary>
+    public string? PrincipalName { get; set; }
+}
+
+/// <summary>One report card to render: the data plus the student's photo bytes (if any).</summary>
+public sealed record ReportCardDocument(Reports.ReportCard Card, byte[]? Photo);
+
+/// <summary>Renders report cards to PDF (E5.6). One page per card; several cards make one printable document (E5.6b).</summary>
+public interface IReportCardRenderer
+{
+    byte[] Render(IReadOnlyList<ReportCardDocument> cards);
+}

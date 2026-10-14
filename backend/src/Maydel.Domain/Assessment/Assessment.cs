@@ -169,6 +169,26 @@ public static class ReportMath
 
     public static SubjectStats ForSubject(IReadOnlyCollection<decimal> totals) =>
         new(totals.Max(), totals.Min(), Round(totals.Average()));
+
+    /// <summary>Movements smaller than this (in marks) count as steady, so a half-mark wobble isn't called a decline.</summary>
+    public const decimal SteadyBand = 1m;
+
+    public static Trend TrendOf(decimal current, decimal previous) =>
+        current - previous >= SteadyBand ? Trend.Improved
+        : previous - current >= SteadyBand ? Trend.Declined
+        : Trend.Steady;
+
+    /// <summary>Annual (cumulative) average: mean of the term averages so far this session (E5.8).</summary>
+    public static decimal? Cumulative(IReadOnlyCollection<decimal> termAverages) =>
+        termAverages.Count < 2 ? null : Round(termAverages.Average());
+}
+
+/// <summary>How a student did compared with the previous term (E5.8 / term comparison).</summary>
+public enum Trend
+{
+    Improved,
+    Steady,
+    Declined,
 }
 
 /// <summary>Pure grading logic, kept free of persistence so it can be unit tested.</summary>

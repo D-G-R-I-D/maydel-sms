@@ -70,3 +70,21 @@ public sealed class ReportMathTests
     [Fact]
     public void Halves_round_away_from_zero() => Assert.Equal(62.13m, ReportMath.Round(62.125m));
 }
+
+public sealed class TermComparisonTests
+{
+    [Theory]
+    [InlineData(72, 65, Trend.Improved)]
+    [InlineData(64, 65, Trend.Declined)]
+    [InlineData(65.5, 65, Trend.Steady)]
+    [InlineData(64.2, 65, Trend.Steady)]
+    public void Trend_ignores_movements_under_one_mark(decimal current, decimal previous, Trend expected) =>
+        Assert.Equal(expected, ReportMath.TrendOf(current, previous));
+
+    [Fact]
+    public void Cumulative_average_needs_at_least_two_terms()
+    {
+        Assert.Null(ReportMath.Cumulative([70m]));
+        Assert.Equal(72.33m, ReportMath.Cumulative([70m, 72m, 75m]));
+    }
+}
