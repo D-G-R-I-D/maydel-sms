@@ -50,12 +50,23 @@ test("report preview shows a draft watermark and saves the principal's comment",
   await expect(page.getByText("DRAFT – figures may change")).toBeAttached();
 
   const box = page.getByLabel("Principal's comment");
-  const original = await box.inputValue();
-  await box.fill("E2E check: a good term.");
-  await page.getByRole("button", { name: "Save" }).nth(1).click();
+  const current = await box.inputValue();
+  // Restore to what was there, except a comment an earlier aborted run left behind.
+  const original = current.startsWith("E2E check") ? "" : current;
+  const probe = `E2E check ${Date.now()}: a good term.`;
+  const principalSave = page.getByRole("button", { name: "Save", exact: true }).nth(1);
+  // On a slow dev server typing can land before hydration; retry until React has the edit.
+  await expect(async () => {
+    await box.fill(probe);
+    await expect(principalSave).toBeEnabled({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  await principalSave.click();
   await expect(page.getByText("Principal's comment saved")).toBeVisible({ timeout: 30_000 });
+
   await box.fill(original);
-  if (original !== "E2E check: a good term.") await page.getByRole("button", { name: "Save" }).nth(1).click();
+  await expect(principalSave).toBeEnabled();
+  await principalSave.click();
+  await expect(page.getByText("Principal's comment saved").last()).toBeVisible({ timeout: 30_000 });
 });
 
 test("attendance form checks days present against days opened", async ({ page }) => {
@@ -109,4 +120,41 @@ test("PDF routes refuse junk ids and signed-out users", async ({ request }) => {
   expect((await request.get("/api/media/reports/not-a-guid/x/pdf")).status()).toBe(404);
   const id = "01a131b3-b62a-776b-b7f7-3698f51d8986";
   expect((await request.get(`/api/media/reports/${id}/${id}/pdf`)).status()).toBe(401);
+});
+
+test("behaviour & clubs: rate a trait on a draft report and put it back", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await openClass(page);
+  await expect(page.getByRole("columnheader", { name: "Behaviour" })).toBeVisible();
+  await page.locator("tbody tr").first().getByRole("link").first().click();
+  await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\/[0-9a-f-]+\?termId=/);
+  const card = page.getByRole("heading", { name: /Behaviour & clubs/ });
+  await expect(card).toBeVisible();
+  await expect(page.getByText("Doesn't affect scores or position.", { exact: false })).toBeVisible();
+  test.skip(await page.getByText("Published", { exact: true }).first().isVisible(), "report already published; behaviour is read-only");
+
+  const group = page.getByRole("group").filter({ has: page.getByRole("radio") }).first();
+  const radios = group.getByRole("radio");
+  const checkedBefore = await radios.evaluateAll((els) => els.findIndex((e) => (e as HTMLInputElement).checked));
+  const saveBehaviour = page.getByRole("button", { name: "Save behaviour & clubs" });
+  const target = checkedBefore === 1 ? "Improved" : "Good"; // pick a letter that changes something
+  await expect(async () => {
+    await group.getByTitle(target).click();
+    await expect(saveBehaviour).toBeEnabled({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  await saveBehaviour.click();
+  await expect(page.getByText("Behaviour & clubs saved")).toBeVisible({ timeout: 30_000 });
+
+  // Restore the original choice.
+  await radios.nth(checkedBefore).check({ force: true });
+  const save = page.getByRole("button", { name: "Save behaviour & clubs" });
+  if (await save.isEnabled()) await save.click();
+});
+
+test("settings: behaviour traits tab lists traits with the fixed key", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await page.goto("/admin/settings/assessment?tab=behaviour");
+  await expect(page.getByRole("heading", { name: "Behaviour traits" })).toBeVisible();
+  await expect(page.getByLabel("Trait name").first()).not.toHaveValue("");
+  await expect(page.getByRole("list", { name: "Rating key (fixed)" })).toContainText("Exceptional");
 });

@@ -46,3 +46,11 @@ export async function publishClass(classRoomId: string, termId: string): Promise
 export async function unpublishReports(classRoomId: string, termId: string, studentIds?: string[]): Promise<Loaded<UnpublishResult>> {
   return done(await load((api) => api.POST("/api/reports/unpublish", { body: { classRoomId, termId, studentIds: studentIds?.length ? studentIds : null } })));
 }
+
+export async function saveBehaviour(
+  studentId: string,
+  termId: string,
+  body: { ratings: { traitId: string; rating: string | null }[]; clubs: { name: string; rating: string | null }[] },
+): Promise<Loaded<ReportCard>> {
+  return done(await load((api) => api.PUT("/api/reports/{studentId}/{termId}/behaviour", { params: { path: { studentId, termId } }, body })));
+}

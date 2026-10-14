@@ -13,6 +13,7 @@ import { Alert, ProblemState } from "@/components/ui/states";
 import { CommentEditor } from "@/components/reports/comment-editor";
 import { ReportCardView } from "@/components/reports/report-card";
 import { PdfDownloadButton } from "@/components/reports/pdf-download";
+import { BehaviourCard } from "@/components/reports/behaviour-card";
 
 export const metadata: Metadata = { title: "Report card" };
 
@@ -32,10 +33,11 @@ export default async function ReportPreviewPage({
   const listHref = `/admin/reports/${classRoomId}?termId=${termId}`;
 
   const isAdmin = hasAnyRole(user.roles, ["Admin"]);
-  const [card, summary, formTeacher] = await Promise.all([
+  const [card, summary, formTeacher, behaviourSettings] = await Promise.all([
     load((api) => api.GET("/api/reports/{studentId}/{termId}", { params: { path: { studentId, termId } } })),
     load((api) => api.GET("/api/reports/class", { params: { query: { classRoomId, termId } } })),
     isAdmin ? Promise.resolve(true) : isFormTeacherOf(classRoomId),
+    load((api) => api.GET("/api/assessment/behaviour")),
   ]);
 
   const back = (
@@ -121,6 +123,20 @@ export default async function ReportPreviewPage({
           </>
         }
       />
+      {/* Older APIs (pre-E2.5) send no behaviour; skip the card rather than fail the page. */}
+      {Array.isArray(c.behaviour) && (
+      <BehaviourCard
+        key={`behaviour-${studentId}`}
+        studentId={studentId}
+        termId={termId}
+        behaviour={c.behaviour}
+        clubs={c.clubs}
+        ratingKey={c.behaviourKey}
+        maxClubs={behaviourSettings.ok ? behaviourSettings.data.maxClubs : 6}
+        canEdit={formTeacher}
+        published={published}
+      />
+      )}
       <p className="mt-3 text-xs text-muted">
         The PDF matches what parents will download once the report is published.{!published && " Drafts carry a “DRAFT – NOT FINAL” mark."}
       </p>
