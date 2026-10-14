@@ -4,13 +4,16 @@ export const MAX_PHOTO_BYTES = 12 * 1024 * 1024;
 export const PHOTO_ACCEPT = "image/jpeg,image/png,image/webp";
 const ACCEPTED = new Set(PHOTO_ACCEPT.split(","));
 
-export type PhotoKind = "students" | "staff";
+/** "portal" = a parent's/student's own child, via the portal API (read-only). */
+export type PhotoKind = "students" | "staff" | "portal";
 
 const guid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** The API path for a photo, or null for anything we don't proxy (no open proxy through the BFF). */
 export function photoApiPath(kind: string, id: string): string | null {
-  if ((kind !== "students" && kind !== "staff") || !guid.test(id)) return null;
+  if (!guid.test(id)) return null;
+  if (kind === "portal") return `/api/portal/children/${id}/photo`;
+  if (kind !== "students" && kind !== "staff") return null;
   return `/api/${kind}/${id}/photo`;
 }
 

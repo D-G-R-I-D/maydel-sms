@@ -7,6 +7,7 @@ import { ageOn } from "@/lib/validation/students";
 import { formatAverage, formatChange, ordinal, termShort } from "@/lib/reports/rules";
 import { cn } from "@/components/ui/primitives";
 import { PhotoAvatar } from "@/components/media/photo-avatar";
+import type { PhotoKind } from "@/lib/media/photos";
 
 function Bio({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -80,7 +81,36 @@ function Figure({ label, value, sub }: { label: string; value: React.ReactNode; 
  * comments, grading key, next term). Drafts carry a watermark: figures are live until published.
  * `comments` slots in the editors (or read-only text) from the page.
  */
-export function ReportCardView({ card, comments }: { card: ReportCard; comments: React.ReactNode }) {
+export function ReportCardView({
+  card,
+  comments,
+  photoKind = "students",
+  summaryFirst = false,
+  extra,
+}: {
+  card: ReportCard;
+  comments: React.ReactNode;
+  /** Staff pages use the staff photo route; the portal passes "portal". */
+  photoKind?: PhotoKind;
+  /** Phone-first portal view: summary strip above the subjects table. */
+  summaryFirst?: boolean;
+  /** Rendered after the comments (e.g. read-only behaviour on the portal). */
+  extra?: React.ReactNode;
+}) {
+  const figures = (
+    <div className={cn("grid grid-cols-2 gap-2", card.cumulativeAverage !== null ? "sm:grid-cols-3 lg:grid-cols-6" : "sm:grid-cols-5")}>
+              <Figure label="Total score" value={formatScore(card.totalScore)} />
+              <Figure label="Average" value={formatAverage(card.average)} />
+              <Figure label="Position" value={card.position ? ordinal(card.position) : "—"} sub={`of ${card.classSize}`} />
+              <Figure label="Class average" value={formatAverage(card.classAverage)} />
+              <Figure
+                label="Attendance"
+                value={card.daysOpened === null ? "—" : `${card.daysPresent ?? "—"}/${card.daysOpened}`}
+                sub={card.daysAbsent !== null ? `${card.daysAbsent} absent` : "Not entered"}
+              />
+              {card.cumulativeAverage !== null && <Figure label="Annual average" value={formatAverage(card.cumulativeAverage)} sub="all terms so far" />}
+            </div>
+  );
   const draft = card.status === "Draft";
   // Earlier terms only appear once published; nothing to compare on a first term.
   const compare = card.previousTerms.length > 0;
@@ -111,7 +141,7 @@ export function ReportCardView({ card, comments }: { card: ReportCard; comments:
       <div className="space-y-5 p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <PhotoAvatar
-            kind="students"
+            kind={photoKind}
             id={card.studentId}
             name={card.studentName}
             photoVersion={card.photoVersion}
@@ -130,6 +160,8 @@ export function ReportCardView({ card, comments }: { card: ReportCard; comments:
             <Bio label="Status" value={draft ? "Draft" : `Published ${card.publishedAt ? formatDay(card.publishedAt.slice(0, 10)) : ""}`} />
           </dl>
         </div>
+
+        {summaryFirst && figures}
 
         <div className="overflow-x-auto rounded-input border border-border">
           <table className="w-full min-w-[40rem] text-sm">
@@ -207,22 +239,13 @@ export function ReportCardView({ card, comments }: { card: ReportCard; comments:
           </table>
         </div>
 
-        <div className={cn("grid grid-cols-2 gap-2", card.cumulativeAverage !== null ? "sm:grid-cols-3 lg:grid-cols-6" : "sm:grid-cols-5")}>
-          <Figure label="Total score" value={formatScore(card.totalScore)} />
-          <Figure label="Average" value={formatAverage(card.average)} />
-          <Figure label="Position" value={card.position ? ordinal(card.position) : "—"} sub={`of ${card.classSize}`} />
-          <Figure label="Class average" value={formatAverage(card.classAverage)} />
-          <Figure
-            label="Attendance"
-            value={card.daysOpened === null ? "—" : `${card.daysPresent ?? "—"}/${card.daysOpened}`}
-            sub={card.daysAbsent !== null ? `${card.daysAbsent} absent` : "Not entered"}
-          />
-          {card.cumulativeAverage !== null && <Figure label="Annual average" value={formatAverage(card.cumulativeAverage)} sub="all terms so far" />}
-        </div>
+        {!summaryFirst && figures}
 
         {compare && <TermComparison card={card} />}
 
         <div className="grid gap-4 md:grid-cols-2">{comments}</div>
+
+        {extra}
 
         <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
