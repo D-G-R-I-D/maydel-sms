@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { AlertTriangle, Check, CloudOff, History, Lock, MessageSquare, RotateCcw } from "lucide-react";
 import { SchoolLoader } from "@/components/ui/school-loader";
 import { ProblemCodes, problemMessage } from "@/lib/api/problem";
@@ -22,6 +22,9 @@ import {
   type Drafts,
   type RowDraft,
 } from "@/lib/assessment/grid";
+import { setUnsaved } from "@/lib/drafts/guard";
+import { DRAFT_TTL_MS } from "@/lib/drafts/store";
+import { DraftUserContext } from "@/lib/drafts/use-draft";
 import { Badge, Button, cn } from "@/components/ui/primitives";
 import { toast } from "@/components/ui/toast";
 
@@ -36,14 +39,16 @@ type Status =
   | { kind: "error"; message: string; retry: boolean }
   | { kind: "offline" };
 
-function readStorage(key: string): string | null {
+function readStorage(key: string | null): string | null {
+  if (!key) return null;
   try {
     return window.sessionStorage.getItem(key);
   } catch {
     return null;
   }
 }
-function writeStorage(key: string, value: string | null) {
+function writeStorage(key: string | null, value: string | null) {
+  if (!key) return;
   try {
     if (value === null) window.sessionStorage.removeItem(key);
     else window.sessionStorage.setItem(key, value);
@@ -61,7 +66,9 @@ const timeFormat = new Intl.DateTimeFormat("en-NG", { hour: "2-digit", minute: "
  */
 export function ScoreGrid({ initial, bands }: { initial: GradeSheet; bands: GradeBand[] }) {
   const components = initial.components;
-  const key = backupKey(initial.classRoomId, initial.subjectId, initial.termId);
+  const userId = useContext(DraftUserContext);
+  const key = userId ? backupKey(userId, initial.classRoomId, initial.subjectId, initial.termId) : null;
+  const guardId = useId();
   const cols = components.length + 1; // scores + comment
 
   const [rows, setRows] = useState<GradeSheetRow[]>(initial.rows);
@@ -188,7 +195,7 @@ export function ScoreGrid({ initial, bands }: { initial: GradeSheet; bands: Grad
     if (restoreChecked.current) return;
     restoreChecked.current = true;
     const backup = parseBackup(readStorage(key));
-    if (!backup) return;
+    if (!backup || Date.now() - backup.at > DRAFT_TTL_MS) return;
     const known = new Set(initial.rows.filter((r) => !r.locked).map((r) => r.studentId));
     const rowsToRestore = Object.entries(backup.rows).filter(([id]) => known.has(id));
     if (rowsToRestore.length === 0) return;
@@ -211,12 +218,11 @@ export function ScoreGrid({ initial, bands }: { initial: GradeSheet; bands: Grad
     writeStorage(key, JSON.stringify({ at: Date.now(), rows: rowsOut }));
   }, [dirty, dirtyIds, drafts, key]);
 
+  // Leaving with unsaved (or still-saving) scores is warned about by the console's DraftScope.
   useEffect(() => {
-    if (!dirty && status.kind !== "saving") return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty, status.kind]);
+    setUnsaved(guardId, dirty || status.kind === "saving");
+    return () => setUnsaved(guardId, false);
+  }, [guardId, dirty, status.kind]);
 
   /* ------------------------------------------------------------------ editing */
 

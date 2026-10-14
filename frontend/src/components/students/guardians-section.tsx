@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm, type Control } from "react-hook-form";
@@ -69,16 +71,18 @@ function AddGuardianForm({ studentId, isFirst, close }: { studentId: string; isF
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  const form = useForm<AddGuardianValues, unknown, AddGuardianPayload>({
+    resolver: zodResolver(addGuardianSchema),
+    defaultValues: { fullName: "", phone: "", email: "", occupation: "", address: "", relationship: "Mother", isPrimaryContact: isFirst, canPickUp: true },
+  });
   const {
     register,
     handleSubmit,
     setError,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<AddGuardianValues, unknown, AddGuardianPayload>({
-    resolver: zodResolver(addGuardianSchema),
-    defaultValues: { fullName: "", phone: "", email: "", occupation: "", address: "", relationship: "Mother", isPrimaryContact: isFirst, canPickUp: true },
-  });
+  } = form;
+  const draft = useFormDraft(form, { scope: ["add-guardian", studentId] });
 
   const phoneField = register("phone");
   const lookup = (value: string) => {
@@ -107,6 +111,7 @@ function AddGuardianForm({ studentId, isFirst, close }: { studentId: string; isF
       onProblem: setProblem,
     });
     if (!added) return;
+    draft.clear();
     if (added.reusedExistingGuardian) {
       const g = added.student.guardians.find((x) => x.guardianId === added.guardianId);
       const others = existing ? existing.childCount : 0;
@@ -120,6 +125,7 @@ function AddGuardianForm({ studentId, isFirst, close }: { studentId: string; isF
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       {problem && problem.status > 0 && problem.status !== 429 && problem.status < 500 && (
         <Alert tone="danger" className="animate-rise" title={problem.code === "guardian.already_linked" ? "Already linked" : "Couldn't add guardian"}>
           <p>{problemMessage(problem)}</p>
@@ -181,24 +187,30 @@ function AddGuardianForm({ studentId, isFirst, close }: { studentId: string; isF
 }
 
 function EditLinkForm({ studentId, guardian, close }: { studentId: string; guardian: GuardianLink; close: () => void }) {
+  const form = useForm<GuardianLinkValues>({
+    resolver: zodResolver(guardianLinkSchema),
+    defaultValues: { relationship: guardian.relationship, isPrimaryContact: guardian.isPrimaryContact, canPickUp: guardian.canPickUp },
+  });
   const {
     register,
     handleSubmit,
     control,
     formState: { isSubmitting },
-  } = useForm<GuardianLinkValues>({
-    resolver: zodResolver(guardianLinkSchema),
-    defaultValues: { relationship: guardian.relationship, isPrimaryContact: guardian.isPrimaryContact, canPickUp: guardian.canPickUp },
-  });
+  } = form;
+  const draft = useFormDraft(form, { scope: ["guardian-link", studentId, guardian.guardianId] });
   const onSubmit = handleSubmit(async (values) => {
     const saved = await runAction(() => updateGuardianLink(studentId, guardian.guardianId, values), {
       success: `${guardian.fullName} updated`,
       onProblem: (p) => p.status > 0 && p.status < 500 && p.status !== 429 && toast.error("Couldn't save", { description: problemMessage(p) }),
     });
-    if (saved) close();
+    if (saved) {
+      draft.clear();
+      close();
+    }
   });
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       <Field id="gl-relationship" label="Relationship">
         <Select id="gl-relationship" {...register("relationship")}>
           {RELATIONSHIPS.map((r) => (

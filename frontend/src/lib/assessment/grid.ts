@@ -1,4 +1,5 @@
 import type { GradeBand, GradeSheet, GradeSheetEntry, GradeSheetRow } from "@/lib/api/types";
+import { draftKey } from "@/lib/drafts/store";
 
 /**
  * Pure logic for the score grid (E5.1). The grid keeps raw text per cell (so "7." or "" mid-typing
@@ -136,8 +137,9 @@ export function nextCell(
 }
 
 /** sessionStorage backup of unsaved edits, per sheet. */
-export function backupKey(classRoomId: string, subjectId: string, termId: string): string {
-  return `maydel.gradesheet.v1.${classRoomId}.${subjectId}.${termId}`;
+/** A draft key (lib/drafts): per user, wiped on sign-out or user switch, expires with the other drafts. */
+export function backupKey(userId: string, classRoomId: string, subjectId: string, termId: string): string {
+  return draftKey(userId, "gradesheet", classRoomId, subjectId, termId);
 }
 
 export type Backup = { at: number; rows: Drafts };

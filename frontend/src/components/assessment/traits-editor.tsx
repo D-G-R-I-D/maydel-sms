@@ -1,5 +1,7 @@
 "use client";
 
+import { useDraft } from "@/lib/drafts/use-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useState } from "react";
 import { ArrowDown, ArrowUp, GripVertical, Plus, Save, Trash2, Undo2 } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
@@ -29,6 +31,11 @@ export function TraitsEditor({ initial, canEdit }: { initial: BehaviourSettings;
 
   const issues = traitIssues(rows);
   const dirty = JSON.stringify(payload(rows)) !== JSON.stringify(payload(base));
+  const draft = useDraft({ scope: ["behaviour-traits"], value: rows, dirty, server: payload(base), editable: canEdit, onRestore: setRows });
+  const discard = () => {
+    draft.clear();
+    setRows(base);
+  };
   const set = (i: number, patch: Partial<Row>) => setRows((l) => l.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const remove = (row: Row) => setRows((l) => l.filter((r) => r.key !== row.key));
 
@@ -41,11 +48,13 @@ export function TraitsEditor({ initial, canEdit }: { initial: BehaviourSettings;
       const next = toRows(saved);
       setBase(next);
       setRows(next);
+      draft.clear();
     }
   };
 
   return (
     <div className="space-y-5">
+      <DraftBanner draft={draft} onDiscard={discard} />
       <Card className="overflow-hidden">
         <div className="border-b border-border px-5 py-4">
           <h2 className="font-display text-lg font-semibold">Behaviour traits</h2>
@@ -147,7 +156,7 @@ export function TraitsEditor({ initial, canEdit }: { initial: BehaviourSettings;
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => setRows(base)} disabled={!dirty || saving}>
+              <Button variant="secondary" onClick={discard} disabled={!dirty || saving}>
                 <Undo2 className="size-4" aria-hidden />
                 Undo changes
               </Button>
