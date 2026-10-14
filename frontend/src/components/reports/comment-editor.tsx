@@ -6,6 +6,8 @@ import { problemMessage } from "@/lib/api/problem";
 import { saveFormTeacherComment, savePrincipalComment } from "@/lib/reports/actions";
 import { COMMENT_MAX } from "@/lib/reports/rules";
 import { runAction } from "@/lib/client/action";
+import { useDraft } from "@/lib/drafts/use-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { Button, cn } from "@/components/ui/primitives";
 import { toast } from "@/components/ui/toast";
 
@@ -34,6 +36,7 @@ export function CommentEditor({
   const id = `comment-${kind}`;
   const dirty = value.trim() !== saved.trim();
   const tooLong = value.length > COMMENT_MAX;
+  const draft = useDraft({ scope: ["comment", kind, studentId, termId], value, dirty, server: saved, editable: canEdit && !published, onRestore: setValue });
 
   if (!canEdit || published) {
     return (
@@ -64,6 +67,7 @@ export function CommentEditor({
       const next = (kind === "formTeacher" ? card.formTeacherComment : card.principalComment) ?? "";
       setSaved(next);
       setValue(next);
+      draft.clear();
     }
   };
 
@@ -73,6 +77,14 @@ export function CommentEditor({
         {label}
         {author && <span className="font-normal normal-case tracking-normal">· {author}</span>}
       </label>
+      <DraftBanner
+        draft={draft}
+        onDiscard={() => {
+          draft.clear();
+          setValue(saved);
+        }}
+        className="mb-2"
+      />
       <textarea
         id={id}
         value={value}

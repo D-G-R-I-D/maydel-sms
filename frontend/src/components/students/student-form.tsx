@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -61,12 +63,7 @@ export function StudentForm({
   const router = useRouter();
   const [problem, setProblem] = useState<Problem | null>(null);
   const today = schoolToday();
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<StudentFormValues, unknown, StudentPayload>({
+  const form = useForm<StudentFormValues, unknown, StudentPayload>({
     resolver: zodResolver(studentSchema(today)),
     defaultValues: {
       firstName: student?.firstName ?? "",
@@ -83,6 +80,13 @@ export function StudentForm({
       admittedOn: student?.admittedOn ?? today,
     },
   });
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = form;
+  const draft = useFormDraft(form, { scope: ["student", student?.id ?? "new"] });
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -93,6 +97,7 @@ export function StudentForm({
       onProblem: (p) => (p.code === "classroom.full" ? setError("classRoomId", { type: "server", message: problemMessage(p) }, { shouldFocus: true }) : setProblem(p)),
     });
     if (!saved) return;
+    draft.clear();
     if (student) onSaved?.(saved);
     else router.push(`/admin/students/${saved.id}`);
   });
@@ -105,6 +110,7 @@ export function StudentForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-8">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       {problem && problem.status > 0 && problem.status !== 429 && problem.status < 500 && (
         <Alert tone="danger" className="animate-rise" title="Couldn't save">
           <p>{problemMessage(problem)}</p>

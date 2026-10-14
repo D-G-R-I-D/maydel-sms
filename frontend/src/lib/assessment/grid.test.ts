@@ -125,7 +125,7 @@ describe("keyboard navigation", () => {
 
 describe("session backup", () => {
   it("is keyed per sheet and survives junk", () => {
-    expect(backupKey("c", "s", "t")).toBe("maydel.gradesheet.v1.c.s.t");
+    expect(backupKey("u", "c", "s", "t")).toBe("draft:u:gradesheet:c:s:t");
     expect(parseBackup(JSON.stringify({ at: 5, rows: { s1: { scores: { ca: "3", bad: 4 }, comment: "x" }, s2: "nope" } }))).toEqual({
       at: 5,
       rows: { s1: { scores: { ca: "3" }, comment: "x" } },

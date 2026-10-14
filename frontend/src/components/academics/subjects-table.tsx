@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useOptimistic, useState, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,16 +21,18 @@ const fields = ["name", "code"] as const;
 
 function SubjectForm({ subject, close }: { subject?: SubjectDto; close: () => void }) {
   const [problem, setProblem] = useState<Problem | null>(null);
+  const form = useForm<SubjectInput, unknown, { name: string; code: string; isActive: boolean }>({
+    resolver: zodResolver(subjectSchema),
+    defaultValues: { name: subject?.name ?? "", code: subject?.code ?? "", isActive: subject?.isActive ?? true },
+  });
   const {
     register,
     handleSubmit,
     setError,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<SubjectInput, unknown, { name: string; code: string; isActive: boolean }>({
-    resolver: zodResolver(subjectSchema),
-    defaultValues: { name: subject?.name ?? "", code: subject?.code ?? "", isActive: subject?.isActive ?? true },
-  });
+  } = form;
+  const draft = useFormDraft(form, { scope: ["subject", subject?.id ?? "new"] });
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -38,11 +42,15 @@ function SubjectForm({ subject, close }: { subject?: SubjectDto; close: () => vo
       setError,
       onProblem: (p) => (p.code === "subject.duplicate" ? setProblem({ ...p, title: "That subject already exists" }) : setProblem(p)),
     });
-    if (saved) close();
+    if (saved) {
+      draft.clear();
+      close();
+    }
   });
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       {problem && problem.status > 0 && problem.status !== 429 && problem.status < 500 && (
         <Alert tone="danger" className="animate-rise" title="Couldn't save">
           <p>{problemMessage(problem)}</p>

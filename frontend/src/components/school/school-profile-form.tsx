@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,27 +28,33 @@ const toValues = (p: SchoolProfile): SchoolProfileFormValues => ({
 /** The school's details as printed on report cards (E2.6). One PUT replaces every text field. */
 export function SchoolProfileForm({ profile }: { profile: SchoolProfile }) {
   const [problem, setProblem] = useState<Problem | null>(null);
+  const form = useForm<SchoolProfileFormValues, unknown, SchoolProfilePayload>({
+    resolver: zodResolver(schoolProfileSchema),
+    defaultValues: toValues(profile),
+  });
   const {
     register,
     handleSubmit,
     setError,
     reset,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<SchoolProfileFormValues, unknown, SchoolProfilePayload>({
-    resolver: zodResolver(schoolProfileSchema),
-    defaultValues: toValues(profile),
-  });
+  } = form;
+  const draft = useFormDraft(form, { scope: ["school-profile"] });
 
   const onSubmit = handleSubmit(async (body) => {
     setProblem(null);
     const saved = await runAction(() => updateSchoolProfile(body), { success: "School profile saved", fields, setError, onProblem: setProblem });
-    if (saved) reset(toValues(saved));
+    if (saved) {
+      draft.clear();
+      reset(toValues(saved));
+    }
   });
 
   const err = (f: (typeof fields)[number]) => errors[f]?.message;
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       {problem && problem.status > 0 && problem.status !== 429 && problem.status < 500 && (
         <Alert tone="danger" className="animate-rise" title="Couldn't save">
           <p>{problemMessage(problem)}</p>

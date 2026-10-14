@@ -7,6 +7,8 @@ import type { ClubLine, RatingKeyEntry, TraitRatingLine } from "@/lib/api/types"
 import { saveBehaviour } from "@/lib/reports/actions";
 import { CLUB_NAME_MAX, CLUB_RATING_MAX, RATINGS, behaviourPayload, clubErrors, clubsFromCard, newClub, ratedCount, ratingsFromCard, type ClubDraft } from "@/lib/reports/behaviour";
 import { runAction } from "@/lib/client/action";
+import { useDraft } from "@/lib/drafts/use-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { Badge, Button, Card, Input, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 
@@ -47,6 +49,17 @@ export function BehaviourCard({
   const savedPayload = behaviourPayload(traits.map((t) => t.traitId), savedRatings, savedClubs);
   const dirty = JSON.stringify(payload) !== JSON.stringify(savedPayload);
   const rated = ratedCount(ratings);
+  const draft = useDraft({
+    scope: ["behaviour", studentId, termId],
+    value: { ratings, clubs: clubRows },
+    dirty,
+    server: savedPayload,
+    editable,
+    onRestore: (v) => {
+      setRatings(v.ratings);
+      setClubRows(v.clubs);
+    },
+  });
 
   const save = async () => {
     setProblem(null);
@@ -62,6 +75,7 @@ export function BehaviourCard({
       const c = clubsFromCard(card.clubs);
       setSavedClubs(c);
       setClubRows(c.length ? c : []);
+      draft.clear();
     }
   };
 
@@ -95,6 +109,16 @@ export function BehaviourCard({
       </div>
 
       <div className="space-y-6 p-5">
+        {editable && (
+          <DraftBanner
+            draft={draft}
+            onDiscard={() => {
+              draft.clear();
+              setRatings(savedRatings);
+              setClubRows(savedClubs);
+            }}
+          />
+        )}
         {problem && problem.status > 0 && problem.status < 500 && problem.status !== 429 && (
           <Alert tone="danger" title="Couldn't save">
             {problem.errors ? Object.values(problem.errors).flat().join(" ") : problemMessage(problem)}

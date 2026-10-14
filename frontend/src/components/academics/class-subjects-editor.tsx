@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDraft } from "@/lib/drafts/use-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
+import { useMemo, useState } from "react";
 import { Check, CircleSlash, Search, UserRound } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import type { ClassSubjectDto, StaffLookupItem, SubjectDto } from "@/lib/api/types";
@@ -45,13 +47,18 @@ export function ClassSubjectsEditor({
   const teacherOf = new Map(saved.map((a) => [a.subjectId, a]));
   const hiddenInactive = subjects.filter((s) => !s.isActive && !selected.has(s.id) && !teacherOf.has(s.id)).length;
 
-  // Warn before leaving with unsaved changes.
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  // Unsaved picks survive a reload; leaving with them is warned about by the console's DraftScope.
+  const draft = useDraft({
+    scope: ["class-subjects", classroomId],
+    value: { selected: [...selected].sort(), teacherFor },
+    dirty,
+    server: saved,
+    editable: canEdit,
+    onRestore: (v) => {
+      setSelected(new Set(v.selected));
+      setTeacherFor(v.teacherFor);
+    },
+  });
 
   const toggle = (id: string) =>
     setSelected((prev) => {
@@ -64,6 +71,7 @@ export function ClassSubjectsEditor({
   const selectAllActive = () => setSelected(new Set([...selected, ...rows.filter((r) => r.isActive).map((r) => r.id)]));
   const clearAll = () => setSelected(new Set());
   const discard = () => {
+    draft.clear();
     setSelected(new Set(saved.map((a) => a.subjectId)));
     setTeacherFor(Object.fromEntries(saved.map((a) => [a.subjectId, a.teacherId])));
     setProblem(null);
@@ -83,6 +91,7 @@ export function ClassSubjectsEditor({
       setSaved(result);
       setSelected(new Set(result.map((a) => a.subjectId)));
       setTeacherFor(Object.fromEntries(result.map((a) => [a.subjectId, a.teacherId])));
+      draft.clear();
     }
   };
 
@@ -96,6 +105,7 @@ export function ClassSubjectsEditor({
 
   return (
     <div className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={discard} />
       {problem && problem.status > 0 && problem.status !== 429 && problem.status < 500 && (
         <Alert tone="danger" className="animate-rise" title={problem.code === "class_subjects.has_scores" ? "Some subjects can't be removed" : "Couldn't save"}>
           <p>{problemMessage(problem)}</p>

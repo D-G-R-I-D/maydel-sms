@@ -6,6 +6,7 @@ import { CommandPalette } from "@/components/shell/command-palette";
 import { ConsoleSidebar } from "@/components/shell/console-sidebar";
 import { consoleNav, filterNav } from "@/components/shell/nav";
 import { UserMenu } from "@/components/shell/user-menu";
+import { DraftScope } from "@/components/drafts/draft-scope";
 
 export const metadata: Metadata = { title: { default: "Console", template: "%s · Maydel console" } };
 
@@ -29,7 +30,9 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
           </div>
         </header>
         <main id="main" className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+          <div className="mx-auto w-full max-w-6xl">
+            <DraftScope userId={user.id}>{children}</DraftScope>
+          </div>
         </main>
       </div>
     </div>

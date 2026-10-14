@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,15 +28,17 @@ function FormProblem({ problem }: { problem: Problem | null }) {
 
 function SessionForm({ session, suggestedName, close }: { session?: SessionDto; suggestedName?: string; close: () => void }) {
   const [problem, setProblem] = useState<Problem | null>(null);
+  const form = useForm<SessionInput>({
+    resolver: zodResolver(sessionSchema),
+    defaultValues: { name: session?.name ?? suggestedName ?? "", startsOn: session?.startsOn ?? "", endsOn: session?.endsOn ?? "" },
+  });
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<SessionInput>({
-    resolver: zodResolver(sessionSchema),
-    defaultValues: { name: session?.name ?? suggestedName ?? "", startsOn: session?.startsOn ?? "", endsOn: session?.endsOn ?? "" },
-  });
+  } = form;
+  const draft = useFormDraft(form, { scope: ["session", session?.id ?? "new"] });
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -44,11 +48,15 @@ function SessionForm({ session, suggestedName, close }: { session?: SessionDto; 
       setError,
       onProblem: (p) => (p.code === "session.duplicate" ? setError("name", { type: "server", message: problemMessage(p) }) : setProblem(p)),
     });
-    if (saved) close();
+    if (saved) {
+      draft.clear();
+      close();
+    }
   });
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       <FormProblem problem={problem} />
       <Field id="session-name" label="Session" error={errors.name?.message} hint="Two consecutive years, e.g. 2027/2028.">
         <Input {...describedBy("session-name", errors.name?.message, true)} {...register("name")} inputMode="numeric" placeholder="2027/2028" autoComplete="off" />
@@ -111,12 +119,7 @@ const termFields = ["number", "startsOn", "endsOn", "midTermStartsOn", "midTermE
 
 function TermForm({ session, term, number, close }: { session: SessionDto; term?: TermDto; number: TermNumber; close: () => void }) {
   const [problem, setProblem] = useState<Problem | null>(null);
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<TermInput>({
+  const form = useForm<TermInput>({
     resolver: zodResolver(termSchema({ sessionStartsOn: session.startsOn, sessionEndsOn: session.endsOn })),
     defaultValues: {
       number: term?.number ?? number,
@@ -126,6 +129,13 @@ function TermForm({ session, term, number, close }: { session: SessionDto; term?
       midTermEndsOn: term?.midTermEndsOn ?? "",
     },
   });
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = form;
+  const draft = useFormDraft(form, { scope: ["term", term?.id ?? `${session.id}:${number}`] });
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -136,11 +146,15 @@ function TermForm({ session, term, number, close }: { session: SessionDto; term?
       setError,
       onProblem: setProblem,
     });
-    if (saved) close();
+    if (saved) {
+      draft.clear();
+      close();
+    }
   });
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       <FormProblem problem={problem} />
       <div className="flex items-center justify-between rounded-input bg-surface-2 px-3 py-2 text-sm">
         <span className="font-medium">{term?.number ?? number} Term</span>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useDraft } from "@/lib/drafts/use-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useState } from "react";
 import { ArrowDown, ArrowUp, GripVertical, Lock, Plus, Save, Trash2, Undo2, Wand2 } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
@@ -101,6 +103,18 @@ export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: As
   const issues = settingsIssues(components, bands);
   const dirty = JSON.stringify(toPayload(components, bands)) !== JSON.stringify(toPayload(base.components, base.bands));
 
+  const draft = useDraft({
+    scope: ["assessment-settings"],
+    value: { components, bands },
+    dirty,
+    server: toPayload(base.components, base.bands),
+    editable: canEdit,
+    onRestore: (v) => {
+      setComponents(v.components);
+      setBands(v.bands);
+    },
+  });
+
   const setComp = (i: number, patch: Partial<ComponentRow>) => setComponents((list) => list.map((c, j) => (j === i ? { ...c, ...patch } : c)));
   const setBand = (i: number, patch: Partial<BandRow>) => setBands((list) => list.map((b, j) => (j === i ? { ...b, ...patch } : b)));
 
@@ -117,10 +131,12 @@ export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: As
       setBase(rows);
       setComponents(rows.components);
       setBands(rows.bands);
+      draft.clear();
     }
   };
 
   const reset = () => {
+    draft.clear();
     setComponents(base.components);
     setBands(base.bands);
     setAppliedPreset(null);
@@ -130,6 +146,7 @@ export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: As
   return (
     <div className="space-y-5">
       <Alert tone="warning">Changing settings doesn&apos;t change reports that are already published.</Alert>
+      <DraftBanner draft={draft} onDiscard={() => reset()} />
 
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">

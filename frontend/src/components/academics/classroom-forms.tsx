@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useState } from "react";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,12 +64,7 @@ function ClassroomForm({
   close: () => void;
 }) {
   const [problem, setProblem] = useState<Problem | null>(null);
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<ClassroomFormValues, unknown, ClassroomInput>({
+  const form = useForm<ClassroomFormValues, unknown, ClassroomInput>({
     resolver: zodResolver(classroomSchema(classroom?.studentCount ?? 1)),
     defaultValues: {
       classLevelId: classroom?.classLevelId ?? "",
@@ -76,6 +73,13 @@ function ClassroomForm({
       formTeacherId: classroom?.formTeacherId ?? "",
     },
   });
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = form;
+  const draft = useFormDraft(form, { scope: ["classroom", classroom?.id ?? "new"] });
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -91,13 +95,17 @@ function ClassroomForm({
         onProblem: (p) => (p.code === "classroom.duplicate" ? setError("arm", { type: "server", message: problemMessage(p) }) : setProblem(p)),
       },
     );
-    if (saved) close();
+    if (saved) {
+      draft.clear();
+      close();
+    }
   });
 
   const bySection = SECTION_ORDER.map((section) => [section, levels.filter((l) => l.section === section)] as const).filter(([, items]) => items.length > 0);
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       {problem && problem.status > 0 && problem.status < 500 && problem.status !== 429 && (
         <Alert tone="danger" className="animate-rise" title="Couldn't save">
           <p>{problemMessage(problem)}</p>

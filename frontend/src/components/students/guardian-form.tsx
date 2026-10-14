@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormDraft } from "@/lib/drafts/use-form-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,16 +19,18 @@ const conflictField: Record<string, (typeof fields)[number]> = { "guardian.phone
 /** Edit a guardian's own details (shared by all their children). */
 export function GuardianForm({ guardian }: { guardian: GuardianDetail }) {
   const [problem, setProblem] = useState<Problem | null>(null);
+  const form = useForm<GuardianDetailsValues, unknown, GuardianDetailsPayload>({
+    resolver: zodResolver(guardianDetailsSchema),
+    defaultValues: { fullName: guardian.fullName, phone: guardian.phone, email: guardian.email ?? "", occupation: guardian.occupation ?? "", address: guardian.address ?? "" },
+  });
   const {
     register,
     handleSubmit,
     setError,
     reset,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<GuardianDetailsValues, unknown, GuardianDetailsPayload>({
-    resolver: zodResolver(guardianDetailsSchema),
-    defaultValues: { fullName: guardian.fullName, phone: guardian.phone, email: guardian.email ?? "", occupation: guardian.occupation ?? "", address: guardian.address ?? "" },
-  });
+  } = form;
+  const draft = useFormDraft(form, { scope: ["guardian", guardian.id] });
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -40,11 +44,13 @@ export function GuardianForm({ guardian }: { guardian: GuardianDetail }) {
         else setProblem(p);
       },
     });
+    if (saved) draft.clear();
     if (saved) reset({ fullName: saved.fullName, phone: saved.phone, email: saved.email ?? "", occupation: saved.occupation ?? "", address: saved.address ?? "" });
   });
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <DraftBanner draft={draft} onDiscard={draft.discard} />
       {problem && problem.status > 0 && problem.status !== 429 && problem.status < 500 && (
         <Alert tone="danger" className="animate-rise" title="Couldn't save">
           <p>{problemMessage(problem)}</p>

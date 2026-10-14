@@ -1,13 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCheck, Lock, Save } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import type { ClassReportSummary } from "@/lib/api/types";
 import { saveAttendance } from "@/lib/reports/actions";
 import { attendanceErrors } from "@/lib/reports/rules";
 import { runAction } from "@/lib/client/action";
+import { useDraft } from "@/lib/drafts/use-draft";
+import { DraftBanner } from "@/components/drafts/draft-banner";
 import { Badge, Button, Card, Input, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 
@@ -27,6 +29,24 @@ export function AttendanceForm({ summary }: { summary: ClassReportSummary }) {
   const [touched, setTouched] = useState(false);
 
   const errors = attendanceErrors(opened, present);
+  const server = useMemo(
+    () => ({ opened: summary.daysOpened?.toString() ?? "", present: Object.fromEntries(editable.map((r) => [r.studentId, r.daysPresent?.toString() ?? ""])) }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `editable` is derived from summary
+    [summary],
+  );
+  const dirty = opened !== server.opened || editable.some((r) => (present[r.studentId] ?? "") !== server.present[r.studentId]);
+  const draft = useDraft({
+    scope: ["attendance", summary.classRoomId, summary.termId],
+    value: { opened, present },
+    dirty,
+    server,
+    editable: !allLocked,
+    onRestore: (v) => {
+      setOpened(v.opened);
+      // Only students still editable; anyone published since keeps the server value.
+      setPresent((p) => Object.fromEntries(Object.keys(p).map((id) => [id, v.present[id] ?? p[id]])));
+    },
+  });
   const show = (key: string) => (touched ? errors[key] : undefined) ?? serverErrors[key];
 
   const markAll = () => {
@@ -59,6 +79,7 @@ export function AttendanceForm({ summary }: { summary: ClassReportSummary }) {
     });
     setSaving(false);
     if (saved) {
+      draft.clear();
       setServerErrors({});
       router.push(`/admin/reports/${summary.classRoomId}?termId=${summary.termId}`);
     }
@@ -71,6 +92,14 @@ export function AttendanceForm({ summary }: { summary: ClassReportSummary }) {
           Every report in this class is published, so attendance is locked. Ask an admin to unpublish to make changes.
         </Alert>
       )}
+      <DraftBanner
+        draft={draft}
+        onDiscard={() => {
+          draft.clear();
+          setOpened(server.opened);
+          setPresent(server.present);
+        }}
+      />
       {problem && problem.status > 0 && problem.status < 500 && problem.status !== 429 && (
         <Alert tone="danger" title="Couldn't save attendance">
           {problemMessage(problem)}
