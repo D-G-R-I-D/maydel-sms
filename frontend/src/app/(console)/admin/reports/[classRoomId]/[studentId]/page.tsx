@@ -123,6 +123,8 @@ export default async function ReportPreviewPage({
           </>
         }
       />
+      {/* Older APIs (pre-E2.5) send no behaviour; skip the card rather than fail the page. */}
+      {Array.isArray(c.behaviour) && (
       <BehaviourCard
         key={`behaviour-${studentId}`}
         studentId={studentId}
@@ -134,6 +136,7 @@ export default async function ReportPreviewPage({
         canEdit={formTeacher}
         published={published}
       />
+      )}
       <p className="mt-3 text-xs text-muted">
         The PDF matches what parents will download once the report is published.{!published && " Drafts carry a “DRAFT – NOT FINAL” mark."}
       </p>
