@@ -50,12 +50,23 @@ test("report preview shows a draft watermark and saves the principal's comment",
   await expect(page.getByText("DRAFT – figures may change")).toBeAttached();
 
   const box = page.getByLabel("Principal's comment");
-  const original = await box.inputValue();
-  await box.fill("E2E check: a good term.");
-  await page.getByRole("button", { name: "Save" }).nth(1).click();
+  const current = await box.inputValue();
+  // Restore to what was there, except a comment an earlier aborted run left behind.
+  const original = current.startsWith("E2E check") ? "" : current;
+  const probe = `E2E check ${Date.now()}: a good term.`;
+  const principalSave = page.getByRole("button", { name: "Save", exact: true }).nth(1);
+  // On a slow dev server typing can land before hydration; retry until React has the edit.
+  await expect(async () => {
+    await box.fill(probe);
+    await expect(principalSave).toBeEnabled({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  await principalSave.click();
   await expect(page.getByText("Principal's comment saved")).toBeVisible({ timeout: 30_000 });
+
   await box.fill(original);
-  if (original !== "E2E check: a good term.") await page.getByRole("button", { name: "Save" }).nth(1).click();
+  await expect(principalSave).toBeEnabled();
+  await principalSave.click();
+  await expect(page.getByText("Principal's comment saved").last()).toBeVisible({ timeout: 30_000 });
 });
 
 test("attendance form checks days present against days opened", async ({ page }) => {
@@ -125,8 +136,13 @@ test("behaviour & clubs: rate a trait on a draft report and put it back", async 
   const group = page.getByRole("group").filter({ has: page.getByRole("radio") }).first();
   const radios = group.getByRole("radio");
   const checkedBefore = await radios.evaluateAll((els) => els.findIndex((e) => (e as HTMLInputElement).checked));
-  await group.getByText("B", { exact: true }).click();
-  await page.getByRole("button", { name: "Save behaviour & clubs" }).click();
+  const saveBehaviour = page.getByRole("button", { name: "Save behaviour & clubs" });
+  const target = checkedBefore === 1 ? "Improved" : "Good"; // pick a letter that changes something
+  await expect(async () => {
+    await group.getByTitle(target).click();
+    await expect(saveBehaviour).toBeEnabled({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  await saveBehaviour.click();
   await expect(page.getByText("Behaviour & clubs saved")).toBeVisible({ timeout: 30_000 });
 
   // Restore the original choice.
