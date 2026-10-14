@@ -61,13 +61,29 @@ public sealed class ReportBuilder(IAppDbContext db)
         var components = await db.AssessmentComponents.AsNoTracking().Where(c => c.IsActive || usedIds.Contains(c.Id))
             .OrderBy(c => c.Order).Select(c => new GradeSheetComponent(c.Id, c.Name, c.MaxScore)).ToListAsync(ct);
 
+        // Term comparison: only *published* earlier terms of the same session, so drafts never leak onto a report.
+        var earlier = await db.TermReports.AsNoTracking()
+            .Where(r => r.StudentId == studentId && r.Status == ReportStatus.Published && r.Term.SessionId == term.SessionId && r.Term.Number < term.Number)
+            .OrderBy(r => r.Term.Number)
+            .Select(r => new PreviousTermResult(r.TermId, r.Term.Number, r.Term.Number.ToString() + " Term", r.Average, r.Position, r.ClassSize))
+            .ToListAsync(ct);
+        var earlierIds = earlier.Select(e => e.TermId).ToList();
+        var earlierScores = await db.SubjectScores.AsNoTracking()
+            .Where(s => s.StudentId == studentId && earlierIds.Contains(s.TermId))
+            .Select(s => new { s.SubjectId, s.Total, s.Grade, s.Term.Number }).ToListAsync(ct);
+        var lastTerm = earlier.LastOrDefault();
+
         var subjectStats = classScores.GroupBy(s => s.SubjectId).ToDictionary(g => g.Key, g => ReportMath.ForSubject([.. g.Select(x => x.Total)]));
         var lines = classScores.Where(s => s.StudentId == studentId).OrderBy(s => s.Subject.Name).Select(s =>
         {
             var stats = subjectStats[s.SubjectId];
+            var previous = earlierScores.Where(p => p.SubjectId == s.SubjectId).OrderBy(p => p.Number)
+                .Select(p => new PreviousSubjectResult(p.Number, p.Number + " Term", p.Total, p.Grade)).ToList();
+            var last = lastTerm is null ? null : previous.FirstOrDefault(p => p.Number == lastTerm.Number);
             return new ReportSubjectLine(s.SubjectId, s.Subject.Name,
                 [.. components.Select(c => new ComponentScoreValue(c.Id, s.Components.FirstOrDefault(x => x.ComponentId == c.Id)?.Score))],
-                s.Total, s.Grade, s.Remark, s.TeacherComment, stats.Highest, stats.Lowest, stats.Average);
+                s.Total, s.Grade, s.Remark, s.TeacherComment, stats.Highest, stats.Lowest, stats.Average,
+                previous, last is null ? null : s.Total - last.Total, last is null ? null : ReportMath.TrendOf(s.Total, last.Total));
         }).ToList();
 
         decimal? average; decimal classAverage; int? position; int classSize;
@@ -91,12 +107,16 @@ public sealed class ReportBuilder(IAppDbContext db)
             .Select(b => new GradeBandDto(b.Grade, b.MinScore, b.MaxScore, b.Remark)).ToListAsync(ct);
 
         var name = string.Join(' ', new[] { student.FirstName, student.MiddleName, student.LastName }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        decimal? averageChange = average is { } now && lastTerm is not null ? now - lastTerm.Average : null;
+        Trend? trend = average is { } current && lastTerm is not null ? ReportMath.TrendOf(current, lastTerm.Average) : null;
+        decimal? cumulative = average is { } thisTerm ? ReportMath.Cumulative([.. earlier.Select(e => e.Average), thisTerm]) : null;
         var hasAttendance = report is not null && report.DaysOpened > 0;
         return new ReportCard(
             student.Id, name, student.AdmissionNumber, student.Sex, student.DateOfBirth, student.House, Photos.PhotoStore.VersionOf(student.PhotoPath),
             classRoomId, room.Name, term.Id, $"{term.Number} Term", term.Session, term.EndsOn, nextTerm,
             report?.Status ?? ReportStatus.Draft, report?.PublishedAt, components, lines,
-            average, classAverage, position, classSize,
+            average, classAverage, position, classSize, lines.Sum(l => l.Total),
+            earlier, averageChange, trend, cumulative,
             hasAttendance ? report!.DaysOpened : null, hasAttendance ? report!.DaysPresent : null, hasAttendance ? report!.DaysAbsent : null,
             room.FormTeacher, report?.FormTeacherComment, report?.PrincipalComment, bands);
     }

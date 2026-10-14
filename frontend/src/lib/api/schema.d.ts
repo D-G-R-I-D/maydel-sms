@@ -644,6 +644,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/{studentId}/{termId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetReportCardPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/class/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetClassReportCardsPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/{studentId}/{termId}/form-teacher-comment": {
         parameters: {
             query?: never;
@@ -1137,6 +1169,25 @@ export interface components {
             /** Format: int32 */
             height: number;
         };
+        PreviousSubjectResult: {
+            number: components["schemas"]["TermNumber"];
+            term: string;
+            /** Format: double */
+            total: number;
+            grade: null | string;
+        };
+        PreviousTermResult: {
+            /** Format: uuid */
+            termId: string;
+            number: components["schemas"]["TermNumber"];
+            term: string;
+            /** Format: double */
+            average: number;
+            /** Format: int32 */
+            position: null | number;
+            /** Format: int32 */
+            classSize: number;
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -1199,6 +1250,14 @@ export interface components {
             position: null | number;
             /** Format: int32 */
             classSize: number;
+            /** Format: double */
+            totalScore: number;
+            previousTerms: components["schemas"]["PreviousTermResult"][];
+            /** Format: double */
+            averageChange: null | number;
+            trend: null | components["schemas"]["Trend"];
+            /** Format: double */
+            cumulativeAverage: null | number;
             /** Format: int32 */
             daysOpened: null | number;
             /** Format: int32 */
@@ -1228,6 +1287,10 @@ export interface components {
             classLowest: number;
             /** Format: double */
             classAverage: number;
+            previousTerms: components["schemas"]["PreviousSubjectResult"][];
+            /** Format: double */
+            changeFromLastTerm: null | number;
+            trend: null | components["schemas"]["Trend"];
         };
         /** @enum {unknown} */
         Role: "Admin" | "Teacher" | "Bursar" | "Parent" | "Student";
@@ -1456,6 +1519,8 @@ export interface components {
             /** Format: date */
             midTermEndsOn: null | string;
         };
+        /** @enum {unknown} */
+        Trend: "Improved" | "Steady" | "Declined" | null;
         UnpublishClassReportsCommand: {
             /** Format: uuid */
             classRoomId: string;
@@ -4483,6 +4548,129 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReportCard"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetReportCardPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetClassReportCardsPdf: {
+        parameters: {
+            query: {
+                classRoomId: string;
+                termId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
             };
             /** @description Unauthorized */

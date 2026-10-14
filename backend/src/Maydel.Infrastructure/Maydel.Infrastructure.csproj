@@ -16,8 +16,14 @@
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <PackageReference Include="SkiaSharp" Version="4.153.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- School crest for report cards (from the brand assets in ../website). Replaced by the school profile upload in E2.6. -->
+    <EmbeddedResource Include="Reports\Assets\maydellogo.png" LogicalName="Maydel.ReportLogo.png" />
   </ItemGroup>
 
 </Project>

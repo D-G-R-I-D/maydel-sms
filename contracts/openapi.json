@@ -3834,6 +3834,162 @@
         }
       }
     },
+    "/api/reports/{studentId}/{termId}/pdf": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetReportCardPdf",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/class/pdf": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetClassReportCardsPdf",
+        "parameters": [
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reports/{studentId}/{termId}/form-teacher-comment": {
       "put": {
         "tags": [
@@ -5758,6 +5914,71 @@
           }
         }
       },
+      "PreviousSubjectResult": {
+        "required": [
+          "number",
+          "term",
+          "total",
+          "grade"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "$ref": "#/components/schemas/TermNumber"
+          },
+          "term": {
+            "type": "string"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "grade": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PreviousTermResult": {
+        "required": [
+          "termId",
+          "number",
+          "term",
+          "average",
+          "position",
+          "classSize"
+        ],
+        "type": "object",
+        "properties": {
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "$ref": "#/components/schemas/TermNumber"
+          },
+          "term": {
+            "type": "string"
+          },
+          "average": {
+            "type": "number",
+            "format": "double"
+          },
+          "position": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "classSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -5881,6 +6102,11 @@
           "classAverage",
           "position",
           "classSize",
+          "totalScore",
+          "previousTerms",
+          "averageChange",
+          "trend",
+          "cumulativeAverage",
           "daysOpened",
           "daysPresent",
           "daysAbsent",
@@ -6002,6 +6228,40 @@
             "type": "integer",
             "format": "int32"
           },
+          "totalScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousTerms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviousTermResult"
+            }
+          },
+          "averageChange": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "trend": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Trend"
+              }
+            ]
+          },
+          "cumulativeAverage": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
           "daysOpened": {
             "type": [
               "null",
@@ -6066,7 +6326,10 @@
           "comment",
           "classHighest",
           "classLowest",
-          "classAverage"
+          "classAverage",
+          "previousTerms",
+          "changeFromLastTerm",
+          "trend"
         ],
         "type": "object",
         "properties": {
@@ -6116,6 +6379,29 @@
           "classAverage": {
             "type": "number",
             "format": "double"
+          },
+          "previousTerms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviousSubjectResult"
+            }
+          },
+          "changeFromLastTerm": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "trend": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Trend"
+              }
+            ]
           }
         }
       },
@@ -7050,6 +7336,14 @@
             "format": "date"
           }
         }
+      },
+      "Trend": {
+        "enum": [
+          "Improved",
+          "Steady",
+          "Declined",
+          null
+        ]
       },
       "UnpublishClassReportsCommand": {
         "required": [

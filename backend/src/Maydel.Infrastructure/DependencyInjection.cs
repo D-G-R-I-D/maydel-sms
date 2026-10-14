@@ -63,6 +63,9 @@ public static class DependencyInjection
                 : ActivatorUtilities.CreateInstance<LocalFileStorage>(sp));
         services.AddSingleton<IImageProcessor, SkiaImageProcessor>();
 
+        services.AddOptions<SchoolProfileOptions>().BindConfiguration(SchoolProfileOptions.Section);
+        services.AddSingleton<IReportCardRenderer, Reports.QuestPdfReportCardRenderer>();
+
         return services;
     }
 }

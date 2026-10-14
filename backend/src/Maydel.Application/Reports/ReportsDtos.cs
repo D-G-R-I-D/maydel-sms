@@ -1,4 +1,5 @@
 using Maydel.Application.Assessment;
+using Maydel.Domain.Academics;
 using Maydel.Domain.Assessment;
 using Maydel.Domain.People;
 
@@ -15,7 +16,14 @@ public sealed record ClassReportSummary(
 
 public sealed record ReportSubjectLine(
     Guid SubjectId, string Subject, IReadOnlyList<ComponentScoreValue> Scores, decimal Total, string? Grade, string? Remark,
-    string? Comment, decimal ClassHighest, decimal ClassLowest, decimal ClassAverage);
+    string? Comment, decimal ClassHighest, decimal ClassLowest, decimal ClassAverage,
+    IReadOnlyList<PreviousSubjectResult> PreviousTerms, decimal? ChangeFromLastTerm, Trend? Trend);
+
+/// <summary>This subject's total in an earlier (published) term of the same session.</summary>
+public sealed record PreviousSubjectResult(TermNumber Number, string Term, decimal Total, string? Grade);
+
+/// <summary>The student's published result in an earlier term of the same session.</summary>
+public sealed record PreviousTermResult(Guid TermId, TermNumber Number, string Term, decimal Average, int? Position, int ClassSize);
 
 /// <summary>The full report card (E5.4): preview for drafts, frozen figures once published.</summary>
 public sealed record ReportCard(
@@ -23,7 +31,8 @@ public sealed record ReportCard(
     Guid ClassRoomId, string ClassRoom, Guid TermId, string Term, string Session, DateOnly TermEndsOn, DateOnly? NextTermBegins,
     ReportStatus Status, DateTimeOffset? PublishedAt,
     IReadOnlyList<GradeSheetComponent> Components, IReadOnlyList<ReportSubjectLine> Subjects,
-    decimal? Average, decimal ClassAverage, int? Position, int ClassSize,
+    decimal? Average, decimal ClassAverage, int? Position, int ClassSize, decimal TotalScore,
+    IReadOnlyList<PreviousTermResult> PreviousTerms, decimal? AverageChange, Trend? Trend, decimal? CumulativeAverage,
     int? DaysOpened, int? DaysPresent, int? DaysAbsent,
     string? FormTeacher, string? FormTeacherComment, string? PrincipalComment, IReadOnlyList<GradeBandDto> GradingKey);
 
@@ -50,3 +59,6 @@ public static class ReportErrors
     public static Common.Error AttendanceMissing(IEnumerable<string> names) => Common.Error.Rule("report.attendance_missing",
         $"Enter attendance before publishing. Missing for: {string.Join(", ", names)}.");
 }
+
+/// <summary>A generated PDF and a suggested download file name.</summary>
+public sealed record PdfFile(byte[] Content, string FileName);
