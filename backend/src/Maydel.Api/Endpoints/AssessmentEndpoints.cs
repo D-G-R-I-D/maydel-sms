@@ -1,10 +1,12 @@
 using Maydel.Api.Common;
 using Maydel.Application.Assessment;
 using Maydel.Application.Assessment.GetAssessmentSettings;
+using Maydel.Application.Assessment.GetBehaviourSettings;
 using Maydel.Application.Assessment.GetGradeSheet;
 using Maydel.Application.Assessment.ListGradableClasses;
 using Maydel.Application.Assessment.ListGradingPresets;
 using Maydel.Application.Assessment.SaveAssessmentSettings;
+using Maydel.Application.Assessment.SaveBehaviourSettings;
 using Maydel.Application.Assessment.SaveGradeSheet;
 using Maydel.Application.Common.Messaging;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -12,7 +14,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace Maydel.Api.Endpoints;
 
 /// <summary>
-/// Assessment settings (E2.4) and score entry (E5.1–E5.2). Admins and teachers only; which class/subject a teacher may
+/// Assessment settings (E2.4), behaviour traits (E2.5) and score entry (E5.1–E5.2). Admins and teachers only; which class/subject a teacher may
 /// grade is a row-level rule (AccessRules.CanGradeAsync).
 /// </summary>
 public static class AssessmentEndpoints
@@ -23,6 +25,8 @@ public static class AssessmentEndpoints
 
         academic.MapGet("/settings", GetSettings).WithName("GetAssessmentSettings").ProducesProblems(401, 403);
         academic.MapPut("/settings", SaveSettings).RequireAuthorization(Policies.Admin).WithName("SaveAssessmentSettings").ProducesProblems(400, 401, 403, 422);
+        academic.MapGet("/behaviour", GetBehaviour).WithName("GetBehaviourSettings").ProducesProblems(401, 403);
+        academic.MapPut("/behaviour", SaveBehaviour).RequireAuthorization(Policies.Admin).WithName("SaveBehaviourSettings").ProducesProblems(400, 401, 403);
         academic.MapGet("/grading-presets", ListPresets).WithName("ListGradingPresets").ProducesProblems(401, 403);
         academic.MapGet("/my-classes", ListGradable).WithName("ListGradableClasses").ProducesProblems(401, 403);
         academic.MapGet("/gradesheet", GetGradeSheet).WithName("GetGradeSheet").ProducesProblems(400, 401, 403, 404);
@@ -35,6 +39,14 @@ public static class AssessmentEndpoints
 
     private static async Task<Results<Ok<AssessmentSettings>, ProblemHttpResult>> SaveSettings(
         SaveAssessmentSettingsCommand command, ICommandHandler<SaveAssessmentSettingsCommand, AssessmentSettings> handler, CancellationToken ct) =>
+        (await handler.Handle(command, ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<BehaviourSettings>, ProblemHttpResult>> GetBehaviour(
+        IQueryHandler<GetBehaviourSettingsQuery, BehaviourSettings> handler, CancellationToken ct) =>
+        (await handler.Handle(new GetBehaviourSettingsQuery(), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<BehaviourSettings>, ProblemHttpResult>> SaveBehaviour(
+        SaveBehaviourSettingsCommand command, ICommandHandler<SaveBehaviourSettingsCommand, BehaviourSettings> handler, CancellationToken ct) =>
         (await handler.Handle(command, ct)).ToHttpResult();
 
     private static async Task<Results<Ok<IReadOnlyList<GradingPresetDto>>, ProblemHttpResult>> ListPresets(

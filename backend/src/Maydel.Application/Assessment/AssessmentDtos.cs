@@ -14,6 +14,20 @@ public sealed record GradingPresetDto(string Key, string Name, string Descriptio
 
 public sealed record AssessmentSettings(IReadOnlyList<ComponentDto> Components, IReadOnlyList<GradeBandDto> Bands);
 
+/// <summary><c>InUse</c>: it has been rated on a report, so removing it only deactivates it.</summary>
+public sealed record BehaviourTraitDto(Guid Id, string Name, int Order, bool IsActive, bool InUse);
+
+public sealed record RatingKeyEntry(string Rating, string Meaning);
+
+/// <summary>
+/// Traits rated on report cards (E2.5), the A–E rating key and how many clubs a report can list.
+/// Ratings never affect scores, averages or positions.
+/// </summary>
+public sealed record BehaviourSettings(IReadOnlyList<BehaviourTraitDto> Traits, IReadOnlyList<RatingKeyEntry> RatingKey, int MaxClubs);
+
+/// <summary>A trait in a save request. <c>Id</c> null = new; existing traits missing from the list are removed, or deactivated if in use.</summary>
+public sealed record TraitInput(Guid? Id, string Name, bool IsActive);
+
 /// <summary>Component in a save request. <c>Id</c> null = new component; existing components missing from the list are removed or deactivated.</summary>
 public sealed record ComponentInput(Guid? Id, string Name, decimal MaxScore, bool IsActive);
 
@@ -57,6 +71,16 @@ public static class AssessmentQueries
     public static async Task<HashSet<Guid>> PublishedStudentsAsync(this IAppDbContext db, Guid classRoomId, Guid termId, CancellationToken ct) =>
         [.. await db.TermReports.Where(r => r.ClassRoomId == classRoomId && r.TermId == termId && r.Status == ReportStatus.Published)
             .Select(r => r.StudentId).ToListAsync(ct)];
+
+    public static async Task<BehaviourSettings> GetBehaviourSettingsAsync(this IAppDbContext db, CancellationToken ct)
+    {
+        var used = await db.TermReports.SelectMany(r => r.TraitRatings).Select(r => r.TraitId).Distinct().ToListAsync(ct);
+        var traits = await db.BehaviourTraits.AsNoTracking().OrderBy(t => t.Order).ToListAsync(ct);
+        return new BehaviourSettings(
+            [.. traits.Select(t => new BehaviourTraitDto(t.Id, t.Name, t.Order, t.IsActive, used.Contains(t.Id)))],
+            [.. BehaviourRatings.Key.Select(k => new RatingKeyEntry(k.Rating, k.Meaning))],
+            BehaviourRatings.MaxClubs);
+    }
 
     public static async Task<AssessmentSettings> GetSettingsAsync(this IAppDbContext db, CancellationToken ct)
     {

@@ -12,7 +12,7 @@ namespace Maydel.Infrastructure.Reports;
 /// <summary>
 /// The default report card layout (E5.6), modelled on the school's Excel result sheet: crest and school details,
 /// student details, one column per score component, total / grade / remark / comment, class figures, the term
-/// comparison, attendance, comments and the grading key. A4 portrait, one student per page. Drafts carry a watermark.
+/// comparison, attendance, the grading key, behaviour ratings and clubs, and comments. A4 portrait, one student per page. Drafts carry a watermark.
 /// QuestPDF is used under its Community licence (free for organisations under US$1M annual revenue).
 /// </summary>
 internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> school) : IReportCardRenderer
@@ -64,6 +64,7 @@ internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> 
             col.Item().Element(c => ComposeSummary(c, card));
             if (card.PreviousTerms.Count > 0) col.Item().Element(c => ComposeComparison(c, card));
             col.Item().Element(c => ComposeGradingKey(c, card));
+            if (card.Behaviour.Count > 0 || card.Clubs.Count > 0) col.Item().Element(c => ComposeBehaviour(c, card));
             col.Item().Element(c => ComposeComments(c, card, school));
         });
         page.Footer().Row(row =>
@@ -225,6 +226,55 @@ internal sealed class QuestPdfReportCardRenderer(IOptions<SchoolProfileOptions> 
             t.Span("GRADING KEY: ").Bold().FontSize(7);
             t.Span(string.Join("   ", card.GradingKey.Select(b => $"{b.Grade} {b.MinScore:0.##}–{b.MaxScore:0.##} {b.Remark}"))).FontSize(7);
         });
+
+    /// <summary>Affective and psychomotor traits in two columns, then clubs and the A–E key (E2.5).</summary>
+    private static void ComposeBehaviour(IContainer container, ReportCard card) =>
+        container.Row(row =>
+        {
+            if (card.Behaviour.Count > 0)
+            {
+                row.RelativeItem(3).Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4).Column(col =>
+                {
+                    col.Item().Text("AFFECTIVE & PSYCHOMOTOR TRAITS").FontSize(7).Bold().FontColor(Navy);
+                    col.Item().PaddingTop(2).Table(table =>
+                    {
+                        table.ColumnsDefinition(c => { c.RelativeColumn(); c.ConstantColumn(16); c.ConstantColumn(10); c.RelativeColumn(); c.ConstantColumn(16); });
+                        var half = (card.Behaviour.Count + 1) / 2;
+                        for (var i = 0; i < half; i++)
+                        {
+                            Trait(table, card.Behaviour[i]);
+                            table.Cell();
+                            if (i + half < card.Behaviour.Count) Trait(table, card.Behaviour[i + half]);
+                            else { table.Cell(); table.Cell(); }
+                        }
+                    });
+                });
+                row.ConstantItem(6);
+            }
+            row.RelativeItem(2).Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(4).Column(col =>
+            {
+                col.Item().Text("CLUBS & ACTIVITIES").FontSize(7).Bold().FontColor(Navy);
+                if (card.Clubs.Count == 0) col.Item().PaddingTop(2).Text("—");
+                foreach (var club in card.Clubs)
+                    col.Item().PaddingTop(2).Text(t =>
+                    {
+                        t.Span(club.Name.ToUpperInvariant()).Bold();
+                        if (club.Rating is { } rating) t.Span($"  {rating.ToUpperInvariant()}");
+                    });
+                if (card.Behaviour.Count > 0)
+                {
+                    col.Item().PaddingTop(5).Text("RATING KEY").FontSize(6.5f).Bold().FontColor(Navy);
+                    foreach (var key in card.BehaviourKey)
+                        col.Item().Text($"{key.Rating} – {key.Meaning}").FontSize(6.5f);
+                }
+            });
+        });
+
+    private static void Trait(TableDescriptor table, TraitRatingLine trait)
+    {
+        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(1.2f).Text(trait.Trait).FontSize(6.5f);
+        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(1.2f).AlignCenter().Text(trait.Rating ?? "").FontSize(7).Bold();
+    }
 
     private static void ComposeComments(IContainer container, ReportCard card, SchoolProfileOptions school) =>
         container.Row(row =>

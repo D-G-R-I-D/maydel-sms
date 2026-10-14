@@ -34,6 +34,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<GradeBand> GradeBands => Set<GradeBand>();
     public DbSet<SubjectScore> SubjectScores => Set<SubjectScore>();
     public DbSet<TermReport> TermReports => Set<TermReport>();
+    public DbSet<BehaviourTrait> BehaviourTraits => Set<BehaviourTrait>();
 
     public DbSet<AttendanceRecord> Attendance => Set<AttendanceRecord>();
 

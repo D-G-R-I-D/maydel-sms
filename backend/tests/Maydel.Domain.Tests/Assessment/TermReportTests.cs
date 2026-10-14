@@ -88,3 +88,70 @@ public sealed class TermComparisonTests
         Assert.Equal(72.33m, ReportMath.Cumulative([70m, 72m, 75m]));
     }
 }
+
+public sealed class BehaviourTests
+{
+    private static readonly Guid Punctual = Guid.NewGuid(), Neat = Guid.NewGuid();
+
+    [Fact]
+    public void Ratings_are_normalised_blank_ones_left_unrated_and_clubs_trimmed_in_order()
+    {
+        var report = new TermReport();
+
+        Assert.Null(report.SetBehaviour([(Punctual, " a "), (Neat, " ")], [(" Coding ", " Excellent "), ("", "Ignored"), ("Ballet", null)]));
+
+        var rating = Assert.Single(report.TraitRatings);
+        Assert.Equal((Punctual, "A"), (rating.TraitId, rating.Rating));
+        Assert.Equal([(1, "Coding", (string?)"Excellent"), (2, "Ballet", null)], report.Clubs.Select(c => (c.Order, c.Name, c.Rating)));
+    }
+
+    [Fact]
+    public void Saving_again_replaces_the_previous_ratings_and_clubs()
+    {
+        var report = new TermReport();
+        report.SetBehaviour([(Punctual, "A"), (Neat, "B")], [("Coding", null)]);
+
+        Assert.Null(report.SetBehaviour([(Neat, "C")], []));
+
+        Assert.Equal("C", Assert.Single(report.TraitRatings).Rating);
+        Assert.Empty(report.Clubs);
+    }
+
+    [Theory]
+    [InlineData("F")]
+    [InlineData("AA")]
+    [InlineData("5")]
+    public void Only_letters_on_the_key_are_accepted(string rating)
+    {
+        var report = new TermReport();
+        var error = report.SetBehaviour([(Punctual, rating)], []);
+        Assert.Equal(("report.rating_invalid", "ratings"), (error?.Code, error?.Field));
+        Assert.Empty(report.TraitRatings);
+    }
+
+    [Fact]
+    public void A_trait_is_rated_once_clubs_are_unique_and_limited()
+    {
+        var report = new TermReport();
+        Assert.Equal("report.rating_duplicate", report.SetBehaviour([(Punctual, "A"), (Punctual, "B")], [])?.Code);
+        Assert.Equal("report.club_duplicate", report.SetBehaviour([], [("Coding", null), ("coding", "Good")])?.Code);
+        Assert.Equal("report.too_many_clubs", report.SetBehaviour([], [.. Enumerable.Range(1, 7).Select(i => ((string?)$"Club {i}", (string?)null))])?.Code);
+    }
+
+    [Fact]
+    public void Published_reports_refuse_behaviour_changes()
+    {
+        var report = new TermReport();
+        report.Publish(70, 60, 1, 10, DateTimeOffset.UtcNow, null);
+        Assert.Equal("report.published", report.SetBehaviour([(Punctual, "A")], [])?.Code);
+    }
+
+    [Fact]
+    public void The_key_and_default_traits_match_the_excel_sheet()
+    {
+        Assert.Equal(["A", "B", "C", "D", "E"], BehaviourRatings.Key.Select(k => k.Rating));
+        Assert.Equal("Working towards", BehaviourRatings.Key[^1].Meaning);
+        Assert.Equal(14, BehaviourRatings.DefaultTraits.Count);
+        Assert.Contains("Punctual", BehaviourRatings.DefaultTraits);
+    }
+}

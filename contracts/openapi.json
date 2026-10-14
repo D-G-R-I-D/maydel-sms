@@ -3464,6 +3464,104 @@
         }
       }
     },
+    "/api/assessment/behaviour": {
+      "get": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "GetBehaviourSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BehaviourSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "SaveBehaviourSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveBehaviourSettingsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BehaviourSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assessment/grading-presets": {
       "get": {
         "tags": [
@@ -4133,6 +4231,106 @@
         }
       }
     },
+    "/api/reports/{studentId}/{termId}/behaviour": {
+      "put": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "SetReportBehaviour",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BehaviourRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportCard"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reports/attendance": {
       "put": {
         "tags": [
@@ -4606,6 +4804,88 @@
           }
         }
       },
+      "BehaviourRequest": {
+        "required": [
+          "ratings",
+          "clubs"
+        ],
+        "type": "object",
+        "properties": {
+          "ratings": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TraitRatingInput"
+            }
+          },
+          "clubs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ClubLine"
+            }
+          }
+        }
+      },
+      "BehaviourSettings": {
+        "required": [
+          "traits",
+          "ratingKey",
+          "maxClubs"
+        ],
+        "type": "object",
+        "properties": {
+          "traits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BehaviourTraitDto"
+            }
+          },
+          "ratingKey": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RatingKeyEntry"
+            }
+          },
+          "maxClubs": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "BehaviourTraitDto": {
+        "required": [
+          "id",
+          "name",
+          "order",
+          "isActive",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        }
+      },
       "ChangePasswordCommand": {
         "required": [
           "currentPassword",
@@ -4657,7 +4937,8 @@
           "status",
           "daysPresent",
           "hasFormTeacherComment",
-          "hasPrincipalComment"
+          "hasPrincipalComment",
+          "traitsRated"
         ],
         "type": "object",
         "properties": {
@@ -4704,6 +4985,10 @@
           },
           "hasPrincipalComment": {
             "type": "boolean"
+          },
+          "traitsRated": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -4932,6 +5217,24 @@
             "items": {
               "$ref": "#/components/schemas/ClassSubjectAssignment"
             }
+          }
+        }
+      },
+      "ClubLine": {
+        "required": [
+          "name",
+          "rating"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rating": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6136,6 +6439,21 @@
           }
         }
       },
+      "RatingKeyEntry": {
+        "required": [
+          "rating",
+          "meaning"
+        ],
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "string"
+          },
+          "meaning": {
+            "type": "string"
+          }
+        }
+      },
       "RefreshSessionCommand": {
         "required": [
           "refreshToken"
@@ -6182,7 +6500,10 @@
           "formTeacher",
           "formTeacherComment",
           "principalComment",
-          "gradingKey"
+          "gradingKey",
+          "behaviour",
+          "clubs",
+          "behaviourKey"
         ],
         "type": "object",
         "properties": {
@@ -6375,6 +6696,24 @@
             "items": {
               "$ref": "#/components/schemas/GradeBandDto"
             }
+          },
+          "behaviour": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraitRatingLine"
+            }
+          },
+          "clubs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClubLine"
+            }
+          },
+          "behaviourKey": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RatingKeyEntry"
+            }
           }
         }
       },
@@ -6529,6 +6868,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AttendanceEntry"
+            }
+          }
+        }
+      },
+      "SaveBehaviourSettingsCommand": {
+        "required": [
+          "traits"
+        ],
+        "type": "object",
+        "properties": {
+          "traits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraitInput"
             }
           }
         }
@@ -7403,6 +7756,71 @@
               "string"
             ],
             "format": "date"
+          }
+        }
+      },
+      "TraitInput": {
+        "required": [
+          "id",
+          "name",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TraitRatingInput": {
+        "required": [
+          "traitId",
+          "rating"
+        ],
+        "type": "object",
+        "properties": {
+          "traitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rating": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TraitRatingLine": {
+        "required": [
+          "traitId",
+          "trait",
+          "rating"
+        ],
+        "type": "object",
+        "properties": {
+          "traitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trait": {
+            "type": "string"
+          },
+          "rating": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
