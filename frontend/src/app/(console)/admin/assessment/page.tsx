@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, ClipboardList, Star } from "lucide-react";
+import { ArrowRight, BookOpen, ClipboardList, FileText, Star } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
@@ -102,6 +102,10 @@ export default async function MyClassesPage({ searchParams }: { searchParams: Pr
               <span className="text-xs text-muted">
                 {g.subjects.length} {g.subjects.length === 1 ? "subject" : "subjects"}
               </span>
+              <Link href={`/admin/reports/${classRoomId}?termId=${selected.id}`} className="inline-flex min-h-9 items-center gap-1 rounded-input px-2 text-xs font-medium text-brand hover:bg-brand/10">
+                <FileText className="size-3.5" aria-hidden />
+                Reports
+              </Link>
             </div>
             <ul className="divide-y divide-border">
               {g.subjects

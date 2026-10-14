@@ -50,3 +50,10 @@ export type GradableClass = Schemas["GradableClass"];
 export type GradeSheet = Schemas["GradeSheet"];
 export type GradeSheetRow = Schemas["GradeSheetRow"];
 export type GradeSheetEntry = Schemas["GradeSheetEntry"];
+
+export type ClassReportSummary = Schemas["ClassReportSummary"];
+export type ClassReportRow = Schemas["ClassReportRow"];
+export type ReportCard = Schemas["ReportCard"];
+export type ReportSubjectLine = Schemas["ReportSubjectLine"];
+export type PublishResult = Schemas["PublishResult"];
+export type UnpublishResult = Schemas["UnpublishResult"];
