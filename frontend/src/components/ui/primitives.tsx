@@ -1,13 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
-import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
-import { SchoolLoader } from "./school-loader";
+import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
+import { PendingButton, type ButtonProps, type ButtonSize, type ButtonVariant } from "./button";
 
 export function cn(...values: ClassValue[]) {
   return clsx(values);
 }
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive" | "link";
-type ButtonSize = "sm" | "md" | "lg";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-brand text-on-brand hover:bg-brand-strong",
@@ -33,39 +31,9 @@ export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSi
   );
 }
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  /** Pending: shows the small crest loader + `loadingText` and disables the button. */
-  loading?: boolean;
-  /** Verb shown while pending, e.g. "Saving…". Defaults to the button's own label. */
-  loadingText?: ReactNode;
-};
-
-/**
- * Buttons that can be pending (`loading` passed) stack the idle and pending labels in one grid cell,
- * so the width never jumps when "Save" becomes "Saving…".
- */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = "primary", size = "md", loading, loadingText, className, children, disabled, type = "button", ...rest },
-  ref,
-) {
-  const pendingCapable = loading !== undefined || loadingText !== undefined;
-  return (
-    <button ref={ref} type={type} className={buttonClasses(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-      {pendingCapable ? (
-        <span className="grid place-items-center *:[grid-area:1/1]">
-          <span className={cn("inline-flex items-center justify-center gap-2", loading && "invisible")}>{children}</span>
-          <span className={cn("inline-flex items-center justify-center gap-2", !loading && "invisible")} aria-hidden={!loading}>
-            <SchoolLoader size="xs" />
-            {loadingText ?? children}
-          </span>
-        </span>
-      ) : (
-        children
-      )}
-    </button>
-  );
+/** Primary/secondary/… button. Pending state (crest + verb, width pinned) lives in the client PendingButton. */
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = "primary", size = "md", className, ...rest }, ref) {
+  return <PendingButton ref={ref} classes={buttonClasses(variant, size, className)} {...rest} />;
 });
 
 const controlClasses =

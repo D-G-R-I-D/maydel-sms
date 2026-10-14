@@ -3,7 +3,6 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "./primitives";
-import { SchoolLoader } from "./school-loader";
 
 type Phase = "idle" | "loading" | "done";
 
@@ -21,8 +20,8 @@ function isInternalNavigation(e: MouseEvent): boolean {
 }
 
 /**
- * Slim brand-coloured bar at the top during client navigations, plus the small crest loader if a
- * page takes longer than ~1.5 s. Finishes when the route (path or query) actually changes.
+ * Slim brand-coloured bar at the top during client navigations (the page's own loading.tsx shows the
+ * crest, so the bar never adds a second loader). Finishes when the route actually changes.
  */
 export function NavigationProgress() {
   const pathname = usePathname();
@@ -88,12 +87,7 @@ export function NavigationProgress() {
           )}
         />
       </div>
-      {phase === "loading" && slow && (
-        <div role="status" aria-live="polite" className="animate-fade fixed top-3 right-3 z-[60] rounded-full border border-border bg-surface p-1.5 shadow-lg">
-          <SchoolLoader size="sm" />
-          <span className="sr-only">Loading page…</span>
-        </div>
-      )}
+      {phase === "loading" && slow && <span role="status" aria-live="polite" className="sr-only">Loading page…</span>}
     </>
   );
 }

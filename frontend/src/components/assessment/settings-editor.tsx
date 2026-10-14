@@ -1,18 +1,84 @@
 "use client";
 
 import { useState } from "react";
-import * as Menu from "@radix-ui/react-dropdown-menu";
-import { ArrowDown, ArrowUp, ChevronDown, GripVertical, Lock, Plus, Save, Trash2, Undo2, Wand2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Lock, Plus, Save, Trash2, Undo2, Wand2 } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
-import type { AssessmentSettings, GradingPreset } from "@/lib/api/types";
+import type { AssessmentSettings, GradeBand, GradingPreset } from "@/lib/api/types";
 import { saveAssessmentSettings } from "@/lib/assessment/actions";
 import { activeTotal, blankBand, blankComponent, move, settingsIssues, toPayload, toRows, type BandRow, type ComponentRow } from "@/lib/assessment/settings";
 import { runAction } from "@/lib/client/action";
 import { Badge, Button, Card, Input, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
+import { FormDialog } from "@/components/ui/dialog";
 
 const cellInput = "h-10 min-h-0 px-2 sm:text-sm";
+/** Band rows: phones = Grade | Min – Max, then Remark + remove; sm+ = one row with 7rem number columns. */
+const bandColsMobile = "grid-cols-[4.5rem_minmax(0,1fr)_auto_minmax(0,1fr)]";
+const bandCols = "sm:grid-cols-[5.5rem_7rem_7rem_minmax(0,1fr)_2.5rem]";
+const bandColsRead = "sm:grid-cols-[5.5rem_7rem_7rem_minmax(0,1fr)]";
+
+const bandKey = (bands: readonly GradeBand[]) =>
+  JSON.stringify([...bands].sort((x, y) => y.minScore - x.minScore).map((b) => [b.grade, b.minScore, b.maxScore, b.remark]));
+
+/** Pick a preset with every band previewed first; the one matching the saved scale is marked "In use". */
+function PresetPicker({ presets, activeKey, onApply }: { presets: GradingPreset[]; activeKey: string | null; onApply: (p: GradingPreset) => void }) {
+  return (
+    <FormDialog
+      size="lg"
+      title="Choose a grading preset"
+      description="Preview the bands, then fill the editor with one. Nothing is saved until you press Save settings."
+      trigger={
+        <Button variant="secondary" size="sm">
+          <Wand2 className="size-4" aria-hidden />
+          Use a preset
+        </Button>
+      }
+    >
+      {(close) => (
+        <ul className="grid gap-3 md:grid-cols-2">
+          {presets.map((p) => (
+            <li key={p.key} className={cn("flex flex-col rounded-card border p-4", p.key === activeKey ? "border-brand/50 bg-brand/5" : "border-border")}>
+              <div className="mb-1 flex items-center gap-2">
+                <h3 className="flex-1 font-display text-base font-semibold">{p.name}</h3>
+                {p.key === activeKey && <Badge tone="brand">In use</Badge>}
+              </div>
+              <p className="mb-3 text-xs text-muted">{p.description}</p>
+              <table className="mb-4 w-full text-sm">
+                <caption className="sr-only">{p.name} bands</caption>
+                <tbody className="divide-y divide-border">
+                  {[...p.bands]
+                    .sort((x, y) => y.minScore - x.minScore)
+                    .map((b) => (
+                      <tr key={b.grade}>
+                        <th scope="row" className="w-12 py-1 text-left font-semibold">
+                          {b.grade}
+                        </th>
+                        <td className="tabular w-28 py-1 text-muted">
+                          {b.minScore}–{b.maxScore}
+                        </td>
+                        <td className="py-1">{b.remark}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              <Button
+                className="mt-auto"
+                variant={p.key === activeKey ? "secondary" : "primary"}
+                onClick={() => {
+                  onApply(p);
+                  close();
+                }}
+              >
+                {p.key === activeKey ? "Reset to this preset" : "Use this preset"}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </FormDialog>
+  );
+}
 
 /** Components (reorderable, must total 100) and the grading scale. Admin edits; teachers read. */
 export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: AssessmentSettings; canEdit: boolean; presets?: GradingPreset[] }) {
@@ -23,6 +89,8 @@ export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: As
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState<number | null>(null);
   const [appliedPreset, setAppliedPreset] = useState<GradingPreset | null>(null);
+  const savedKey = bandKey(toPayload(base.components, base.bands).bands);
+  const activePreset = presets.find((p) => bandKey(p.bands) === savedKey) ?? null;
 
   const applyPreset = (preset: GradingPreset) => {
     setBands(toRows({ components: [], bands: preset.bands }).bands);
@@ -103,10 +171,10 @@ export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: As
                     </button>
                   </div>
                   {/* Width lives on wrappers: Input carries w-full, which would win over a width class here. */}
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-[9rem] flex-1">
                     <Input value={c.name} onChange={(e) => setComp(i, { name: e.target.value })} aria-label="Component name" placeholder="e.g. CAT" className={cellInput} maxLength={50} />
                   </div>
-                  <div className="w-20 shrink-0">
+                  <div className="w-28 shrink-0">
                     <Input value={c.maxScore} onChange={(e) => setComp(i, { maxScore: e.target.value })} aria-label={`Max score for ${c.name || "component"}`} inputMode="decimal" className={cn(cellInput, "tabular text-center")} />
                   </div>
                   <label className="flex items-center gap-2 text-sm text-muted">
@@ -146,83 +214,57 @@ export function SettingsEditor({ initial, canEdit, presets = [] }: { initial: As
 
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-start gap-3 border-b border-border px-5 py-4">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h2 className="font-display text-lg font-semibold">Grading scale</h2>
             <p className="text-sm text-muted">Highest first. The lowest band must start at 0. Only one scale is active at a time.</p>
+            {activePreset && (
+              <p className="mt-1.5">
+                <Badge tone="brand">In use: {activePreset.name}</Badge>
+              </p>
+            )}
           </div>
-          {canEdit && presets.length > 0 && (
-            <Menu.Root>
-              <Menu.Trigger asChild>
-                <Button variant="secondary" size="sm">
-                  <Wand2 className="size-4" aria-hidden />
-                  Use a preset
-                  <ChevronDown className="size-4" aria-hidden />
-                </Button>
-              </Menu.Trigger>
-              <Menu.Portal>
-                <Menu.Content align="end" sideOffset={6} className="z-50 w-80 rounded-card border border-border bg-surface p-1.5 text-text shadow-low">
-                  {presets.map((p) => (
-                    <Menu.Item key={p.key} onSelect={() => applyPreset(p)} className="cursor-pointer rounded-input px-3 py-2 outline-none data-[highlighted]:bg-surface-2">
-                      <p className="text-sm font-medium">{p.name}</p>
-                      <p className="text-xs text-muted">{p.description}</p>
-                      <p className="mt-1 text-xs text-muted">{p.bands.map((b) => b.grade).join(" · ")}</p>
-                    </Menu.Item>
-                  ))}
-                </Menu.Content>
-              </Menu.Portal>
-            </Menu.Root>
-          )}
+          {canEdit && presets.length > 0 && <PresetPicker presets={presets} activeKey={activePreset?.key ?? null} onApply={applyPreset} />}
         </div>
         {appliedPreset && dirty && (
           <Alert tone="info" className="mx-5 mt-4" title={`${appliedPreset.name} filled in (not saved yet)`}>
-            Applies to new and draft reports; published reports keep their figures. Review the bands, then save.
+            Applies to new and draft reports; published reports keep their figures. You can still edit the bands below, then save.
           </Alert>
         )}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th scope="col" className="px-3 py-2 font-medium sm:px-5">Grade</th>
-                <th scope="col" className="px-3 py-2 font-medium">Min</th>
-                <th scope="col" className="px-3 py-2 font-medium">Max</th>
-                <th scope="col" className="px-3 py-2 font-medium">Remark</th>
-                {canEdit && <th scope="col" className="px-3 py-2"><span className="sr-only">Remove</span></th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {bands.map((b, i) =>
-                canEdit ? (
-                  <tr key={b.key}>
-                    <td className="px-3 py-1.5 sm:px-5">
-                      <Input value={b.grade} onChange={(e) => setBand(i, { grade: e.target.value })} aria-label="Grade" className={cn(cellInput, "w-16 text-center font-semibold")} maxLength={3} />
-                    </td>
-                    <td className="px-3 py-1.5">
-                      <Input value={b.minScore} onChange={(e) => setBand(i, { minScore: e.target.value })} aria-label={`Min for ${b.grade || "band"}`} inputMode="decimal" className={cn(cellInput, "tabular w-20 text-center")} />
-                    </td>
-                    <td className="px-3 py-1.5">
-                      <Input value={b.maxScore} onChange={(e) => setBand(i, { maxScore: e.target.value })} aria-label={`Max for ${b.grade || "band"}`} inputMode="decimal" className={cn(cellInput, "tabular w-20 text-center")} />
-                    </td>
-                    <td className="px-3 py-1.5">
-                      <Input value={b.remark} onChange={(e) => setBand(i, { remark: e.target.value })} aria-label={`Remark for ${b.grade || "band"}`} className={cn(cellInput, "min-w-40")} maxLength={100} />
-                    </td>
-                    <td className="px-3 py-1.5">
-                      <Button variant="ghost" size="sm" onClick={() => setBands((l) => l.filter((_, j) => j !== i))} aria-label={`Remove grade ${b.grade}`}>
-                        <Trash2 className="size-4 text-danger" aria-hidden />
-                      </Button>
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={b.key}>
-                    <td className="px-3 py-2.5 font-semibold sm:px-5">{b.grade}</td>
-                    <td className="tabular px-3 py-2.5">{b.minScore}</td>
-                    <td className="tabular px-3 py-2.5">{b.maxScore}</td>
-                    <td className="px-3 py-2.5">{b.remark}</td>
-                  </tr>
-                ),
-              )}
-            </tbody>
-          </table>
+
+        {/* Column headings from sm up; below that each band is a small card. */}
+        <div className={cn("hidden gap-2 bg-surface-2 px-5 py-2 text-xs font-medium uppercase tracking-wide text-muted sm:grid", canEdit ? bandCols : bandColsRead)}>
+          <span>Grade</span>
+          <span>Min</span>
+          <span>Max</span>
+          <span>Remark</span>
+          {canEdit && <span className="sr-only">Remove</span>}
         </div>
+        <ul className="divide-y divide-border">
+          {bands.map((b, i) =>
+            canEdit ? (
+              <li key={b.key} className={cn("grid items-center gap-2 px-4 py-3 sm:px-5 sm:py-2", bandColsMobile, bandCols)}>
+                <Input value={b.grade} onChange={(e) => setBand(i, { grade: e.target.value })} aria-label="Grade" placeholder="A" className={cn(cellInput, "w-full text-center font-semibold")} maxLength={3} />
+                <Input value={b.minScore} onChange={(e) => setBand(i, { minScore: e.target.value })} aria-label={`Min for ${b.grade || "band"}`} placeholder="Min" inputMode="decimal" className={cn(cellInput, "tabular w-full text-center")} />
+                <span aria-hidden className="text-center text-muted sm:hidden">–</span>
+                <Input value={b.maxScore} onChange={(e) => setBand(i, { maxScore: e.target.value })} aria-label={`Max for ${b.grade || "band"}`} placeholder="Max" inputMode="decimal" className={cn(cellInput, "tabular w-full text-center")} />
+                <Input value={b.remark} onChange={(e) => setBand(i, { remark: e.target.value })} aria-label={`Remark for ${b.grade || "band"}`} placeholder="Remark, e.g. Excellent" className={cn(cellInput, "col-span-3 w-full sm:col-span-1")} maxLength={100} />
+                <Button variant="ghost" size="sm" className="size-10 justify-self-end px-0" onClick={() => setBands((l) => l.filter((_, j) => j !== i))} aria-label={`Remove grade ${b.grade || "band"}`}>
+                  <Trash2 className="size-4 text-danger" aria-hidden />
+                </Button>
+              </li>
+            ) : (
+              <li key={b.key} className={cn("grid grid-cols-[3.5rem_1fr] items-center gap-2 px-4 py-2.5 text-sm sm:px-5", bandColsRead)}>
+                <span className="font-semibold">{b.grade}</span>
+                <span className="tabular sm:hidden">
+                  {b.minScore}–{b.maxScore} · <span className="text-muted">{b.remark}</span>
+                </span>
+                <span className="tabular hidden sm:block">{b.minScore}</span>
+                <span className="tabular hidden sm:block">{b.maxScore}</span>
+                <span className="hidden sm:block">{b.remark}</span>
+              </li>
+            ),
+          )}
+        </ul>
         {canEdit && (
           <div className="border-t border-border px-5 py-3">
             <Button variant="secondary" size="sm" onClick={() => setBands((l) => [...l, blankBand()])}>

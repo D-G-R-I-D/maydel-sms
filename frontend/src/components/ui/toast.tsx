@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { Toaster as Sonner, toast } from "sonner";
-import { CircleCheck, Info, Loader2, TriangleAlert, XCircle } from "lucide-react";
+import { CircleCheck, Info, TriangleAlert, XCircle } from "lucide-react";
+import { SchoolLoader } from "./school-loader";
 import { FLASH_COOKIE, flashMessages, parseFlash } from "@/lib/flash";
 
 export { toast };
@@ -37,7 +38,7 @@ export function Toaster() {
           info: <Info className="size-4 text-brand" aria-hidden />,
           warning: <TriangleAlert className="size-4 text-warning" aria-hidden />,
           error: <XCircle className="size-4 text-danger" aria-hidden />,
-          loading: <Loader2 className="size-4 animate-spin text-muted" aria-hidden />,
+          loading: <SchoolLoader size="xs" />,
         }}
         toastOptions={{
           unstyled: true,

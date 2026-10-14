@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { AlertTriangle, Check, CloudOff, History, Loader2, Lock, MessageSquare, RotateCcw } from "lucide-react";
+import { AlertTriangle, Check, CloudOff, History, Lock, MessageSquare, RotateCcw } from "lucide-react";
+import { SchoolLoader } from "@/components/ui/school-loader";
 import { ProblemCodes, problemMessage } from "@/lib/api/problem";
 import type { GradeBand, GradeSheet, GradeSheetRow } from "@/lib/api/types";
 import { saveGradeSheet } from "@/lib/assessment/actions";
@@ -439,7 +440,7 @@ function SaveStatus({ status, dirty, onRetry }: { status: Status; dirty: boolean
     case "saving":
       body = (
         <span className="inline-flex items-center gap-1.5 text-muted">
-          <Loader2 className="size-4 animate-spin" aria-hidden />
+          <SchoolLoader size="xs" />
           Saving…
         </span>
       );
