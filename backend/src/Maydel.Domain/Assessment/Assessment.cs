@@ -220,6 +220,32 @@ public sealed class GradingScale
     }
 }
 
+/// <summary>
+/// Ready-made grading scales the admin can apply in Settings → Assessment (one is active at a time; it can be edited after).
+/// </summary>
+public static class GradingPresets
+{
+    public sealed record Preset(string Key, string Name, string Description, IReadOnlyList<AssessmentRules.BandInput> Bands);
+
+    /// <summary>The school's own result sheet (8 grades). The default for new installations.</summary>
+    public static readonly Preset SchoolStandard = new("school-standard", "School standard (8 grades)",
+        "The scale on the school's existing result sheet: A+ for 95 and above down to F below 40.",
+        [
+            new("A+", 95, 100, "Distinction"), new("A", 90, 94.99m, "Excellent"), new("B+", 80, 89.99m, "Very Good"),
+            new("B", 70, 79.99m, "Good"), new("C+", 60, 69.99m, "Fairly Good"), new("C", 50, 59.99m, "Average"),
+            new("D", 40, 49.99m, "Below Average"), new("F", 0, 39.99m, "Weak"),
+        ]);
+
+    public static readonly Preset Simple = new("simple", "Simple (6 grades)",
+        "A broader scale: A for 70 and above down to F below 40.",
+        [
+            new("A", 70, 100, "Excellent"), new("B", 60, 69.99m, "Very Good"), new("C", 50, 59.99m, "Good"),
+            new("D", 45, 49.99m, "Fair"), new("E", 40, 44.99m, "Pass"), new("F", 0, 39.99m, "Needs Improvement"),
+        ]);
+
+    public static readonly IReadOnlyList<Preset> All = [SchoolStandard, Simple];
+}
+
 /// <summary>Assessment configuration and score rules (E2.4, E5.1). Pure, unit-tested.</summary>
 public static class AssessmentRules
 {

@@ -3464,6 +3464,49 @@
         }
       }
     },
+    "/api/assessment/grading-presets": {
+      "get": {
+        "tags": [
+          "Assessment"
+        ],
+        "operationId": "ListGradingPresets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GradingPresetDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assessment/my-classes": {
       "get": {
         "tags": [
@@ -5315,6 +5358,32 @@
           },
           "locked": {
             "type": "boolean"
+          }
+        }
+      },
+      "GradingPresetDto": {
+        "required": [
+          "key",
+          "name",
+          "description",
+          "bands"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "bands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradeBandDto"
+            }
           }
         }
       },

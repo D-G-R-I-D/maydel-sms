@@ -3,6 +3,7 @@ using Maydel.Application.Assessment;
 using Maydel.Application.Assessment.GetAssessmentSettings;
 using Maydel.Application.Assessment.GetGradeSheet;
 using Maydel.Application.Assessment.ListGradableClasses;
+using Maydel.Application.Assessment.ListGradingPresets;
 using Maydel.Application.Assessment.SaveAssessmentSettings;
 using Maydel.Application.Assessment.SaveGradeSheet;
 using Maydel.Application.Common.Messaging;
@@ -22,6 +23,7 @@ public static class AssessmentEndpoints
 
         academic.MapGet("/settings", GetSettings).WithName("GetAssessmentSettings").ProducesProblems(401, 403);
         academic.MapPut("/settings", SaveSettings).RequireAuthorization(Policies.Admin).WithName("SaveAssessmentSettings").ProducesProblems(400, 401, 403, 422);
+        academic.MapGet("/grading-presets", ListPresets).WithName("ListGradingPresets").ProducesProblems(401, 403);
         academic.MapGet("/my-classes", ListGradable).WithName("ListGradableClasses").ProducesProblems(401, 403);
         academic.MapGet("/gradesheet", GetGradeSheet).WithName("GetGradeSheet").ProducesProblems(400, 401, 403, 404);
         academic.MapPut("/gradesheet", SaveGradeSheet).WithName("SaveGradeSheet").ProducesProblems(400, 401, 403, 404, 422);
@@ -34,6 +36,10 @@ public static class AssessmentEndpoints
     private static async Task<Results<Ok<AssessmentSettings>, ProblemHttpResult>> SaveSettings(
         SaveAssessmentSettingsCommand command, ICommandHandler<SaveAssessmentSettingsCommand, AssessmentSettings> handler, CancellationToken ct) =>
         (await handler.Handle(command, ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<IReadOnlyList<GradingPresetDto>>, ProblemHttpResult>> ListPresets(
+        IQueryHandler<ListGradingPresetsQuery, IReadOnlyList<GradingPresetDto>> handler, CancellationToken ct) =>
+        (await handler.Handle(new ListGradingPresetsQuery(), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<IReadOnlyList<GradableClass>>, ProblemHttpResult>> ListGradable(
         IQueryHandler<ListGradableClassesQuery, IReadOnlyList<GradableClass>> handler, CancellationToken ct) =>

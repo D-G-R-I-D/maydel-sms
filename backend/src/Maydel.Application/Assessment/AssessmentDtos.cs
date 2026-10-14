@@ -9,6 +9,9 @@ public sealed record ComponentDto(Guid Id, string Name, decimal MaxScore, int Or
 
 public sealed record GradeBandDto(string Grade, decimal MinScore, decimal MaxScore, string Remark);
 
+/// <summary>A ready-made grading scale. Apply it by sending its bands in <c>PUT /api/assessment/settings</c>.</summary>
+public sealed record GradingPresetDto(string Key, string Name, string Description, IReadOnlyList<GradeBandDto> Bands);
+
 public sealed record AssessmentSettings(IReadOnlyList<ComponentDto> Components, IReadOnlyList<GradeBandDto> Bands);
 
 /// <summary>Component in a save request. <c>Id</c> null = new component; existing components missing from the list are removed or deactivated.</summary>

@@ -32,7 +32,7 @@ public sealed class ReportTests(PostgresFixture fixture)
         Assert.Null(draft.DaysOpened); // attendance not entered yet
         var line = draft.Subjects.Single(l => l.SubjectId == s.SubjectId);
         Assert.Equal((70m, 50m, 60m), (line.ClassHighest, line.ClassLowest, line.ClassAverage));
-        Assert.Equal("A", line.Grade);
+        Assert.Equal("B", line.Grade); // 70 on the school standard scale
         Assert.NotEmpty(draft.GradingKey);
         Assert.NotNull(draft.NextTermBegins);
 

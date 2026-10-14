@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assessment/grading-presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListGradingPresets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assessment/my-classes": {
         parameters: {
             query?: never;
@@ -1011,6 +1027,12 @@ export interface components {
             remark: null | string;
             comment: null | string;
             locked: boolean;
+        };
+        GradingPresetDto: {
+            key: string;
+            name: string;
+            description: string;
+            bands: components["schemas"]["GradeBandDto"][];
         };
         GuardianAdded: {
             student: components["schemas"]["StudentDetail"];
@@ -4294,6 +4316,44 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListGradingPresets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradingPresetDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

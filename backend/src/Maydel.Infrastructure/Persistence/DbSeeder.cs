@@ -144,13 +144,9 @@ public sealed class DbSeeder(
 
         if (!await db.GradeBands.AnyAsync(ct))
         {
-            db.GradeBands.AddRange(
-                new GradeBand { Grade = "A", MinScore = 70, MaxScore = 100, Remark = "Excellent" },
-                new GradeBand { Grade = "B", MinScore = 60, MaxScore = 69.99m, Remark = "Very Good" },
-                new GradeBand { Grade = "C", MinScore = 50, MaxScore = 59.99m, Remark = "Good" },
-                new GradeBand { Grade = "D", MinScore = 45, MaxScore = 49.99m, Remark = "Fair" },
-                new GradeBand { Grade = "E", MinScore = 40, MaxScore = 44.99m, Remark = "Pass" },
-                new GradeBand { Grade = "F", MinScore = 0, MaxScore = 39.99m, Remark = "Needs Improvement" });
+            // The school's own 8-grade scale (agreed 2026-10-14); "Simple (6 grades)" stays available as a preset.
+            db.GradeBands.AddRange(GradingPresets.SchoolStandard.Bands.Select(b =>
+                new GradeBand { Grade = b.Grade, MinScore = b.MinScore, MaxScore = b.MaxScore, Remark = b.Remark }));
         }
 
         await db.SaveChangesAsync(ct);
