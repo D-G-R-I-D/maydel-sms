@@ -17,7 +17,7 @@ test("admin adds, sees and removes a student photo", async ({ page }) => {
   await signIn(page, "admin@maydel.test");
   await page.goto("/admin/students/new");
   await page.getByLabel("First name").fill("Photo");
-  await page.getByLabel("Surname").fill(`Test${Date.now() % 100000}`);
+  await page.getByLabel("Surname").fill(`E2E${Date.now() % 100000}`);
   await page.getByRole("button", { name: "Admit student" }).click();
   await page.waitForURL(/\/admin\/students\/[0-9a-f-]+$/);
 
@@ -45,6 +45,12 @@ test("admin adds, sees and removes a student photo", async ({ page }) => {
   await page.getByRole("menuitem", { name: "Remove photo" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Remove photo" }).click();
   await expect(page.locator('img[src^="/api/media/students/"]')).toHaveCount(0);
+
+  // Withdraw the test student so it drops out of lists.
+  await page.getByRole("button", { name: "Change status" }).click();
+  await page.getByRole("menuitem", { name: "Withdraw" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Withdraw" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Withdrawn");
 });
 
 test("the media route refuses anything but student/staff photos", async ({ page }) => {
