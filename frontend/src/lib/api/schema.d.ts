@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assessment/behaviour": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetBehaviourSettings"];
+        put: operations["SaveBehaviourSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assessment/grading-presets": {
         parameters: {
             query?: never;
@@ -708,6 +724,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/{studentId}/{termId}/behaviour": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetReportBehaviour"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/attendance": {
         parameters: {
             query?: never;
@@ -815,6 +847,25 @@ export interface components {
             refreshTokenExpiresAt: string;
             user: components["schemas"]["MeResponse"];
         };
+        BehaviourRequest: {
+            ratings: null | components["schemas"]["TraitRatingInput"][];
+            clubs: null | components["schemas"]["ClubLine"][];
+        };
+        BehaviourSettings: {
+            traits: components["schemas"]["BehaviourTraitDto"][];
+            ratingKey: components["schemas"]["RatingKeyEntry"][];
+            /** Format: int32 */
+            maxClubs: number;
+        };
+        BehaviourTraitDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int32 */
+            order: number;
+            isActive: boolean;
+            inUse: boolean;
+        };
         ChangePasswordCommand: {
             currentPassword: string;
             newPassword: string;
@@ -843,6 +894,8 @@ export interface components {
             daysPresent: null | number;
             hasFormTeacherComment: boolean;
             hasPrincipalComment: boolean;
+            /** Format: int32 */
+            traitsRated: number;
         };
         ClassReportSummary: {
             /** Format: uuid */
@@ -909,6 +962,10 @@ export interface components {
         };
         ClassSubjectsRequest: {
             subjects: components["schemas"]["ClassSubjectAssignment"][];
+        };
+        ClubLine: {
+            name: string;
+            rating: null | string;
         };
         CommentRequest: {
             comment: null | string;
@@ -1235,6 +1292,10 @@ export interface components {
             classAverage: number;
             skipped: components["schemas"]["SkippedStudent"][];
         };
+        RatingKeyEntry: {
+            rating: string;
+            meaning: string;
+        };
         RefreshSessionCommand: {
             refreshToken: string;
         };
@@ -1290,6 +1351,9 @@ export interface components {
             formTeacherComment: null | string;
             principalComment: null | string;
             gradingKey: components["schemas"]["GradeBandDto"][];
+            behaviour: components["schemas"]["TraitRatingLine"][];
+            clubs: components["schemas"]["ClubLine"][];
+            behaviourKey: components["schemas"]["RatingKeyEntry"][];
         };
         /** @enum {unknown} */
         ReportStatus: "Draft" | "Published";
@@ -1328,6 +1392,9 @@ export interface components {
             /** Format: int32 */
             daysOpened: number;
             entries: components["schemas"]["AttendanceEntry"][];
+        };
+        SaveBehaviourSettingsCommand: {
+            traits: components["schemas"]["TraitInput"][];
         };
         SaveGradeSheetCommand: {
             /** Format: uuid */
@@ -1540,6 +1607,23 @@ export interface components {
             midTermStartsOn: null | string;
             /** Format: date */
             midTermEndsOn: null | string;
+        };
+        TraitInput: {
+            /** Format: uuid */
+            id: null | string;
+            name: string;
+            isActive: boolean;
+        };
+        TraitRatingInput: {
+            /** Format: uuid */
+            traitId: string;
+            rating: null | string;
+        };
+        TraitRatingLine: {
+            /** Format: uuid */
+            traitId: string;
+            trait: string;
+            rating: null | string;
         };
         /** @enum {unknown} */
         Trend: "Improved" | "Steady" | "Declined" | null;
@@ -4325,6 +4409,95 @@ export interface operations {
             };
         };
     };
+    GetBehaviourSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BehaviourSettings"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveBehaviourSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveBehaviourSettingsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BehaviourSettings"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     ListGradingPresets: {
         parameters: {
             query?: never;
@@ -4784,6 +4957,78 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCard"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SetReportBehaviour: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+                termId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BehaviourRequest"];
             };
         };
         responses: {
