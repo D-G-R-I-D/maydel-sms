@@ -90,7 +90,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
+    <form method="post" onSubmit={onSubmit} noValidate className="space-y-4">
       {problem && (
         <Alert tone="danger" title="Couldn't change your password" className="animate-rise">
           <p>{problemMessage(problem)}</p>
