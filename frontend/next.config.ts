@@ -4,19 +4,30 @@ import type { NextConfig } from "next";
 // `**` = any number of labels (abc-3000.uks1.devtunnels.ms); `*` would match only one.
 const devTunnels = ["**.devtunnels.ms", "**.trycloudflare.com", "**.ngrok-free.app"];
 
+const isDev = process.env.NODE_ENV !== "production";
+
 /**
  * Hosts whose pages may call Server Actions besides our own. Next rejects an action whose Origin
- * doesn't match Host / X-Forwarded-Host, and tunnels show `localhost:3000` as Host, so without this
- * every save through a shared link fails. Mirrors the BFF's TRUSTED_ORIGINS (lib/auth/origins.ts):
- * dev tunnels by default in development, only what TRUSTED_ORIGINS lists in production.
+ * host doesn't match X-Forwarded-Host (or Host), and tunnels break that both ways:
+ * - some keep the browser's Origin (`https://abc-3000.uks1.devtunnels.ms`) but send Host `localhost:3000`;
+ * - VS Code dev tunnels rewrite Origin to `http://localhost:3000` and put the tunnel in X-Forwarded-Host.
+ * So in development we also trust the dev server's own localhost origin. Only a page served by this
+ * dev server can send that Origin, so it isn't a CSRF hole. Mirrors the BFF's TRUSTED_ORIGINS
+ * (lib/auth/origins.ts): in production, only what TRUSTED_ORIGINS lists.
  */
 function serverActionOrigins(): string[] {
   const raw = process.env.TRUSTED_ORIGINS;
-  if (raw === undefined) return process.env.NODE_ENV === "production" ? [] : devTunnels;
-  return raw
-    .split(",")
-    .map((o) => o.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^\*\./, "**."))
-    .filter(Boolean);
+  const listed =
+    raw === undefined
+      ? isDev
+        ? devTunnels
+        : []
+      : raw
+          .split(",")
+          .map((o) => o.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^\*\./, "**."))
+          .filter(Boolean);
+  const port = process.env.PORT ?? "3000";
+  return isDev ? [...listed, `localhost:${port}`, `127.0.0.1:${port}`] : listed;
 }
 
 const nextConfig: NextConfig = {

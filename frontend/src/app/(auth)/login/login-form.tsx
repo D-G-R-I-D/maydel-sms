@@ -95,7 +95,7 @@ export function LoginForm({ next, googleClientId, showDemo }: { next: string | n
         </Alert>
       )}
 
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <form method="post" onSubmit={onSubmit} noValidate className="space-y-4">
         <Field id="userName" label="Email or admission number" error={errors.userName?.message}>
           <Input
             {...describedBy("userName", errors.userName?.message)}
