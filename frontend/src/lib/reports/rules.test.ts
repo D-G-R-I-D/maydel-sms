@@ -13,6 +13,7 @@ const row = (id: string, scored: number, daysPresent: number | null) => ({
   daysPresent,
   hasFormTeacherComment: false,
   hasPrincipalComment: false,
+  traitsRated: 0,
 });
 const summary = (daysOpened: number | null, rows: ReturnType<typeof row>[]): ClassReportSummary => ({
   classRoomId: "c",
