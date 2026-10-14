@@ -26,11 +26,15 @@ public sealed class PhotoStore(IFileStorage storage, IImageProcessor images)
         key is null ? null : Path.GetFileNameWithoutExtension(key);
 
     /// <summary>Re-encodes and stores the upload; returns the new key and image info, or an error for anything that isn't a usable photo.</summary>
-    public async Task<Common.Result<(string Key, ProcessedImage Image)>> SaveAsync(byte[] upload, string folder, CancellationToken ct)
+    public Task<Common.Result<(string Key, ProcessedImage Image)>> SaveAsync(byte[] upload, string folder, CancellationToken ct) =>
+        SaveAsync(upload, folder, transparent: false, MaxDimension, ct);
+
+    /// <summary><paramref name="transparent"/>: store a PNG that keeps transparency (logos, signatures) instead of a JPEG.</summary>
+    public async Task<Common.Result<(string Key, ProcessedImage Image)>> SaveAsync(byte[] upload, string folder, bool transparent, int maxDimension, CancellationToken ct)
     {
         if (upload.Length == 0) return PhotoErrors.Empty;
         if (upload.Length > MaxUploadBytes) return PhotoErrors.Invalid;
-        var processed = images.ToJpeg(upload, MaxDimension);
+        var processed = transparent ? images.ToPng(upload, maxDimension) : images.ToJpeg(upload, maxDimension);
         if (processed is null) return PhotoErrors.Invalid;
 
         using var stream = new MemoryStream(processed.Content);
@@ -41,7 +45,8 @@ public sealed class PhotoStore(IFileStorage storage, IImageProcessor images)
     public async Task<Common.Result<PhotoContent>> OpenAsync(string? key, CancellationToken ct)
     {
         if (key is null || await storage.OpenAsync(key, ct) is not { } stream) return PhotoErrors.NotFound;
-        return new PhotoContent(stream, "image/jpeg", $"\"{VersionOf(key)}\"");
+        var contentType = key.EndsWith(".png", StringComparison.Ordinal) ? "image/png" : "image/jpeg";
+        return new PhotoContent(stream, contentType, $"\"{VersionOf(key)}\"");
     }
 
     /// <summary>Best effort: an orphaned file is harmless, a failed request because of one is not.</summary>

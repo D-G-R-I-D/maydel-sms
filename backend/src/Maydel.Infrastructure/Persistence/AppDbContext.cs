@@ -35,6 +35,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SubjectScore> SubjectScores => Set<SubjectScore>();
     public DbSet<TermReport> TermReports => Set<TermReport>();
     public DbSet<BehaviourTrait> BehaviourTraits => Set<BehaviourTrait>();
+    public DbSet<Domain.Settings.SchoolProfile> SchoolProfiles => Set<Domain.Settings.SchoolProfile>();
 
     public DbSet<AttendanceRecord> Attendance => Set<AttendanceRecord>();
 

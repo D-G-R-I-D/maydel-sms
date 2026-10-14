@@ -37,6 +37,7 @@ public interface IAppDbContext
     DbSet<SubjectScore> SubjectScores { get; }
     DbSet<TermReport> TermReports { get; }
     DbSet<BehaviourTrait> BehaviourTraits { get; }
+    DbSet<Domain.Settings.SchoolProfile> SchoolProfiles { get; }
 
     DbSet<AttendanceRecord> Attendance { get; }
 

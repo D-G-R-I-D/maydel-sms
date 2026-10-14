@@ -192,6 +192,23 @@ internal sealed class TermReportConfig : IEntityTypeConfiguration<TermReport>
     }
 }
 
+internal sealed class SchoolProfileConfig : IEntityTypeConfiguration<Domain.Settings.SchoolProfile>
+{
+    public void Configure(EntityTypeBuilder<Domain.Settings.SchoolProfile> b)
+    {
+        b.ToTable("SchoolProfile");
+        b.Property(x => x.Name).HasMaxLength(120);
+        b.Property(x => x.Motto).HasMaxLength(120);
+        b.Property(x => x.Address).HasMaxLength(300);
+        b.Property(x => x.Phone).HasMaxLength(40);
+        b.Property(x => x.Email).HasMaxLength(120);
+        b.Property(x => x.Website).HasMaxLength(120);
+        b.Property(x => x.PrincipalName).HasMaxLength(80);
+        b.Property(x => x.LogoPath).HasMaxLength(200);
+        b.Property(x => x.SignaturePath).HasMaxLength(200);
+    }
+}
+
 internal sealed class BehaviourTraitConfig : IEntityTypeConfiguration<BehaviourTrait>
 {
     public void Configure(EntityTypeBuilder<BehaviourTrait> b) => b.Property(x => x.Name).HasMaxLength(60);

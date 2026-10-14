@@ -50,7 +50,7 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E2.3** 🟡 *API ✅ 2026-10-13; UI pending.* Subjects catalogue and per-class subject offering with assigned subject teacher.
 - **E2.4** 🟡 *API ✅ 2026-10-13; UI pending.* Assessment configuration: components (name, max) and grade bands. Default (agreed 2026-10-12): Project 10 · Homefun 5 · Class Fun 5 · Attendance 10 · CAT (Continuous Assessment Test) 30 · Exams 40 = 100. AC: active components must total 100; bands start at 0 with unique minima; changing config never alters already-published reports.
 - **E2.5 (S)** 🟡 *API ✅ 2026-10-14 (A–E key and 14 traits from the school sheet, clubs ≤ 6, form teacher/admin, locked on publish, on the PDF; never affects scores); UI pending.* Affective & psychomotor traits rated on the report card, plus clubs & activities — standard on Nigerian report cards.
-- **E2.6** School profile: name, motto, logo, address, principal's signature image (used on report cards & receipts).
+- **E2.6** 🟡 *API ✅ 2026-10-14 (editable details, PNG logo (public) and principal signature (admin-only) on the report PDF); UI pending.* School profile: name, motto, logo, address, principal's signature image (used on report cards & receipts).
 
 ## E3 — Student information system
 - **E3.1** 🟡 *API ✅ 2026-10-13 incl. photos (re-encoded, private; ADR-006); UI pending.* Create/edit student with biodata (name, DOB, sex, state/LGA, address, house, medical notes, photo). AC: admission number auto-generated `MSS/{year}/{seq}`, unique.

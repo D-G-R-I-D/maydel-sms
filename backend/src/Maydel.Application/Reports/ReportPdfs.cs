@@ -1,9 +1,10 @@
 using Maydel.Application.Abstractions;
+using Maydel.Application.SchoolSettings;
 using Microsoft.EntityFrameworkCore;
 
 namespace Maydel.Application.Reports;
 
-/// <summary>Loads each student's photo and hands the cards to the PDF renderer.</summary>
+/// <summary>Loads each student's photo and the school profile (E2.6) and hands the cards to the PDF renderer.</summary>
 public sealed class ReportPdfs(IAppDbContext db, IFileStorage storage, IReportCardRenderer renderer)
 {
     public async Task<byte[]> RenderAsync(IReadOnlyList<ReportCard> cards, CancellationToken ct)
@@ -14,20 +15,24 @@ public sealed class ReportPdfs(IAppDbContext db, IFileStorage storage, IReportCa
 
         var documents = new List<ReportCardDocument>(cards.Count);
         foreach (var card in cards)
+            documents.Add(new ReportCardDocument(card, await ReadAsync(photos.GetValueOrDefault(card.StudentId), ct)));
+
+        var school = await db.SchoolProfiles.AsNoTracking().OrderBy(p => p.CreatedAt).FirstOrDefaultAsync(ct)
+            ?? new Domain.Settings.SchoolProfile { Name = "School", Address = "" };
+        var branding = new ReportBranding(school.Name, school.Motto, school.Address, school.Phone, school.Email, school.Website,
+            school.PrincipalName, await ReadAsync(school.LogoPath, ct), await ReadAsync(school.SignaturePath, ct));
+        return renderer.Render(documents, branding);
+    }
+
+    private async Task<byte[]?> ReadAsync(string? key, CancellationToken ct)
+    {
+        if (key is null || await storage.OpenAsync(key, ct) is not { } stream) return null;
+        await using (stream)
         {
-            byte[]? photo = null;
-            if (photos.TryGetValue(card.StudentId, out var key) && await storage.OpenAsync(key, ct) is { } stream)
-            {
-                await using (stream)
-                {
-                    using var buffer = new MemoryStream();
-                    await stream.CopyToAsync(buffer, ct);
-                    photo = buffer.ToArray();
-                }
-            }
-            documents.Add(new ReportCardDocument(card, photo));
+            using var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer, ct);
+            return buffer.ToArray();
         }
-        return renderer.Render(documents);
     }
 
     public static string FileName(ReportCard card) => Safe($"{card.StudentName} - {card.Term} {card.Session}") + ".pdf";
