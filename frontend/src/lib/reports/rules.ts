@@ -51,3 +51,26 @@ export function neighbours<T extends { studentId: string }>(rows: readonly T[], 
   const i = rows.findIndex((r) => r.studentId === studentId);
   return { prev: i > 0 ? rows[i - 1] : null, next: i >= 0 && i < rows.length - 1 ? rows[i + 1] : null, index: i };
 }
+
+/** "+5.5", "−3", "0" (true minus sign), for change cells. */
+export function formatChange(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  const r = Math.round(n * 100) / 100;
+  if (r === 0) return "0";
+  return r > 0 ? `+${r}` : `−${Math.abs(r)}`;
+}
+
+/** Short column label for an earlier term: "1st T", "2nd T". */
+export function termShort(number: "First" | "Second" | "Third"): string {
+  return { First: "1st T", Second: "2nd T", Third: "3rd T" }[number];
+}
+
+export const trendTone = { Improved: "success", Steady: "neutral", Declined: "danger" } as const;
+
+export function reportPdfHref(studentId: string, termId: string): string {
+  return `/api/media/reports/${studentId}/${termId}/pdf`;
+}
+
+export function classPdfHref(classRoomId: string, termId: string): string {
+  return `/api/media/reports/class/pdf?${new URLSearchParams({ classRoomId, termId }).toString()}`;
+}

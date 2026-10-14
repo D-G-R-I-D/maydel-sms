@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, Lock } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { loadTerms } from "@/lib/assessment/terms";
 import { isFormTeacherOf } from "@/lib/reports/access";
-import { neighbours } from "@/lib/reports/rules";
+import { neighbours, reportPdfHref } from "@/lib/reports/rules";
 import { Badge, Card, buttonClasses, cn } from "@/components/ui/primitives";
 import { Alert, ProblemState } from "@/components/ui/states";
 import { CommentEditor } from "@/components/reports/comment-editor";
@@ -66,6 +66,10 @@ export default async function ReportPreviewPage({
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {back}
         <span className="flex-1" />
+        <a href={reportPdfHref(studentId, termId)} target="_blank" rel="noopener" className={buttonClasses("secondary", "sm")}>
+          <Download className="size-4" aria-hidden />
+          Download PDF
+        </a>
         {published ? (
           <Badge tone="success">
             <Lock className="size-3" aria-hidden />
@@ -119,7 +123,9 @@ export default async function ReportPreviewPage({
           </>
         }
       />
-      <p className="mt-3 text-xs text-muted">The PDF report card (download and print) arrives in the next release.</p>
+      <p className="mt-3 text-xs text-muted">
+        The PDF matches what parents will download once the report is published.{!published && " Drafts carry a “DRAFT – NOT FINAL” mark."}
+      </p>
     </>
   );
 }

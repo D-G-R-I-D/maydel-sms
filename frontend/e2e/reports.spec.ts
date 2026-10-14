@@ -78,3 +78,35 @@ test("teachers can't write the principal's comment", async ({ page }) => {
   await expect(page.getByLabel("Form teacher's comment")).toBeEditable();
   await expect(page.getByLabel("Principal's comment")).toHaveCount(0);
 });
+
+test("report and class PDFs download through the BFF", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await openClass(page);
+  const classPdf = await page.getByRole("link", { name: "Download class PDF (print)" }).getAttribute("href");
+  const res = await page.request.get(classPdf!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("application/pdf");
+  expect((await res.body()).subarray(0, 4).toString()).toBe("%PDF");
+
+  await page.locator("tbody tr").first().getByRole("link").first().click();
+  await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\/[0-9a-f-]+\?termId=/);
+  const one = await page.getByRole("link", { name: "Download PDF" }).getAttribute("href");
+  const pdf = await page.request.get(one!);
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-disposition"] ?? "").toMatch(/\.pdf/);
+});
+
+test("first-term reports show no comparison", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await openClass(page);
+  await page.locator("tbody tr").first().getByRole("link").first().click();
+  await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\/[0-9a-f-]+\?termId=/);
+  await expect(page.getByRole("article")).toBeVisible();
+  await expect(page.getByText("Compared with earlier terms")).toHaveCount(0);
+});
+
+test("PDF routes refuse junk ids and signed-out users", async ({ request }) => {
+  expect((await request.get("/api/media/reports/not-a-guid/x/pdf")).status()).toBe(404);
+  const id = "01a131b3-b62a-776b-b7f7-3698f51d8986";
+  expect((await request.get(`/api/media/reports/${id}/${id}/pdf`)).status()).toBe(401);
+});

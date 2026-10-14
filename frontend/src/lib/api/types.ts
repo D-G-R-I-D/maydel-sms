@@ -57,3 +57,7 @@ export type ReportCard = Schemas["ReportCard"];
 export type ReportSubjectLine = Schemas["ReportSubjectLine"];
 export type PublishResult = Schemas["PublishResult"];
 export type UnpublishResult = Schemas["UnpublishResult"];
+
+export type Trend = NonNullable<Schemas["Trend"]>;
+export type PreviousTermResult = Schemas["PreviousTermResult"];
+export type PreviousSubjectResult = Schemas["PreviousSubjectResult"];

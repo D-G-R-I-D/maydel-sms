@@ -1,9 +1,10 @@
 import Image from "next/image";
-import type { ReportCard } from "@/lib/api/types";
+import { ArrowRight, MoveRight, TrendingDown, TrendingUp } from "lucide-react";
+import type { ReportCard, Trend } from "@/lib/api/types";
 import { formatScore } from "@/lib/assessment/grid";
 import { formatDay } from "@/lib/validation/academics";
 import { ageOn } from "@/lib/validation/students";
-import { formatAverage, ordinal } from "@/lib/reports/rules";
+import { formatAverage, formatChange, ordinal, termShort } from "@/lib/reports/rules";
 import { cn } from "@/components/ui/primitives";
 import { PhotoAvatar } from "@/components/media/photo-avatar";
 
@@ -13,6 +14,54 @@ function Bio({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">{label}</dt>
       <dd className="truncate text-sm font-medium">{value ?? "—"}</dd>
     </div>
+  );
+}
+
+function TrendCell({ change, trend }: { change: number | null; trend: Trend | null }) {
+  if (change === null || trend === null) return <span className="text-muted">–</span>;
+  const Icon = trend === "Improved" ? TrendingUp : trend === "Declined" ? TrendingDown : MoveRight;
+  return (
+    <span
+      className={cn(
+        "tabular inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+        trend === "Improved" ? "bg-success/12 text-success" : trend === "Declined" ? "bg-danger/10 text-danger" : "bg-surface-2 text-muted",
+      )}
+      title={trend}
+    >
+      <Icon className="size-3" aria-hidden />
+      {trend === "Steady" ? "Steady" : formatChange(change)}
+      <span className="sr-only"> ({trend.toLowerCase()})</span>
+    </span>
+  );
+}
+
+/** "First Term: avg 74.26, 2nd of 3 → This term: avg 72.08 (−2.18)". Only published earlier terms. */
+function TermComparison({ card }: { card: ReportCard }) {
+  return (
+    <section aria-label="Comparison with earlier terms" className="rounded-input border border-border p-3">
+      <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-muted">Compared with earlier terms</p>
+      <ol className="flex flex-wrap items-center gap-2 text-sm">
+        {card.previousTerms.map((t) => (
+          <li key={t.termId} className="flex items-center gap-2">
+            <span className="rounded-input bg-surface-2 px-2.5 py-1">
+              <span className="font-medium">{t.term}</span>: avg <span className="tabular font-semibold">{formatAverage(t.average)}</span>
+              {t.position ? (
+                <>
+                  , {ordinal(t.position)} of {t.classSize}
+                </>
+              ) : null}
+            </span>
+            <ArrowRight className="size-4 text-muted" aria-hidden />
+          </li>
+        ))}
+        <li className="flex flex-wrap items-center gap-2">
+          <span className="rounded-input bg-brand/10 px-2.5 py-1 text-brand">
+            <span className="font-medium">This term</span>: avg <span className="tabular font-semibold">{formatAverage(card.average)}</span>
+          </span>
+          <TrendCell change={card.averageChange} trend={card.trend} />
+        </li>
+      </ol>
+    </section>
   );
 }
 
@@ -33,6 +82,8 @@ function Figure({ label, value, sub }: { label: string; value: React.ReactNode; 
  */
 export function ReportCardView({ card, comments }: { card: ReportCard; comments: React.ReactNode }) {
   const draft = card.status === "Draft";
+  // Earlier terms only appear once published; nothing to compare on a first term.
+  const compare = card.previousTerms.length > 0;
   return (
     <article className="relative overflow-hidden rounded-card border border-border bg-surface shadow-low" aria-label={`Report card for ${card.studentName}`}>
       {draft && (
@@ -98,12 +149,23 @@ export function ReportCardView({ card, comments }: { card: ReportCard; comments:
                 <th scope="col" className="border-l border-border px-2 py-2 text-center font-semibold" title="Class highest">High</th>
                 <th scope="col" className="px-2 py-2 text-center font-semibold" title="Class lowest">Low</th>
                 <th scope="col" className="px-2 py-2 text-center font-semibold" title="Class average">Avg</th>
+                {compare &&
+                  card.previousTerms.map((t) => (
+                    <th key={t.termId} scope="col" className="border-l border-border px-2 py-2 text-center font-semibold" title={`${t.term} total`}>
+                      {termShort(t.number)}
+                    </th>
+                  ))}
+                {compare && (
+                  <th scope="col" className="px-2 py-2 text-center font-semibold" title="Change from last term">
+                    Change
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {card.subjects.length === 0 && (
                 <tr>
-                  <td colSpan={card.components.length + 7} className="px-3 py-6 text-center text-muted">
+                  <td colSpan={card.components.length + 7 + (compare ? card.previousTerms.length + 1 : 0)} className="px-3 py-6 text-center text-muted">
                     No scores entered yet.
                   </td>
                 </tr>
@@ -125,13 +187,28 @@ export function ReportCardView({ card, comments }: { card: ReportCard; comments:
                   <td className="tabular border-l border-border px-2 py-2 text-center text-muted">{formatScore(s.classHighest)}</td>
                   <td className="tabular px-2 py-2 text-center text-muted">{formatScore(s.classLowest)}</td>
                   <td className="tabular px-2 py-2 text-center text-muted">{formatAverage(s.classAverage)}</td>
+                  {compare &&
+                    card.previousTerms.map((t) => {
+                      const prev = s.previousTerms.find((p) => p.number === t.number);
+                      return (
+                        <td key={t.termId} className="tabular border-l border-border px-2 py-2 text-center text-muted" title={prev?.grade ? `Grade ${prev.grade}` : undefined}>
+                          {prev ? formatScore(prev.total) : "–"}
+                        </td>
+                      );
+                    })}
+                  {compare && (
+                    <td className="px-2 py-2 text-center">
+                      <TrendCell change={s.changeFromLastTerm} trend={s.trend} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className={cn("grid grid-cols-2 gap-2", card.cumulativeAverage !== null ? "sm:grid-cols-3 lg:grid-cols-6" : "sm:grid-cols-5")}>
+          <Figure label="Total score" value={formatScore(card.totalScore)} />
           <Figure label="Average" value={formatAverage(card.average)} />
           <Figure label="Position" value={card.position ? ordinal(card.position) : "—"} sub={`of ${card.classSize}`} />
           <Figure label="Class average" value={formatAverage(card.classAverage)} />
@@ -140,7 +217,10 @@ export function ReportCardView({ card, comments }: { card: ReportCard; comments:
             value={card.daysOpened === null ? "—" : `${card.daysPresent ?? "—"}/${card.daysOpened}`}
             sub={card.daysAbsent !== null ? `${card.daysAbsent} absent` : "Not entered"}
           />
+          {card.cumulativeAverage !== null && <Figure label="Annual average" value={formatAverage(card.cumulativeAverage)} sub="all terms so far" />}
         </div>
+
+        {compare && <TermComparison card={card} />}
 
         <div className="grid gap-4 md:grid-cols-2">{comments}</div>
 

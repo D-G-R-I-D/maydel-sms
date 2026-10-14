@@ -63,3 +63,16 @@ describe("report helpers", () => {
     expect(neighbours(rows, "c").next).toBeNull();
   });
 });
+
+describe("term comparison helpers", () => {
+  it("formats changes with signs", async () => {
+    const { formatChange, termShort, reportPdfHref, classPdfHref } = await import("./rules");
+    expect(formatChange(5.5)).toBe("+5.5");
+    expect(formatChange(-3)).toBe("−3");
+    expect(formatChange(0.001)).toBe("0");
+    expect(formatChange(null)).toBe("—");
+    expect(termShort("Second")).toBe("2nd T");
+    expect(reportPdfHref("s", "t")).toBe("/api/media/reports/s/t/pdf");
+    expect(classPdfHref("c", "t")).toBe("/api/media/reports/class/pdf?classRoomId=c&termId=t");
+  });
+});
