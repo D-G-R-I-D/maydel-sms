@@ -92,6 +92,10 @@ test("teachers can't write the principal's comment", async ({ page }) => {
 });
 
 test("report and class PDFs download through the BFF", async ({ page }) => {
+  // Playwright can't drive the native Save As dialog; without it the button falls back to a download.
+  await page.addInitScript(() => {
+    delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker;
+  });
   await signIn(page, "admin@maydel.test");
   await openClass(page);
   const classDownload = page.waitForEvent("download", { timeout: 60_000 });
@@ -105,6 +109,14 @@ test("report and class PDFs download through the BFF", async ({ page }) => {
   const one = page.waitForEvent("download", { timeout: 60_000 });
   await page.getByRole("button", { name: "Download PDF" }).click();
   expect((await one).suggestedFilename()).toMatch(/\.pdf$/);
+
+  // "View" serves the same PDF inline for the browser's viewer.
+  const view = page.getByRole("link", { name: /^View .*opens in a new tab/ });
+  await expect(view).toHaveAttribute("target", "_blank");
+  const res = await page.request.get((await view.getAttribute("href"))!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("application/pdf");
+  expect(res.headers()["content-disposition"]).toMatch(/^inline/);
 });
 
 test("first-term reports show no comparison", async ({ page }) => {
