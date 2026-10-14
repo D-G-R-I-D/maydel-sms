@@ -1,4 +1,5 @@
 import { isProblem, toProblem, type Problem } from "@/lib/api/problem";
+import { unreachableProblem } from "./unreachable";
 
 export type BffResult<T> = { ok: true; data: T } | { ok: false; problem: Problem };
 
@@ -13,7 +14,7 @@ export async function postJson<T>(url: string, body: unknown): Promise<BffResult
       credentials: "same-origin",
     });
   } catch {
-    return { ok: false, problem: { status: 0, title: "You appear to be offline. Check your connection and try again." } };
+    return { ok: false, problem: unreachableProblem() };
   }
   const json: unknown = res.status === 204 ? null : await res.json().catch(() => null);
   if (res.ok) return { ok: true, data: json as T };
