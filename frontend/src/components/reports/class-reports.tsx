@@ -22,7 +22,7 @@ function Tick({ on, label }: { on: boolean; label: string }) {
 }
 
 /** Class report list with (admin) publish / unpublish. Rows open the report card preview. */
-export function ClassReports({ summary, isAdmin, canAttendance }: { summary: ClassReportSummary; isAdmin: boolean; canAttendance: boolean }) {
+export function ClassReports({ summary, isAdmin, canAttendance, traitCount }: { summary: ClassReportSummary; isAdmin: boolean; canAttendance: boolean; traitCount: number | null }) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [problem, setProblem] = useState<Problem | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
@@ -148,7 +148,7 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
       </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-surface shadow-low">
-        <table className="w-full min-w-[44rem] text-left text-sm">
+        <table className="w-full min-w-[48rem] text-left text-sm">
           <caption className="sr-only">
             {summary.classRoom} reports, {summary.term}
           </caption>
@@ -170,6 +170,7 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
               <th scope="col" className="px-3 py-2.5 text-center font-medium">Average</th>
               <th scope="col" className="px-3 py-2.5 text-center font-medium">Position</th>
               <th scope="col" className="px-3 py-2.5 text-center font-medium">Attendance</th>
+              <th scope="col" className="px-3 py-2.5 text-center font-medium" title="Behaviour traits rated">Behaviour</th>
               <th scope="col" className="px-3 py-2.5 text-center font-medium" title="Form teacher's comment">FT</th>
               <th scope="col" className="px-3 py-2.5 text-center font-medium" title="Principal's comment">P</th>
               <th scope="col" className="px-3 py-2.5 font-medium">Status</th>
@@ -199,6 +200,13 @@ export function ClassReports({ summary, isAdmin, canAttendance }: { summary: Cla
                   <td className="tabular px-3 py-2.5 text-center">{formatAverage(r.average)}</td>
                   <td className="tabular px-3 py-2.5 text-center">{r.position ? ordinal(r.position) : "—"}</td>
                   <td className={cn("tabular px-3 py-2.5 text-center", r.daysPresent === null && r.subjectsScored > 0 && "text-warning")}>{attendanceText(r, summary.daysOpened)}</td>
+                  <td
+                    className={cn("tabular px-3 py-2.5 text-center", traitCount !== null && r.traitsRated < traitCount ? "text-warning" : "text-success")}
+                    title={traitCount !== null && r.traitsRated < traitCount ? "Some traits not rated yet" : "All traits rated"}
+                  >
+                    {r.traitsRated}
+                    {traitCount !== null && `/${traitCount}`}
+                  </td>
                   <td className="px-3 py-2.5 text-center">
                     <Tick on={r.hasFormTeacherComment} label="Form teacher's comment" />
                   </td>

@@ -62,3 +62,9 @@ export type Trend = NonNullable<Schemas["Trend"]>;
 export type PreviousTermResult = Schemas["PreviousTermResult"];
 export type PreviousSubjectResult = Schemas["PreviousSubjectResult"];
 export type GradingPreset = Schemas["GradingPresetDto"];
+
+export type BehaviourSettings = Schemas["BehaviourSettings"];
+export type BehaviourTrait = Schemas["BehaviourTraitDto"];
+export type RatingKeyEntry = Schemas["RatingKeyEntry"];
+export type TraitRatingLine = Schemas["TraitRatingLine"];
+export type ClubLine = Schemas["ClubLine"];

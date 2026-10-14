@@ -110,3 +110,35 @@ test("PDF routes refuse junk ids and signed-out users", async ({ request }) => {
   const id = "01a131b3-b62a-776b-b7f7-3698f51d8986";
   expect((await request.get(`/api/media/reports/${id}/${id}/pdf`)).status()).toBe(401);
 });
+
+test("behaviour & clubs: rate a trait on a draft report and put it back", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await openClass(page);
+  await expect(page.getByRole("columnheader", { name: "Behaviour" })).toBeVisible();
+  await page.locator("tbody tr").first().getByRole("link").first().click();
+  await page.waitForURL(/\/admin\/reports\/[0-9a-f-]+\/[0-9a-f-]+\?termId=/);
+  const card = page.getByRole("heading", { name: /Behaviour & clubs/ });
+  await expect(card).toBeVisible();
+  await expect(page.getByText("Doesn't affect scores or position.", { exact: false })).toBeVisible();
+  test.skip(await page.getByText("Published", { exact: true }).first().isVisible(), "report already published; behaviour is read-only");
+
+  const group = page.getByRole("group").filter({ has: page.getByRole("radio") }).first();
+  const radios = group.getByRole("radio");
+  const checkedBefore = await radios.evaluateAll((els) => els.findIndex((e) => (e as HTMLInputElement).checked));
+  await group.getByText("B", { exact: true }).click();
+  await page.getByRole("button", { name: "Save behaviour & clubs" }).click();
+  await expect(page.getByText("Behaviour & clubs saved")).toBeVisible({ timeout: 30_000 });
+
+  // Restore the original choice.
+  await radios.nth(checkedBefore).check({ force: true });
+  const save = page.getByRole("button", { name: "Save behaviour & clubs" });
+  if (await save.isEnabled()) await save.click();
+});
+
+test("settings: behaviour traits tab lists traits with the fixed key", async ({ page }) => {
+  await signIn(page, "admin@maydel.test");
+  await page.goto("/admin/settings/assessment?tab=behaviour");
+  await expect(page.getByRole("heading", { name: "Behaviour traits" })).toBeVisible();
+  await expect(page.getByLabel("Trait name").first()).not.toHaveValue("");
+  await expect(page.getByRole("list", { name: "Rating key (fixed)" })).toContainText("Exceptional");
+});
