@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<Photos.PhotoStore>();
         services.AddScoped<Reports.ReportBuilder>();
         services.AddScoped<Reports.ReportPdfs>();
+        services.AddScoped<Portal.PortalReports>();
         return services;
     }
 }

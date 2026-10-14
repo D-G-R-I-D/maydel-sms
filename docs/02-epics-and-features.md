@@ -80,8 +80,8 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E5.9 (C)** Fee-debt result withholding (school policy switch).
 
 ## E6 — Parent & student portal
-- **E6.1** Dashboard: children switcher (parent), current class, latest published result summary, fee balance, attendance %, latest notices.
-- **E6.2** Results: list of published terms → report card view + PDF download. AC: drafts never visible (tested).
+- **E6.1** 🟡 *API: children + latest published result ✅ 2026-10-14 (fees, attendance, notices later); UI pending.* Dashboard: children switcher (parent), current class, latest published result summary, fee balance, attendance %, latest notices.
+- **E6.2** 🟡 *API ✅ 2026-10-14 (published only; other families and drafts are 404; PDF); UI pending.* Results: list of published terms → report card view + PDF download. AC: drafts never visible (tested).
 - **E6.3** Fees: invoices, payments, receipts (PDF), outstanding balance; Pay online button (E10.5).
 - **E6.4** Attendance: term calendar with absences/lates.
 - **E6.5** Profile: biodata (read-only), guardians, request-correction link.
