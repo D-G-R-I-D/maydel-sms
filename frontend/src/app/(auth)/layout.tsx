@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { BookOpenCheck, ShieldCheck, Smartphone } from "lucide-react";
+import { SchoolLogo } from "@/components/school/school-logo";
 
 const highlights = [
   { icon: BookOpenCheck, text: "Results and report cards the moment they're published" },
@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <aside className="brand-panel relative hidden overflow-hidden p-12 text-navy-ink lg:flex lg:flex-col lg:justify-between">
         <div className="animate-fade flex items-center gap-3">
           <span className="inline-flex size-14 items-center justify-center rounded-full bg-white/95 p-2 shadow-lg">
-            <Image src="/brand/crest.svg" alt="" width={34} height={42} priority />
+            <SchoolLogo width={34} height={42} priority />
           </span>
           <span className="font-display text-xl font-semibold">Maydel Spring Schools</span>
         </div>
@@ -42,7 +42,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <main id="main" className="relative flex items-center justify-center px-4 py-10 sm:px-8">
         <div className="animate-rise w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <Image src="/brand/crest.svg" alt="" width={36} height={45} priority />
+            <SchoolLogo width={36} height={45} priority />
             <span className="font-display text-lg leading-tight font-semibold text-brand">
               Maydel Spring Schools
               <span className="block text-xs font-normal tracking-wide text-muted">The Well Spring of Knowledge</span>

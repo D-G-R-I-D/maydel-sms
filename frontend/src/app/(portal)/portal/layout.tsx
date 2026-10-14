@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireSessionUser } from "@/lib/auth/session";
 import { CurrentTermChip, CurrentTermChipFallback } from "@/components/shell/current-term-chip";
 import { portalNav } from "@/components/shell/nav";
 import { PortalNav } from "@/components/shell/portal-nav";
+import { SchoolLogo } from "@/components/school/school-logo";
 import { UserMenu } from "@/components/shell/user-menu";
 
 export const metadata: Metadata = { title: { default: "Portal", template: "%s · Maydel portal" } };
@@ -19,7 +19,7 @@ export default async function PortalLayout({ children }: { children: React.React
       <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/portal" className="flex items-center gap-2.5">
-            <Image src="/brand/crest.svg" alt="" width={28} height={35} />
+            <SchoolLogo width={28} height={35} />
             <span className="font-display text-base font-semibold text-brand">Maydel</span>
           </Link>
           <PortalNav items={items} variant="top" />
