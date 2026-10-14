@@ -7,6 +7,7 @@ describe("photo proxy paths", () => {
   it("only proxies student/staff photos for a real id", () => {
     expect(photoApiPath("students", id)).toBe(`/api/students/${id}/photo`);
     expect(photoApiPath("staff", id)).toBe(`/api/staff/${id}/photo`);
+    expect(photoApiPath("portal", id)).toBe(`/api/portal/children/${id}/photo`);
     expect(photoApiPath("guardians", id)).toBeNull();
     expect(photoApiPath("students", "../../auth/me")).toBeNull();
   });

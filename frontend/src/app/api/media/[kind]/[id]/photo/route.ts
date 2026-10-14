@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const blocked = crossSiteRejection(request);
   if (blocked) return blocked;
   const { kind, id } = await params;
-  const path = photoApiPath(kind, id);
+  const path = kind === "portal" ? null : photoApiPath(kind, id);
   if (!path) return bodyless(404);
 
   const contentType = request.headers.get("content-type") ?? "";
@@ -94,7 +94,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   const blocked = crossSiteRejection(request);
   if (blocked) return blocked;
   const { kind, id } = await params;
-  const path = photoApiPath(kind, id);
+  const path = kind === "portal" ? null : photoApiPath(kind, id);
   if (!path) return bodyless(404);
 
   const { reply, finish } = await forward(request, path, { method: "DELETE" });

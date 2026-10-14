@@ -68,3 +68,6 @@ export type BehaviourTrait = Schemas["BehaviourTraitDto"];
 export type RatingKeyEntry = Schemas["RatingKeyEntry"];
 export type TraitRatingLine = Schemas["TraitRatingLine"];
 export type ClubLine = Schemas["ClubLine"];
+
+export type PortalChild = Schemas["PortalChild"];
+export type PortalResultSummary = Schemas["PortalResultSummary"];
