@@ -106,6 +106,14 @@ public sealed class ReportBuilder(IAppDbContext db)
         var bands = await db.GradeBands.AsNoTracking().OrderByDescending(b => b.MinScore)
             .Select(b => new GradeBandDto(b.Grade, b.MinScore, b.MaxScore, b.Remark)).ToListAsync(ct);
 
+        // Behaviour (E2.5): active traits, plus any since-deactivated trait this report rated.
+        var rated = report?.TraitRatings ?? [];
+        var ratedIds = rated.Select(r => r.TraitId).ToList();
+        var traits = await db.BehaviourTraits.AsNoTracking().Where(t => t.IsActive || ratedIds.Contains(t.Id))
+            .OrderBy(t => t.Order).Select(t => new { t.Id, t.Name }).ToListAsync(ct);
+        var behaviour = traits.Select(t => new TraitRatingLine(t.Id, t.Name, rated.FirstOrDefault(r => r.TraitId == t.Id)?.Rating)).ToList();
+        var clubs = (report?.Clubs ?? []).OrderBy(c => c.Order).Select(c => new ClubLine(c.Name, c.Rating)).ToList();
+
         var name = string.Join(' ', new[] { student.FirstName, student.MiddleName, student.LastName }.Where(x => !string.IsNullOrWhiteSpace(x)));
         decimal? averageChange = average is { } now && lastTerm is not null ? now - lastTerm.Average : null;
         Trend? trend = average is { } current && lastTerm is not null ? ReportMath.TrendOf(current, lastTerm.Average) : null;
@@ -118,7 +126,8 @@ public sealed class ReportBuilder(IAppDbContext db)
             average, classAverage, position, classSize, lines.Sum(l => l.Total),
             earlier, averageChange, trend, cumulative,
             hasAttendance ? report!.DaysOpened : null, hasAttendance ? report!.DaysPresent : null, hasAttendance ? report!.DaysAbsent : null,
-            room.FormTeacher, report?.FormTeacherComment, report?.PrincipalComment, bands);
+            room.FormTeacher, report?.FormTeacherComment, report?.PrincipalComment, bands,
+            behaviour, clubs, [.. BehaviourRatings.Key.Select(k => new RatingKeyEntry(k.Rating, k.Meaning))]);
     }
 
     /// <summary>The report row for a student and term, created as a draft if missing.</summary>

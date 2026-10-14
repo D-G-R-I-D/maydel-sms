@@ -70,6 +70,63 @@ public class ComponentScore
     public decimal Score { get; set; }
 }
 
+/// <summary>
+/// An affective or psychomotor trait rated on the report card (E2.5), e.g. "Punctual". Configurable by the school.
+/// Ratings are kept apart from scores: they never affect totals, averages or positions.
+/// </summary>
+public class BehaviourTrait : Entity
+{
+    public required string Name { get; set; }
+    public int Order { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>A trait's rating on one term report, a letter from <see cref="BehaviourRatings.Key"/>.</summary>
+public class TraitRating
+{
+    public Guid TermReportId { get; set; }
+    public Guid TraitId { get; set; }
+    public BehaviourTrait Trait { get; set; } = null!;
+    public required string Rating { get; set; }
+}
+
+/// <summary>A club or activity on one term report, with an optional free-text rating (e.g. "Coding", "Excellent").</summary>
+public class ClubActivity
+{
+    public Guid TermReportId { get; set; }
+    public int Order { get; set; }
+    public required string Name { get; set; }
+    public string? Rating { get; set; }
+}
+
+/// <summary>The rating key and default traits from the school's Excel result sheet (E2.5). Pure, unit-tested.</summary>
+public static class BehaviourRatings
+{
+    public sealed record KeyEntry(string Rating, string Meaning);
+
+    public static readonly IReadOnlyList<KeyEntry> Key =
+    [
+        new("A", "Exceptional"), new("B", "Good"), new("C", "Improved"), new("D", "Improving"), new("E", "Working towards"),
+    ];
+
+    /// <summary>Seeded for new installations; the admin can rename, reorder, add or deactivate them.</summary>
+    public static readonly IReadOnlyList<string> DefaultTraits =
+    [
+        "Accepts criticism", "Punctual", "Asks for help", "Assumes responsibility", "Attentive", "Care of books and property",
+        "Care of personal appearance", "Courteous and considerate", "Does homework regularly", "Does neat work",
+        "Participates in group activities", "Respects authority", "Uses time to good advantage", "Works independently",
+    ];
+
+    public const int MaxClubs = 6;
+
+    /// <summary>"a" becomes "A"; null when the letter isn't on the key.</summary>
+    public static string? Normalise(string? rating)
+    {
+        var value = rating?.Trim().ToUpperInvariant();
+        return Key.Any(k => k.Rating == value) ? value : null;
+    }
+}
+
 public enum ReportStatus
 {
     Draft,
@@ -93,6 +150,10 @@ public class TermReport : Entity
     public int DaysPresent { get; set; }
     public string? FormTeacherComment { get; set; }
     public string? PrincipalComment { get; set; }
+
+    /// <summary>Behaviour ratings and clubs (E2.5): shown on the report, never part of its figures.</summary>
+    public List<TraitRating> TraitRatings { get; set; } = [];
+    public List<ClubActivity> Clubs { get; set; } = [];
 
     // Computed at publish time so the printed report never changes underneath parents.
     public decimal Average { get; set; }
@@ -122,6 +183,38 @@ public class TermReport : Entity
     {
         if (IsPublished) return Locked;
         PrincipalComment = Clean(comment);
+        return null;
+    }
+
+    /// <summary>
+    /// Replaces the behaviour ratings and clubs (E2.5). Blank ratings are left unrated and blank club names dropped.
+    /// Callers check the traits exist. Scores, averages and positions are untouched.
+    /// </summary>
+    public DomainError? SetBehaviour(IReadOnlyList<(Guid TraitId, string? Rating)> ratings, IReadOnlyList<(string? Name, string? Rating)> clubs)
+    {
+        if (IsPublished) return Locked;
+
+        var rated = new List<TraitRating>();
+        foreach (var (traitId, rating) in ratings)
+        {
+            if (rated.Any(r => r.TraitId == traitId) || ratings.Count(r => r.TraitId == traitId) > 1)
+                return new("report.rating_duplicate", "Each trait can only be rated once.", "ratings");
+            if (string.IsNullOrWhiteSpace(rating)) continue;
+            if (BehaviourRatings.Normalise(rating) is not { } letter)
+                return new("report.rating_invalid", $"Ratings must be one of {string.Join(", ", BehaviourRatings.Key.Select(k => k.Rating))}.", "ratings");
+            rated.Add(new TraitRating { TraitId = traitId, Rating = letter });
+        }
+
+        var named = clubs.Where(c => !string.IsNullOrWhiteSpace(c.Name)).Select(c => (Name: c.Name!.Trim(), Rating: Clean(c.Rating))).ToList();
+        if (named.Count > BehaviourRatings.MaxClubs)
+            return new("report.too_many_clubs", $"List at most {BehaviourRatings.MaxClubs} clubs or activities.", "clubs");
+        if (named.GroupBy(c => c.Name, StringComparer.OrdinalIgnoreCase).Any(g => g.Count() > 1))
+            return new("report.club_duplicate", "Each club can only be listed once.", "clubs");
+
+        TraitRatings.Clear();
+        TraitRatings.AddRange(rated);
+        Clubs.Clear();
+        Clubs.AddRange(named.Select((c, i) => new ClubActivity { Order = i + 1, Name = c.Name, Rating = c.Rating }));
         return null;
     }
 

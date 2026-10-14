@@ -34,7 +34,7 @@ internal sealed class GetClassReportsHandler(IAppDbContext db, AccessRules acces
                 published ? r!.Average : live.Averages.TryGetValue(s.Id, out var a) ? a : null,
                 published ? r!.Position : live.Positions.TryGetValue(s.Id, out var p) ? p : null,
                 r?.Status ?? ReportStatus.Draft, r is { DaysOpened: > 0 } ? r.DaysPresent : null,
-                r?.FormTeacherComment is not null, r?.PrincipalComment is not null);
+                r?.FormTeacherComment is not null, r?.PrincipalComment is not null, r?.TraitRatings.Count ?? 0);
         }).ToList();
 
         var daysOpened = rows.Values.Where(r => r.DaysOpened > 0).Select(r => (int?)r.DaysOpened).Max();

@@ -8,6 +8,7 @@ using Maydel.Application.Reports.GetReportCardPdf;
 using Maydel.Application.Reports.GetReportCard;
 using Maydel.Application.Reports.PublishClassReports;
 using Maydel.Application.Reports.SaveAttendance;
+using Maydel.Application.Reports.SetBehaviour;
 using Maydel.Application.Reports.SetFormTeacherComment;
 using Maydel.Application.Reports.SetPrincipalComment;
 using Maydel.Application.Reports.UnpublishClassReports;
@@ -16,7 +17,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace Maydel.Api.Endpoints;
 
 /// <summary>
-/// Term reports (E5.3–E5.5) for staff: class list, report card preview, comments, attendance, publish/unpublish.
+/// Term reports (E5.3–E5.5, E2.5) for staff: class list, report card preview, comments, behaviour, attendance, publish/unpublish.
 /// Viewing: admins and the class's teachers. Form-teacher actions: that class's form teacher or an admin. Publishing: admins.
 /// Parents and students read published reports through the portal (M1.3), not here.
 /// </summary>
@@ -34,6 +35,7 @@ public static class ReportEndpoints
         academic.MapGet("/class/pdf", GetClassPdf).WithName("GetClassReportCardsPdf")
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(400, 401, 403, 404, 422);
         academic.MapPut("/{studentId:guid}/{termId:guid}/form-teacher-comment", SetFormTeacherComment).WithName("SetFormTeacherComment").ProducesProblems(400, 401, 403, 404, 422);
+        academic.MapPut("/{studentId:guid}/{termId:guid}/behaviour", SetBehaviour).WithName("SetReportBehaviour").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPut("/{studentId:guid}/{termId:guid}/principal-comment", SetPrincipalComment).WithName("SetPrincipalComment").ProducesProblems(400, 401, 403, 404, 422);
         academic.MapPut("/attendance", SaveAttendance).WithName("SaveReportAttendance").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPost("/publish", Publish).WithName("PublishClassReports").ProducesProblems(401, 403, 404, 422);
@@ -63,6 +65,10 @@ public static class ReportEndpoints
     private static async Task<Results<Ok<ReportCard>, ProblemHttpResult>> SetFormTeacherComment(
         Guid studentId, Guid termId, CommentRequest body, ICommandHandler<SetFormTeacherCommentCommand, ReportCard> handler, CancellationToken ct) =>
         (await handler.Handle(new SetFormTeacherCommentCommand(studentId, termId, body.Comment), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ReportCard>, ProblemHttpResult>> SetBehaviour(
+        Guid studentId, Guid termId, BehaviourRequest body, ICommandHandler<SetBehaviourCommand, ReportCard> handler, CancellationToken ct) =>
+        (await handler.Handle(new SetBehaviourCommand(studentId, termId, body.Ratings ?? [], body.Clubs ?? []), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<ReportCard>, ProblemHttpResult>> SetPrincipalComment(
         Guid studentId, Guid termId, CommentRequest body, ICommandHandler<SetPrincipalCommentCommand, ReportCard> handler, CancellationToken ct) =>

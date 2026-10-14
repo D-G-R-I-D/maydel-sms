@@ -8,7 +8,7 @@ namespace Maydel.Application.Reports;
 /// <summary>One line of the class report list. Draft rows show live figures; published rows show the frozen ones.</summary>
 public sealed record ClassReportRow(
     Guid StudentId, string AdmissionNumber, string Name, int SubjectsScored, decimal? Average, int? Position,
-    ReportStatus Status, int? DaysPresent, bool HasFormTeacherComment, bool HasPrincipalComment);
+    ReportStatus Status, int? DaysPresent, bool HasFormTeacherComment, bool HasPrincipalComment, int TraitsRated);
 
 public sealed record ClassReportSummary(
     Guid ClassRoomId, string ClassRoom, Guid TermId, string Term, string? FormTeacher, int SubjectsOffered,
@@ -34,7 +34,20 @@ public sealed record ReportCard(
     decimal? Average, decimal ClassAverage, int? Position, int ClassSize, decimal TotalScore,
     IReadOnlyList<PreviousTermResult> PreviousTerms, decimal? AverageChange, Trend? Trend, decimal? CumulativeAverage,
     int? DaysOpened, int? DaysPresent, int? DaysAbsent,
-    string? FormTeacher, string? FormTeacherComment, string? PrincipalComment, IReadOnlyList<GradeBandDto> GradingKey);
+    string? FormTeacher, string? FormTeacherComment, string? PrincipalComment, IReadOnlyList<GradeBandDto> GradingKey,
+    IReadOnlyList<TraitRatingLine> Behaviour, IReadOnlyList<ClubLine> Clubs, IReadOnlyList<RatingKeyEntry> BehaviourKey);
+
+/// <summary>A behaviour trait on the report (E2.5): every active trait, plus inactive ones this report rated. <c>Rating</c> null = not rated.</summary>
+public sealed record TraitRatingLine(Guid TraitId, string Trait, string? Rating);
+
+/// <summary>A club or activity on the report, with an optional free-text rating such as "Excellent".</summary>
+public sealed record ClubLine(string Name, string? Rating);
+
+/// <summary><c>Rating</c>: a letter from the key (A–E, any case); null or blank leaves the trait unrated.</summary>
+public sealed record TraitRatingInput(Guid TraitId, string? Rating);
+
+/// <summary>Replaces the report's behaviour ratings and clubs. Traits left out are unrated.</summary>
+public sealed record BehaviourRequest(IReadOnlyList<TraitRatingInput>? Ratings, IReadOnlyList<ClubLine>? Clubs);
 
 public sealed record CommentRequest(string? Comment);
 

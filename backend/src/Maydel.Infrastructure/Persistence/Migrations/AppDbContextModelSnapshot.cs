@@ -560,6 +560,33 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("AssessmentComponents");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Assessment.BehaviourTrait", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BehaviourTraits");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Assessment.GradeBand", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1558,11 +1585,74 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.OwnsMany("Maydel.Domain.Assessment.ClubActivity", "Clubs", b1 =>
+                        {
+                            b1.Property<Guid>("TermReportId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Order")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Order"));
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(40)
+                                .HasColumnType("character varying(40)");
+
+                            b1.Property<string>("Rating")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
+
+                            b1.HasKey("TermReportId", "Order");
+
+                            b1.ToTable("ReportClubs", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("TermReportId");
+                        });
+
+                    b.OwnsMany("Maydel.Domain.Assessment.TraitRating", "TraitRatings", b1 =>
+                        {
+                            b1.Property<Guid>("TermReportId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("TraitId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Rating")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)");
+
+                            b1.HasKey("TermReportId", "TraitId");
+
+                            b1.HasIndex("TraitId");
+
+                            b1.ToTable("TraitRatings", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("TermReportId");
+
+                            b1.HasOne("Maydel.Domain.Assessment.BehaviourTrait", "Trait")
+                                .WithMany()
+                                .HasForeignKey("TraitId")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired();
+
+                            b1.Navigation("Trait");
+                        });
+
                     b.Navigation("ClassRoom");
+
+                    b.Navigation("Clubs");
 
                     b.Navigation("Student");
 
                     b.Navigation("Term");
+
+                    b.Navigation("TraitRatings");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Attendance.AttendanceRecord", b =>

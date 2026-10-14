@@ -170,10 +170,31 @@ internal sealed class TermReportConfig : IEntityTypeConfiguration<TermReport>
         b.Property(x => x.FormTeacherComment).HasMaxLength(2000);
         b.Property(x => x.PrincipalComment).HasMaxLength(2000);
         b.Ignore(x => x.DaysAbsent);
+        b.OwnsMany(x => x.TraitRatings, r =>
+        {
+            r.ToTable("TraitRatings");
+            r.WithOwner().HasForeignKey(x => x.TermReportId);
+            r.HasKey(x => new { x.TermReportId, x.TraitId });
+            r.Property(x => x.Rating).HasMaxLength(2);
+            r.HasOne(x => x.Trait).WithMany().HasForeignKey(x => x.TraitId).OnDelete(DeleteBehavior.Restrict);
+        });
+        b.OwnsMany(x => x.Clubs, c =>
+        {
+            c.ToTable("ReportClubs");
+            c.WithOwner().HasForeignKey(x => x.TermReportId);
+            c.HasKey(x => new { x.TermReportId, x.Order });
+            c.Property(x => x.Name).HasMaxLength(40);
+            c.Property(x => x.Rating).HasMaxLength(30);
+        });
         b.HasOne(x => x.Student).WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Term).WithMany().HasForeignKey(x => x.TermId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.ClassRoom).WithMany().HasForeignKey(x => x.ClassRoomId).OnDelete(DeleteBehavior.Restrict);
     }
+}
+
+internal sealed class BehaviourTraitConfig : IEntityTypeConfiguration<BehaviourTrait>
+{
+    public void Configure(EntityTypeBuilder<BehaviourTrait> b) => b.Property(x => x.Name).HasMaxLength(60);
 }
 
 internal sealed class AttendanceConfig : IEntityTypeConfiguration<AttendanceRecord>

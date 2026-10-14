@@ -36,6 +36,7 @@ public interface IAppDbContext
     DbSet<GradeBand> GradeBands { get; }
     DbSet<SubjectScore> SubjectScores { get; }
     DbSet<TermReport> TermReports { get; }
+    DbSet<BehaviourTrait> BehaviourTraits { get; }
 
     DbSet<AttendanceRecord> Attendance { get; }
 

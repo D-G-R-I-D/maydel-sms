@@ -149,6 +149,13 @@ public sealed class DbSeeder(
                 new GradeBand { Grade = b.Grade, MinScore = b.MinScore, MaxScore = b.MaxScore, Remark = b.Remark }));
         }
 
+        if (!await db.BehaviourTraits.AnyAsync(ct))
+        {
+            // The traits on the school's Excel result sheet (E2.5).
+            var order = 0;
+            db.BehaviourTraits.AddRange(BehaviourRatings.DefaultTraits.Select(name => new BehaviourTrait { Name = name, Order = ++order }));
+        }
+
         await db.SaveChangesAsync(ct);
     }
 
