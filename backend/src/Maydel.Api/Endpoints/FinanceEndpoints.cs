@@ -2,7 +2,15 @@ using Maydel.Api.Common;
 using Maydel.Application.Common;
 using Maydel.Application.Common.Messaging;
 using Maydel.Application.Finance;
+using System.Globalization;
+using System.Text;
+using Maydel.Application.Finance.AdjustInvoice;
+using Maydel.Application.Finance.CancelInvoice;
 using Maydel.Application.Finance.CopyFeeItems;
+using Maydel.Application.Finance.GetStatement;
+using Maydel.Application.Finance.ListDebtors;
+using Maydel.Application.Finance.RecordPayment;
+using Maydel.Application.Finance.ReversePayment;
 using Maydel.Application.Finance.DeleteFeeItem;
 using Maydel.Application.Finance.GenerateInvoices;
 using Maydel.Application.Finance.GetFeeOptIns;
@@ -20,8 +28,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace Maydel.Api.Endpoints;
 
 /// <summary>
-/// Fees and invoices (E10.1–E10.2) for admins and bursars. School-wide rules (sibling discount, instalment plans) are
-/// admin-only. Payments and receipts come in E10.3.
+/// Fees, invoices, payments and reports (E10.1–E10.4) for admins and bursars. School-wide rules (sibling discount,
+/// instalment plans) and corrections (reversals, cancellations, adjustments) are admin-only.
 /// </summary>
 public static class FinanceEndpoints
 {
@@ -47,9 +55,58 @@ public static class FinanceEndpoints
         finance.MapPost("/invoices/generate", Generate).WithName("GenerateInvoices").ProducesProblems(400, 401, 403, 404);
         finance.MapGet("/invoices", ListInvoices).WithName("ListInvoices").ProducesProblems(400, 401, 403);
         finance.MapGet("/invoices/{id:guid}", GetInvoice).WithName("GetInvoice").ProducesProblems(401, 403, 404);
+        finance.MapPost("/invoices/{id:guid}/payments", RecordPayment).WithName("RecordPayment").ProducesProblems(400, 401, 403, 404, 422);
+        admin.MapPost("/payments/{id:guid}/reverse", ReversePayment).WithName("ReversePayment").ProducesProblems(400, 401, 403, 404, 422);
+        admin.MapPost("/invoices/{id:guid}/cancel", CancelInvoice).WithName("CancelInvoice").ProducesProblems(400, 401, 403, 404, 422);
+        admin.MapPost("/invoices/{id:guid}/adjustments", AdjustInvoice).WithName("AdjustInvoice").ProducesProblems(400, 401, 403, 404, 422);
+        finance.MapGet("/students/{id:guid}/statement", Statement).WithName("GetStudentStatement").ProducesProblems(401, 403, 404);
+        finance.MapGet("/debtors", Debtors).WithName("ListDebtors").ProducesProblems(400, 401, 403, 404);
+        finance.MapGet("/debtors.csv", DebtorsCsv).WithName("ExportDebtorsCsv")
+            .Produces(StatusCodes.Status200OK, contentType: "text/csv").ProducesProblems(400, 401, 403, 404);
     }
 
     public sealed record OptInsRequest(IReadOnlyList<Guid> StudentIds);
+    public sealed record PaymentRequest(decimal Amount, Domain.Finance.PaymentMethod Method, string? Reference, DateOnly? PaidOn);
+    public sealed record ReasonRequest(string Reason);
+    public sealed record AdjustmentRequest(string Description, decimal Amount);
+
+    private static async Task<Results<Ok<ReceiptDto>, ProblemHttpResult>> RecordPayment(Guid id, PaymentRequest body, ICommandHandler<RecordPaymentCommand, ReceiptDto> h, CancellationToken ct) =>
+        (await h.Handle(new RecordPaymentCommand(id, body.Amount, body.Method, body.Reference, body.PaidOn), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ReceiptDto>, ProblemHttpResult>> ReversePayment(Guid id, ReasonRequest body, ICommandHandler<ReversePaymentCommand, ReceiptDto> h, CancellationToken ct) =>
+        (await h.Handle(new ReversePaymentCommand(id, body.Reason), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<InvoiceDetail>, ProblemHttpResult>> CancelInvoice(Guid id, ReasonRequest body, ICommandHandler<CancelInvoiceCommand, InvoiceDetail> h, CancellationToken ct) =>
+        (await h.Handle(new CancelInvoiceCommand(id, body.Reason), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<InvoiceDetail>, ProblemHttpResult>> AdjustInvoice(Guid id, AdjustmentRequest body, ICommandHandler<AdjustInvoiceCommand, InvoiceDetail> h, CancellationToken ct) =>
+        (await h.Handle(new AdjustInvoiceCommand(id, body.Description, body.Amount), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<StudentStatement>, ProblemHttpResult>> Statement(Guid id, IQueryHandler<GetStatementQuery, StudentStatement> h, CancellationToken ct) =>
+        (await h.Handle(new GetStatementQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<DebtorsReport>, ProblemHttpResult>> Debtors([AsParameters] ListDebtorsQuery query, IQueryHandler<ListDebtorsQuery, DebtorsReport> h, CancellationToken ct) =>
+        (await h.Handle(query, ct)).ToHttpResult();
+
+    /// <summary>Spreadsheet-safe CSV: cells starting with = + - @ are prefixed so Excel never runs them as formulas.</summary>
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> DebtorsCsv([AsParameters] ListDebtorsQuery query, IQueryHandler<ListDebtorsQuery, DebtorsReport> h, CancellationToken ct)
+    {
+        var result = await h.Handle(query, ct);
+        if (result.IsFailure) return result.Error!.ToProblem();
+        static string Cell(string? v)
+        {
+            v ??= "";
+            if (v.Length > 0 && "=+-@\t\r".Contains(v[0])) v = "'" + v;
+            return v.IndexOfAny([',', '"', '\n', '\r']) >= 0 ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
+        }
+        static string Money(decimal d) => d.ToString("0.00", CultureInfo.InvariantCulture);
+        var csv = new StringBuilder("Admission number,Student,Class,Invoice,Total,Paid,Balance,Due now,Overdue,Next due,Guardian,Guardian phone\r\n");
+        foreach (var r in result.Value.Rows)
+            csv.Append(string.Join(',', Cell(r.AdmissionNumber), Cell(r.Name), Cell(r.ClassRoom), Cell(r.InvoiceNumber), Money(r.Total), Money(r.Paid),
+                Money(r.Balance), Money(r.DueNow), Money(r.Overdue), r.NextDueOn?.ToString("yyyy-MM-dd") ?? "", Cell(r.Guardian), Cell(r.GuardianPhone))).Append("\r\n");
+        var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+        return TypedResults.File(bytes, "text/csv", $"Debtors - {result.Value.Term.Replace('/', '-')}.csv");
+    }
 
     private static async Task<Results<Ok<FeeSettingsDto>, ProblemHttpResult>> GetSettings(IQueryHandler<GetFeeSettingsQuery, FeeSettingsDto> h, CancellationToken ct) =>
         (await h.Handle(new GetFeeSettingsQuery(), ct)).ToHttpResult();

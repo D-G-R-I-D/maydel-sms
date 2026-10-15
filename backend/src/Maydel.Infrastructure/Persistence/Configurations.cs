@@ -301,6 +301,7 @@ internal sealed class InvoiceConfig : IEntityTypeConfiguration<Invoice>
         b.HasIndex(x => new { x.StudentId, x.TermId }).IsUnique().HasFilter("\"IsCancelled\" = false");
         b.HasIndex(x => new { x.TermId, x.ClassRoomId });
         b.Property(x => x.Number).HasMaxLength(40);
+        b.Property(x => x.CancelReason).HasMaxLength(300);
         b.Ignore(x => x.Total);
         b.Ignore(x => x.AmountPaid);
         b.Ignore(x => x.Balance);
@@ -325,7 +326,15 @@ internal sealed class PaymentConfig : IEntityTypeConfiguration<Payment>
     public void Configure(EntityTypeBuilder<Payment> b)
     {
         b.HasIndex(x => x.ReceiptNumber).IsUnique();
+        b.Property(x => x.ReceiptNumber).HasMaxLength(40);
         b.Property(x => x.Method).HasConversion<string>().HasMaxLength(32);
+        b.Property(x => x.Amount).HasPrecision(14, 2);
+        b.Property(x => x.Reference).HasMaxLength(100);
+        b.Property(x => x.Note).HasMaxLength(300);
+        b.Ignore(x => x.IsReversal);
+        // At most one reversal per payment, enforced by the database too.
+        b.HasIndex(x => x.ReversesPaymentId).IsUnique().HasFilter("\"ReversesPaymentId\" IS NOT NULL");
+        b.HasOne<Payment>().WithMany().HasForeignKey(x => x.ReversesPaymentId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

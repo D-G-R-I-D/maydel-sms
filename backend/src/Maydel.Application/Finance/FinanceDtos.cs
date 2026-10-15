@@ -45,7 +45,35 @@ public sealed record ScheduleItem(int Order, decimal Percent, decimal Amount, Da
 public sealed record InvoiceDetail(
     Guid Id, string Number, Guid StudentId, string AdmissionNumber, string StudentName, string? ClassRoom, Guid TermId, string Term, string Session,
     IReadOnlyList<InvoiceLineDto> Lines, decimal Total, decimal Paid, decimal Balance, InvoiceStatus Status, DateOnly? DueOn,
-    IReadOnlyList<ScheduleItem> Schedule, DateTimeOffset IssuedAt);
+    IReadOnlyList<ScheduleItem> Schedule, DateTimeOffset IssuedAt,
+    IReadOnlyList<PaymentDto> Payments, bool InstalmentsAllowed, decimal DueNow, decimal Overdue, string? CancelReason);
+
+/// <summary>
+/// A receipt or a reversal (negative amount, <c>ReversesReceipt</c> set). <c>ReversedBy</c>: the receipt number of the
+/// reversal that undid this payment.
+/// </summary>
+public sealed record PaymentDto(
+    Guid Id, string ReceiptNumber, decimal Amount, PaymentMethod Method, string? Reference, DateOnly PaidOn, bool IsReversal,
+    string? ReversesReceipt, string? ReversedBy, string? Note, DateTimeOffset RecordedAt);
+
+/// <summary>What the bursar hands over or prints: who paid what against which invoice, and what's left.</summary>
+public sealed record ReceiptDto(
+    Guid PaymentId, string ReceiptNumber, decimal Amount, PaymentMethod Method, string? Reference, DateOnly PaidOn, bool IsReversal,
+    Guid InvoiceId, string InvoiceNumber, string AdmissionNumber, string StudentName, string? ClassRoom, string Term, decimal BalanceAfter);
+
+/// <summary>One line of a student's account, oldest first. <c>Balance</c> is the running amount owed.</summary>
+public sealed record StatementEntry(DateOnly Date, string Kind, string Reference, string Description, decimal Debit, decimal Credit, decimal Balance);
+
+public sealed record StudentStatement(
+    Guid StudentId, string AdmissionNumber, string Name, string? ClassRoom, decimal TotalBilled, decimal TotalPaid, decimal Balance,
+    IReadOnlyList<StatementEntry> Entries);
+
+/// <summary><c>DueNow</c>: what should have been paid by today; <c>Overdue</c>: the part of it still unpaid.</summary>
+public sealed record DebtorRow(
+    Guid StudentId, string AdmissionNumber, string Name, string? ClassRoom, Guid InvoiceId, string InvoiceNumber,
+    decimal Total, decimal Paid, decimal Balance, decimal DueNow, decimal Overdue, DateOnly? NextDueOn, string? Guardian, string? GuardianPhone);
+
+public sealed record DebtorsReport(Guid TermId, string Term, int Count, decimal TotalOutstanding, decimal TotalOverdue, IReadOnlyList<DebtorRow> Rows);
 
 public static class FinanceErrors
 {
@@ -54,6 +82,9 @@ public static class FinanceErrors
     public static readonly Common.Error ClassLevelNotFound = Common.Error.Validation("classLevelId", "That class level doesn't exist.");
     public static readonly Common.Error InvoiceNotFound = Common.Error.NotFound("invoice.not_found", "That invoice doesn't exist.");
     public static readonly Common.Error MandatoryNoOptIn = Common.Error.Rule("fee.mandatory", "Everyone pays a mandatory item; opt-ins are only for optional items.");
+    public static readonly Common.Error PaymentNotFound = Common.Error.NotFound("payment.not_found", "That payment doesn't exist.");
+    public static readonly Common.Error StudentNotFound = Common.Error.NotFound("student.not_found", "That student doesn't exist.");
+    public static readonly Common.Error FuturePayment = Common.Error.Validation("paidOn", "A payment can't be dated in the future.");
     public static readonly Common.Error SameTerm = Common.Error.Validation("toTermId", "Choose a different term to copy to.");
 }
 

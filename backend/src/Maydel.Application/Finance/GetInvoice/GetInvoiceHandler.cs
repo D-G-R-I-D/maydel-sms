@@ -4,8 +4,8 @@ using Maydel.Application.Common.Messaging;
 
 namespace Maydel.Application.Finance.GetInvoice;
 
-internal sealed class GetInvoiceHandler(IAppDbContext db) : IQueryHandler<GetInvoiceQuery, InvoiceDetail>
+internal sealed class GetInvoiceHandler(IAppDbContext db, ISchoolClock clock) : IQueryHandler<GetInvoiceQuery, InvoiceDetail>
 {
     public async Task<Result<InvoiceDetail>> Handle(GetInvoiceQuery q, CancellationToken ct) =>
-        await db.DetailAsync(q.Id, ct) is { } detail ? detail : FinanceErrors.InvoiceNotFound;
+        await db.DetailAsync(q.Id, clock.Today, ct) is { } detail ? detail : FinanceErrors.InvoiceNotFound;
 }
