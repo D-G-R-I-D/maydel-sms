@@ -75,6 +75,9 @@ export default async function ClassReportsPage({
   }
 
   const s = summary.data;
+  // No attendance typed in: reports use the daily register's totals (E9), copied in on publish.
+  const register = s.daysOpened === null ? await load((api) => api.GET("/api/attendance/summary", { params: { query: { classRoomId, termId: selected.id } } })) : null;
+  const registerDays = register?.ok ? register.data.daysOpened : 0;
   return (
     <>
       {back}
@@ -87,7 +90,7 @@ export default async function ClassReportsPage({
         <Stat label="Students" value={s.rows.length} />
         <Stat label="Class average" value={formatAverage(s.rows.length ? s.classAverage : null)} />
         <Stat label="Published / draft" value={`${s.publishedCount} / ${s.draftCount}`} />
-        <Stat label="Days school opened" value={s.daysOpened ?? "Not entered"} />
+        <Stat label="Days school opened" value={s.daysOpened ?? (registerDays > 0 ? `From register: ${registerDays} ${registerDays === 1 ? "day" : "days"}` : "Not entered")} />
       </div>
       {s.rows.length === 0 ? (
         <Card>
@@ -96,7 +99,7 @@ export default async function ClassReportsPage({
           </EmptyState>
         </Card>
       ) : (
-        <ClassReports summary={s} isAdmin={isAdmin} canAttendance={formTeacher} traitCount={traitCount} emails={emails} />
+        <ClassReports summary={s} isAdmin={isAdmin} canAttendance={formTeacher} traitCount={traitCount} emails={emails} registerDays={registerDays} />
       )}
     </>
   );
