@@ -7,7 +7,10 @@ using System.Text;
 using Maydel.Application.Finance.AdjustInvoice;
 using Maydel.Application.Finance.CancelInvoice;
 using Maydel.Application.Finance.CopyFeeItems;
+using Maydel.Application.Finance.GetInvoicePdf;
+using Maydel.Application.Finance.GetReceiptPdf;
 using Maydel.Application.Finance.GetStatement;
+using Maydel.Application.Reports;
 using Maydel.Application.Finance.ListDebtors;
 using Maydel.Application.Finance.RecordPayment;
 using Maydel.Application.Finance.ReversePayment;
@@ -55,6 +58,10 @@ public static class FinanceEndpoints
         finance.MapPost("/invoices/generate", Generate).WithName("GenerateInvoices").ProducesProblems(400, 401, 403, 404);
         finance.MapGet("/invoices", ListInvoices).WithName("ListInvoices").ProducesProblems(400, 401, 403);
         finance.MapGet("/invoices/{id:guid}", GetInvoice).WithName("GetInvoice").ProducesProblems(401, 403, 404);
+        finance.MapGet("/invoices/{id:guid}/pdf", InvoicePdf).WithName("GetInvoicePdf")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
+        finance.MapGet("/payments/{id:guid}/receipt.pdf", ReceiptPdf).WithName("GetReceiptPdf")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
         finance.MapPost("/invoices/{id:guid}/payments", RecordPayment).WithName("RecordPayment").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPost("/payments/{id:guid}/reverse", ReversePayment).WithName("ReversePayment").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPost("/invoices/{id:guid}/cancel", CancelInvoice).WithName("CancelInvoice").ProducesProblems(400, 401, 403, 404, 422);
@@ -69,6 +76,15 @@ public static class FinanceEndpoints
     public sealed record PaymentRequest(decimal Amount, Domain.Finance.PaymentMethod Method, string? Reference, DateOnly? PaidOn);
     public sealed record ReasonRequest(string Reason);
     public sealed record AdjustmentRequest(string Description, decimal Amount);
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> InvoicePdf(Guid id, IQueryHandler<GetInvoicePdfQuery, PdfFile> h, CancellationToken ct) =>
+        Pdf(await h.Handle(new GetInvoicePdfQuery(id), ct));
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> ReceiptPdf(Guid id, IQueryHandler<GetReceiptPdfQuery, PdfFile> h, CancellationToken ct) =>
+        Pdf(await h.Handle(new GetReceiptPdfQuery(id), ct));
+
+    internal static Results<FileContentHttpResult, ProblemHttpResult> Pdf(Result<PdfFile> result) =>
+        result.IsSuccess ? TypedResults.File(result.Value.Content, "application/pdf", result.Value.FileName) : result.Error!.ToProblem();
 
     private static async Task<Results<Ok<ReceiptDto>, ProblemHttpResult>> RecordPayment(Guid id, PaymentRequest body, ICommandHandler<RecordPaymentCommand, ReceiptDto> h, CancellationToken ct) =>
         (await h.Handle(new RecordPaymentCommand(id, body.Amount, body.Method, body.Reference, body.PaidOn), ct)).ToHttpResult();

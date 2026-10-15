@@ -14,8 +14,13 @@ public sealed record PortalResultSummary(
 public sealed record PortalChild(
     Guid StudentId, string Name, string AdmissionNumber, string? ClassRoom, string? PhotoVersion, PortalResultSummary? LatestResult);
 
+/// <summary>A child's fees (E6.3): live invoices newest first, with what's owed and overdue across them.</summary>
+public sealed record PortalFees(Guid StudentId, decimal Balance, decimal Overdue, IReadOnlyList<Finance.InvoiceDetail> Invoices);
+
 public static class PortalErrors
 {
+    public static readonly Common.Error InvoiceNotFound = Common.Error.NotFound("invoice.not_found", "We couldn't find that invoice for this child.");
+
     /// <summary>Not linked to this account looks the same as not existing, so other families' children can't be probed.</summary>
     public static readonly Common.Error StudentNotFound = Common.Error.NotFound("portal.student_not_found", "We couldn't find that child on your account.");
     public static readonly Common.Error NotPublished = Common.Error.NotFound("report.not_published", "That result hasn't been published yet.");

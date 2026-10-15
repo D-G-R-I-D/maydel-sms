@@ -4,6 +4,8 @@ using Maydel.Application.Common.Messaging;
 using Maydel.Application.Photos;
 using Maydel.Application.Photos.GetStudentPhoto;
 using Maydel.Application.Portal;
+using Maydel.Application.Portal.GetChildFeeDocument;
+using Maydel.Application.Portal.GetChildFees;
 using Maydel.Application.Portal.GetChildResult;
 using Maydel.Application.Portal.GetChildResultPdf;
 using Maydel.Application.Portal.ListChildResults;
@@ -25,11 +27,28 @@ public static class PortalEndpoints
 
         portal.MapGet("/children", ListChildren).WithName("ListMyChildren").ProducesProblems(401, 403);
         portal.MapGet("/children/{studentId:guid}/photo", GetPhoto).WithName("GetChildPhoto").ProducesProblems(401, 403, 404).PrivateCache();
+        portal.MapGet("/children/{studentId:guid}/fees", GetFees).WithName("GetChildFees").ProducesProblems(401, 403, 404);
+        portal.MapGet("/children/{studentId:guid}/invoices/{invoiceId:guid}/pdf", GetInvoicePdf).WithName("GetChildInvoicePdf")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
+        portal.MapGet("/children/{studentId:guid}/receipts/{paymentId:guid}/pdf", GetReceiptPdf).WithName("GetChildReceiptPdf")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results", ListResults).WithName("ListChildResults").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results/{termId:guid}", GetResult).WithName("GetChildResult").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results/{termId:guid}/pdf", GetResultPdf).WithName("GetChildResultPdf")
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
     }
+
+    private static async Task<Results<Ok<PortalFees>, ProblemHttpResult>> GetFees(
+        Guid studentId, IQueryHandler<GetChildFeesQuery, PortalFees> handler, CancellationToken ct) =>
+        (await handler.Handle(new GetChildFeesQuery(studentId), ct)).ToHttpResult();
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> GetInvoicePdf(
+        Guid studentId, Guid invoiceId, IQueryHandler<GetChildFeeDocumentQuery, PdfFile> handler, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await handler.Handle(new GetChildFeeDocumentQuery(studentId, invoiceId, null), ct));
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> GetReceiptPdf(
+        Guid studentId, Guid paymentId, IQueryHandler<GetChildFeeDocumentQuery, PdfFile> handler, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await handler.Handle(new GetChildFeeDocumentQuery(studentId, null, paymentId), ct));
 
     private static async Task<Results<Ok<IReadOnlyList<PortalChild>>, ProblemHttpResult>> ListChildren(
         IQueryHandler<ListMyChildrenQuery, IReadOnlyList<PortalChild>> handler, CancellationToken ct) =>

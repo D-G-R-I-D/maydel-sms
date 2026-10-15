@@ -23,7 +23,9 @@ internal sealed class SaveInstalmentPlanHandler(IAppDbContext db, IQueryHandler<
             return await get.Handle(new GetInstalmentPlanQuery(term.Id), ct);
         }
 
-        if (FeeRules.CheckInstalments([.. c.Instalments.Select(i => (i.Percent, i.DueOn))]) is { } invalid) return invalid.ToError();
+        // A switched-off plan may have no parts: "pay in full this term" even when the session has a plan.
+        if ((c.Enabled || c.Instalments.Count > 0) && FeeRules.CheckInstalments([.. c.Instalments.Select(i => (i.Percent, i.DueOn))]) is { } invalid)
+            return invalid.ToError();
 
         var plan = c.Scope == PlanScope.Term
             ? await db.InstalmentPlans.Include(p => p.Instalments).FirstOrDefaultAsync(p => p.TermId == term.Id, ct)
