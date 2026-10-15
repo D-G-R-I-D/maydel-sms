@@ -21,23 +21,31 @@ internal sealed class PublishClassReportsHandler(IAppDbContext db, ReportBuilder
             .Select(s => new { s.Id, Name = s.FirstName + " " + s.LastName }).ToListAsync(ct);
         var rows = await db.TermReports.Where(r => r.TermId == c.TermId && students.Select(s => s.Id).Contains(r.StudentId)).ToDictionaryAsync(r => r.StudentId, ct);
 
-        var toPublish = students.Where(s => figures.Averages.ContainsKey(s.Id)).ToList();
-        var missingAttendance = toPublish.Where(s => !rows.TryGetValue(s.Id, out var r) || r.DaysOpened == 0).Select(s => s.Name).ToList();
+        var scored = students.Where(s => figures.Averages.ContainsKey(s.Id)).ToList();
+        var fresh = scored.Where(s => !rows.TryGetValue(s.Id, out var r) || !r.IsPublished).ToList();
+        if (fresh.Count == 0) return ReportErrors.AlreadyPublished;
+        var missingAttendance = fresh.Where(s => !rows.TryGetValue(s.Id, out var r) || r.DaysOpened == 0).Select(s => s.Name).ToList();
         if (missingAttendance.Count > 0) return ReportErrors.AttendanceMissing(missingAttendance);
 
         var now = clock.GetUtcNow();
-        foreach (var s in toPublish)
+        foreach (var s in scored)
         {
             var report = rows[s.Id];
+            var (average, position) = (figures.Averages[s.Id], figures.Positions[s.Id]);
+            if (report.IsPublished)
+            {
+                report.Refreeze(average, figures.ClassAverage, position, figures.Averages.Count);
+                continue;
+            }
             report.ClassRoomId = c.ClassRoomId;
-            report.Publish(figures.Averages[s.Id], figures.ClassAverage, figures.Positions[s.Id], figures.Averages.Count, now, me.UserId);
+            report.Publish(average, figures.ClassAverage, position, figures.Averages.Count, now, me.UserId);
         }
-        // Same transaction as the publish: either both happen or neither does.
-        var queued = (c.NotifyParents ?? true) ? await emails.QueueAsync([.. toPublish.Select(s => s.Id)], c.TermId, now, ct) : 0;
+        // Same transaction as the publish: either both happen or neither does. Only newly published students' parents.
+        var queued = (c.NotifyParents ?? true) ? await emails.QueueAsync([.. fresh.Select(s => s.Id)], c.TermId, now, ct) : 0;
         await db.SaveChangesAsync(ct);
 
         var skipped = students.Where(s => !figures.Averages.ContainsKey(s.Id))
             .Select(s => new SkippedStudent(s.Id, s.Name, "No scores entered for this term.")).ToList();
-        return new PublishResult(toPublish.Count, figures.ClassAverage, skipped, queued);
+        return new PublishResult(fresh.Count, figures.ClassAverage, skipped, queued, scored.Count - fresh.Count);
     }
 }

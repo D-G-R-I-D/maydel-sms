@@ -14,6 +14,7 @@ const row = (id: string, scored: number, daysPresent: number | null) => ({
   hasFormTeacherComment: false,
   hasPrincipalComment: false,
   traitsRated: 0,
+  publishedAt: null,
 });
 const summary = (daysOpened: number | null, rows: ReturnType<typeof row>[]): ClassReportSummary => ({
   classRoomId: "c",
@@ -27,6 +28,7 @@ const summary = (daysOpened: number | null, rows: ReturnType<typeof row>[]): Cla
   publishedCount: 0,
   draftCount: rows.length,
   rows,
+  lastPublishedAt: null,
 });
 
 describe("report helpers", () => {

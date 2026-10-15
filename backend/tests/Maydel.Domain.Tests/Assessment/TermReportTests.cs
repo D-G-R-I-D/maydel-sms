@@ -89,6 +89,23 @@ public sealed class TermComparisonTests
     }
 }
 
+public sealed class RefreezeTests
+{
+    [Fact]
+    public void Refreezing_updates_figures_but_keeps_the_publication()
+    {
+        var report = new TermReport();
+        var at = new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero);
+        var by = Guid.NewGuid();
+        report.Publish(70, 60, 1, 2, at, by);
+
+        report.Refreeze(70, 58.5m, 2, 3);
+
+        Assert.Equal((ReportStatus.Published, (DateTimeOffset?)at, (Guid?)by), (report.Status, report.PublishedAt, report.PublishedByUserId));
+        Assert.Equal((70m, 58.5m, (int?)2, 3), (report.Average, report.ClassAverage, report.Position, report.ClassSize));
+    }
+}
+
 public sealed class BehaviourTests
 {
     private static readonly Guid Punctual = Guid.NewGuid(), Neat = Guid.NewGuid();

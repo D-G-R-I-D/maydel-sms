@@ -64,20 +64,46 @@ public sealed class ReportEmailTests(PostgresFixture fixture)
         await GuardianAsync(admin, s.Students[0], address);
         await PublishAsync(admin, s, notify: null);
 
-        (await admin.PostAsJsonAsync("/api/reports/unpublish", new { classRoomId = s.ClassRoomId, termId = s.TermId })).EnsureSuccessStatusCode();
+        await UnpublishAsync(admin, s);
         await DispatchAsync();
         Assert.DoesNotContain(Api.Email.Sent, m => m.To == address);
         Assert.Equal(EmailStatus.Skipped, Assert.Single(await EmailsAsync(admin, s)).Status);
 
+        // Published, corrected, published again before the worker ran: only the newest copy goes out.
         await PublishAsync(admin, s, notify: null);
-        await PublishAsync(admin, s, notify: null); // again before the worker ran: only the newest is sent
+        await UnpublishAsync(admin, s);
+        await PublishAsync(admin, s, notify: null);
         var emails = await EmailsAsync(admin, s);
-        Assert.Equal(3, emails.Count);
-        Assert.Equal(EmailStatus.Pending, emails[0].Status);
-        Assert.Equal(EmailStatus.Skipped, emails[1].Status);
+        Assert.Equal([EmailStatus.Pending, EmailStatus.Skipped, EmailStatus.Skipped], emails.Select(e => e.Status));
 
         await DispatchAsync();
         Assert.Single(Api.Email.Sent, m => m.To == address);
+    }
+
+    [Fact]
+    public async Task Pressing_publish_again_sends_nothing_and_late_students_email_only_their_parents()
+    {
+        var (s, admin) = await ReadyClassAsync();
+        var early = Unique("early");
+        var late = Unique("late");
+        await GuardianAsync(admin, s.Students[0], early);
+        await GuardianAsync(admin, s.Students[2], late); // Chidi has no scores yet
+        Assert.Equal(1, (await PublishAsync(admin, s, notify: null)).EmailsQueued);
+
+        await (await admin.PostAsJsonAsync("/api/reports/publish", new { classRoomId = s.ClassRoomId, termId = s.TermId }))
+            .AssertProblemAsync(HttpStatusCode.UnprocessableEntity, "report.already_published");
+
+        var settings = (await admin.GetFromJsonAsync<AssessmentSettings>("/api/assessment/settings", Json.Options))!;
+        var cat = settings.Components.Single(c => c.Name == "CAT" && c.IsActive).Id;
+        (await admin.PutAsJsonAsync("/api/assessment/gradesheet", new
+        {
+            classRoomId = s.ClassRoomId, subjectId = s.SubjectId, termId = s.TermId,
+            entries = new[] { new { studentId = s.Students[2], scores = new[] { new { componentId = cat, score = (decimal?)20 } } } },
+        })).EnsureSuccessStatusCode();
+        var second = await PublishAsync(admin, s, notify: null);
+
+        Assert.Equal((1, 2, 1), (second.Published, second.AlreadyPublished, second.EmailsQueued));
+        Assert.Equal([early, late], (await EmailsAsync(admin, s)).Select(e => e.ToAddress).Order());
     }
 
     [Fact]
@@ -145,6 +171,9 @@ public sealed class ReportEmailTests(PostgresFixture fixture)
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<PublishResult>(Json.Options))!;
     }
+
+    private static async Task UnpublishAsync(HttpClient admin, School s) =>
+        (await admin.PostAsJsonAsync("/api/reports/unpublish", new { classRoomId = s.ClassRoomId, termId = s.TermId })).EnsureSuccessStatusCode();
 
     private static async Task<List<ReportEmailStatus>> EmailsAsync(HttpClient admin, School s) =>
         (await admin.GetFromJsonAsync<List<ReportEmailStatus>>($"/api/reports/emails?classRoomId={s.ClassRoomId}&termId={s.TermId}", Json.Options))!;

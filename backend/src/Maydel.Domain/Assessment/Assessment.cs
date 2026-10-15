@@ -235,6 +235,13 @@ public class TermReport : Entity
         (Status, PublishedAt, PublishedByUserId) = (ReportStatus.Published, at, by);
     }
 
+    /// <summary>
+    /// Updates the frozen class figures of a report that is already published, when classmates are published later
+    /// (their arrival can shift positions and the class average). The publication date and publisher stay the same.
+    /// </summary>
+    public void Refreeze(decimal average, decimal classAverage, int position, int classSize) =>
+        (Average, ClassAverage, Position, ClassSize) = (average, classAverage, position, classSize);
+
     public void Unpublish()
     {
         (Status, PublishedAt, PublishedByUserId) = (ReportStatus.Draft, null, null);

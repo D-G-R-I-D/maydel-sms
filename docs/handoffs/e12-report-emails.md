@@ -46,3 +46,19 @@ type ReportEmailStatus = {
 - Other triggers: absence, invoices, payments, announcements.
 - Per-recipient opt-out for non-critical messages.
 - A delivery-status page across all emails.
+
+## Update 2026-10-15: publish only what isn't published yet (fix/publish-once)
+- `POST /api/reports/publish` now publishes only reports that are **not yet published**.
+  - Already-published reports keep their publication date. Only their position and class average are refreshed, because late classmates can shift them.
+  - Their parents are **not** emailed again.
+- When nothing is left to publish it returns **422 `report.already_published`**. Pressing Publish twice therefore never re-sends anything.
+- `PublishResult` gains `alreadyPublished: number`. `published` now counts only the reports newly published by this call.
+- Emails go only to guardians of newly published students. After Unpublish → fix → Publish, that student counts as new again, so their parents get the corrected copy.
+
+### UI changes
+1. **Class reports header:** use `publishedCount` / `draftCount` from `GET /api/reports/class`.
+   - **All published** (`draftCount === 0 && publishedCount > 0`): replace the Publish button with a status, "✓ All N reports published · {latest publishedAt}". Keep Unpublish.
+   - **Some drafts:** "Publish M remaining" (M = draft rows that have scores, i.e. `subjectsScored > 0`). Show the already-published count beside it.
+2. **Confirm dialog:** "Publish M reports? Parents of these M students will be emailed" (when the box is ticked). Disable the confirm button while submitting.
+3. **On 422 `report.already_published`:** refresh the page data and show the problem `detail` as an info toast, not an error.
+4. **After success:** "Published M · K already published · E emails queued".

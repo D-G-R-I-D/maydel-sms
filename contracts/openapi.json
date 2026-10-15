@@ -5748,7 +5748,8 @@
           "daysPresent",
           "hasFormTeacherComment",
           "hasPrincipalComment",
-          "traitsRated"
+          "traitsRated",
+          "publishedAt"
         ],
         "type": "object",
         "properties": {
@@ -5799,6 +5800,13 @@
           "traitsRated": {
             "type": "integer",
             "format": "int32"
+          },
+          "publishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -5814,7 +5822,8 @@
           "daysOpened",
           "publishedCount",
           "draftCount",
-          "rows"
+          "rows",
+          "lastPublishedAt"
         ],
         "type": "object",
         "properties": {
@@ -5866,6 +5875,13 @@
             "items": {
               "$ref": "#/components/schemas/ClassReportRow"
             }
+          },
+          "lastPublishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -7343,7 +7359,8 @@
           "published",
           "classAverage",
           "skipped",
-          "emailsQueued"
+          "emailsQueued",
+          "alreadyPublished"
         ],
         "type": "object",
         "properties": {
@@ -7362,6 +7379,10 @@
             }
           },
           "emailsQueued": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyPublished": {
             "type": "integer",
             "format": "int32"
           }

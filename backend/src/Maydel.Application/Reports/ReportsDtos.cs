@@ -8,11 +8,13 @@ namespace Maydel.Application.Reports;
 /// <summary>One line of the class report list. Draft rows show live figures; published rows show the frozen ones.</summary>
 public sealed record ClassReportRow(
     Guid StudentId, string AdmissionNumber, string Name, int SubjectsScored, decimal? Average, int? Position,
-    ReportStatus Status, int? DaysPresent, bool HasFormTeacherComment, bool HasPrincipalComment, int TraitsRated);
+    ReportStatus Status, int? DaysPresent, bool HasFormTeacherComment, bool HasPrincipalComment, int TraitsRated,
+    DateTimeOffset? PublishedAt);
 
 public sealed record ClassReportSummary(
     Guid ClassRoomId, string ClassRoom, Guid TermId, string Term, string? FormTeacher, int SubjectsOffered,
-    decimal ClassAverage, int? DaysOpened, int PublishedCount, int DraftCount, IReadOnlyList<ClassReportRow> Rows);
+    decimal ClassAverage, int? DaysOpened, int PublishedCount, int DraftCount, IReadOnlyList<ClassReportRow> Rows,
+    DateTimeOffset? LastPublishedAt);
 
 public sealed record ReportSubjectLine(
     Guid SubjectId, string Subject, IReadOnlyList<ComponentScoreValue> Scores, decimal Total, string? Grade, string? Remark,
@@ -54,10 +56,12 @@ public sealed record CommentRequest(string? Comment);
 public sealed record AttendanceEntry(Guid StudentId, int DaysPresent);
 
 /// <summary>
+/// <c>Published</c>: reports newly published by this call. <c>AlreadyPublished</c>: reports that were published before
+/// (their positions and class average are refreshed, nothing else changes and their parents aren't emailed again).
 /// <c>Skipped</c>: active students in the class who weren't published, with the reason (e.g. no scores yet).
 /// <c>EmailsQueued</c>: guardian emails queued with the report attached (0 when <c>notifyParents</c> was false).
 /// </summary>
-public sealed record PublishResult(int Published, decimal ClassAverage, IReadOnlyList<SkippedStudent> Skipped, int EmailsQueued);
+public sealed record PublishResult(int Published, decimal ClassAverage, IReadOnlyList<SkippedStudent> Skipped, int EmailsQueued, int AlreadyPublished);
 
 public sealed record SkippedStudent(Guid StudentId, string Name, string Reason);
 
@@ -71,6 +75,8 @@ public static class ReportErrors
     public static readonly Common.Error TermNotFound = Common.Error.NotFound("term.not_found", "That term doesn't exist.");
     public static readonly Common.Error StudentNotFound = Common.Error.NotFound("student.not_found", "That student doesn't exist.");
     public static readonly Common.Error NoClass = Common.Error.Rule("report.no_class", "This student isn't in a class, so there's no report to show.");
+    public static readonly Common.Error AlreadyPublished = Common.Error.Rule("report.already_published",
+        "Every report in this class is already published. To change one, unpublish it, make the change, then publish again.");
     public static readonly Common.Error NothingToPublish = Common.Error.Rule("report.nothing_to_publish", "No student in this class has scores for this term yet.");
     public static Common.Error AttendanceMissing(IEnumerable<string> names) => Common.Error.Rule("report.attendance_missing",
         $"Enter attendance before publishing. Missing for: {string.Join(", ", names)}.");
