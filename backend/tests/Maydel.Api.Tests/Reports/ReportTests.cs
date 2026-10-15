@@ -108,6 +108,9 @@ public sealed class ReportTests(PostgresFixture fixture)
         var adaeze = await CardAsync(admin, s.Students[0], s.TermId);
         Assert.Equal((2, 3, publishedAt), (adaeze.Position!.Value, adaeze.ClassSize, adaeze.PublishedAt));
         Assert.Equal(1, (await CardAsync(admin, s.Students[2], s.TermId)).Position);
+        var list = (await admin.GetFromJsonAsync<ClassReportSummary>($"/api/reports/class?classRoomId={s.ClassRoomId}&termId={s.TermId}", Json.Options))!;
+        Assert.Equal(publishedAt, list.Rows.Single(r => r.StudentId == s.Students[0]).PublishedAt);
+        Assert.True(list.LastPublishedAt > publishedAt); // Chidi, just now
     }
 
     private static async Task<PublishResult> PublishResultAsync(HttpClient admin, School s)

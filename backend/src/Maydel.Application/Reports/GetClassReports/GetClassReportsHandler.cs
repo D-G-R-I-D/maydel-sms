@@ -34,11 +34,12 @@ internal sealed class GetClassReportsHandler(IAppDbContext db, AccessRules acces
                 published ? r!.Average : live.Averages.TryGetValue(s.Id, out var a) ? a : null,
                 published ? r!.Position : live.Positions.TryGetValue(s.Id, out var p) ? p : null,
                 r?.Status ?? ReportStatus.Draft, r is { DaysOpened: > 0 } ? r.DaysPresent : null,
-                r?.FormTeacherComment is not null, r?.PrincipalComment is not null, r?.TraitRatings.Count ?? 0);
+                r?.FormTeacherComment is not null, r?.PrincipalComment is not null, r?.TraitRatings.Count ?? 0,
+                published ? r!.PublishedAt : null);
         }).ToList();
 
         var daysOpened = rows.Values.Where(r => r.DaysOpened > 0).Select(r => (int?)r.DaysOpened).Max();
         return new ClassReportSummary(q.ClassRoomId, room.Name, q.TermId, term, room.FormTeacher, room.Offered, live.ClassAverage, daysOpened,
-            lines.Count(l => l.Status == ReportStatus.Published), lines.Count(l => l.Status == ReportStatus.Draft), lines);
+            lines.Count(l => l.Status == ReportStatus.Published), lines.Count(l => l.Status == ReportStatus.Draft), lines, lines.Max(l => l.PublishedAt));
     }
 }

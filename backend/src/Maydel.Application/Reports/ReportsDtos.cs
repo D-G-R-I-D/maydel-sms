@@ -8,11 +8,13 @@ namespace Maydel.Application.Reports;
 /// <summary>One line of the class report list. Draft rows show live figures; published rows show the frozen ones.</summary>
 public sealed record ClassReportRow(
     Guid StudentId, string AdmissionNumber, string Name, int SubjectsScored, decimal? Average, int? Position,
-    ReportStatus Status, int? DaysPresent, bool HasFormTeacherComment, bool HasPrincipalComment, int TraitsRated);
+    ReportStatus Status, int? DaysPresent, bool HasFormTeacherComment, bool HasPrincipalComment, int TraitsRated,
+    DateTimeOffset? PublishedAt);
 
 public sealed record ClassReportSummary(
     Guid ClassRoomId, string ClassRoom, Guid TermId, string Term, string? FormTeacher, int SubjectsOffered,
-    decimal ClassAverage, int? DaysOpened, int PublishedCount, int DraftCount, IReadOnlyList<ClassReportRow> Rows);
+    decimal ClassAverage, int? DaysOpened, int PublishedCount, int DraftCount, IReadOnlyList<ClassReportRow> Rows,
+    DateTimeOffset? LastPublishedAt);
 
 public sealed record ReportSubjectLine(
     Guid SubjectId, string Subject, IReadOnlyList<ComponentScoreValue> Scores, decimal Total, string? Grade, string? Remark,

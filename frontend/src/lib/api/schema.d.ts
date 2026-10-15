@@ -1072,6 +1072,8 @@ export interface components {
             hasPrincipalComment: boolean;
             /** Format: int32 */
             traitsRated: number;
+            /** Format: date-time */
+            publishedAt: null | string;
         };
         ClassReportSummary: {
             /** Format: uuid */
@@ -1092,6 +1094,8 @@ export interface components {
             /** Format: int32 */
             draftCount: number;
             rows: components["schemas"]["ClassReportRow"][];
+            /** Format: date-time */
+            lastPublishedAt: null | string;
         };
         ClassRoomDto: {
             /** Format: uuid */
