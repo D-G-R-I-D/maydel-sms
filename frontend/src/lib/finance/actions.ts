@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { load, type Loaded } from "@/lib/api/server";
-import type { FeeItem, FeeSettings, GenerateInvoicesResult, InstalmentPlan, OptInStudent, PlanScope } from "@/lib/api/types";
+import type { FeeItem, FeeSettings, GenerateInvoicesResult, InstalmentPlan, InvoiceDetail, OptInStudent, PaymentMethod, PlanScope, Receipt } from "@/lib/api/types";
 
 /** Fees (E10 part 1). The API enforces Admin/Bursar (Finance policy) and admin-only settings. */
 
@@ -11,6 +11,8 @@ function done<T>(result: Loaded<T>): Loaded<T> {
     revalidatePath("/admin/fees", "layout");
     revalidatePath("/admin/invoices", "layout");
     revalidatePath("/admin/settings/fees");
+    revalidatePath("/admin/debtors");
+    revalidatePath("/admin/students", "layout"); // fee statements
   }
   return result;
 }
@@ -62,4 +64,25 @@ export async function saveInstalmentPlan(body: {
 
 export async function generateInvoices(termId: string, classLevelId: string | null): Promise<Loaded<GenerateInvoicesResult>> {
   return done(await load((api) => api.POST("/api/finance/invoices/generate", { body: { termId, classLevelId } })));
+}
+
+/* ----------------------------------------------------------------- part 2a: payments */
+
+export async function recordPayment(invoiceId: string, body: { amount: number; method: Exclude<PaymentMethod, "Online">; reference: string | null; paidOn: string | null }): Promise<Loaded<Receipt>> {
+  return done(await load((api) => api.POST("/api/finance/invoices/{id}/payments", { params: { path: { id: invoiceId } }, body })));
+}
+
+/** Admin: a reversal is a new negative receipt; the original is never edited. */
+export async function reversePayment(paymentId: string, reason: string): Promise<Loaded<Receipt>> {
+  return done(await load((api) => api.POST("/api/finance/payments/{id}/reverse", { params: { path: { id: paymentId } }, body: { reason } })));
+}
+
+/** Admin: only when no money is on the invoice (422 invoice.has_payments). */
+export async function cancelInvoice(invoiceId: string, reason: string): Promise<Loaded<InvoiceDetail>> {
+  return done(await load((api) => api.POST("/api/finance/invoices/{id}/cancel", { params: { path: { id: invoiceId } }, body: { reason } })));
+}
+
+/** Admin: negative = scholarship/discount, positive = extra charge. */
+export async function addAdjustment(invoiceId: string, description: string, amount: number): Promise<Loaded<InvoiceDetail>> {
+  return done(await load((api) => api.POST("/api/finance/invoices/{id}/adjustments", { params: { path: { id: invoiceId } }, body: { description, amount } })));
 }

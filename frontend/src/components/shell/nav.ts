@@ -48,7 +48,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Fee items", href: "/admin/fees", icon: "fees", roles: AB, ready: true },
       { label: "Invoices", href: "/admin/invoices", icon: "invoices", roles: AB, ready: true },
       { label: "Payments", href: "/admin/payments", icon: "payments", roles: AB },
-      { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB },
+      { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB, ready: true },
     ],
   },
   { label: "Admissions", items: [{ label: "Admissions", href: "/admin/admissions", icon: "admissions", roles: A }] },
