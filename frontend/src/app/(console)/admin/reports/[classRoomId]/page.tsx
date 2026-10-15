@@ -54,10 +54,11 @@ export default async function ClassReportsPage({
   const { terms, selected } = await loadTerms(Array.isArray(sp.termId) ? sp.termId[0] : sp.termId);
   if (!selected) notFound();
 
-  const [summary, formTeacher, behaviour] = await Promise.all([
+  const [summary, formTeacher, behaviour, emails] = await Promise.all([
     load((api) => api.GET("/api/reports/class", { params: { query: { classRoomId, termId: selected.id } } })),
     isAdmin ? Promise.resolve(true) : isFormTeacherOf(classRoomId),
     load((api) => api.GET("/api/assessment/behaviour")),
+    isAdmin ? load((api) => api.GET("/api/reports/emails", { params: { query: { classRoomId, termId: selected.id } } })) : Promise.resolve(null),
   ]);
   const traitCount = behaviour.ok ? behaviour.data.traits.filter((t) => t.isActive).length : null;
   if (!summary.ok) {
@@ -95,7 +96,7 @@ export default async function ClassReportsPage({
           </EmptyState>
         </Card>
       ) : (
-        <ClassReports summary={s} isAdmin={isAdmin} canAttendance={formTeacher} traitCount={traitCount} />
+        <ClassReports summary={s} isAdmin={isAdmin} canAttendance={formTeacher} traitCount={traitCount} emails={emails} />
       )}
     </>
   );

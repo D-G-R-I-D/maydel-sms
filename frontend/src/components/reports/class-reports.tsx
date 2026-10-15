@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, CalendarCheck, Check, ChevronRight, LockOpen, Minus, Send } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
-import type { ClassReportSummary, PublishResult } from "@/lib/api/types";
+import type { Loaded } from "@/lib/api/server";
+import type { ClassReportSummary, PublishResult, ReportEmailStatus } from "@/lib/api/types";
 import { publishClass, unpublishReports } from "@/lib/reports/actions";
 import { attendanceText, classPdfHref, formatAverage, ordinal, publishPreview } from "@/lib/reports/rules";
+import { noGuardianEmails, publishToast } from "@/lib/reports/emails";
 import { runAction } from "@/lib/client/action";
 import { Badge, Button, buttonClasses, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { PdfDownloadButton } from "./pdf-download";
+import { ReportEmails } from "./report-emails";
 
 function Tick({ on, label }: { on: boolean; label: string }) {
   return on ? (
@@ -22,10 +25,25 @@ function Tick({ on, label }: { on: boolean; label: string }) {
 }
 
 /** Class report list with (admin) publish / unpublish. Rows open the report card preview. */
-export function ClassReports({ summary, isAdmin, canAttendance, traitCount }: { summary: ClassReportSummary; isAdmin: boolean; canAttendance: boolean; traitCount: number | null }) {
+export function ClassReports({
+  summary,
+  isAdmin,
+  canAttendance,
+  traitCount,
+  emails,
+}: {
+  summary: ClassReportSummary;
+  isAdmin: boolean;
+  canAttendance: boolean;
+  traitCount: number | null;
+  /** Parent-email statuses (admin only). */
+  emails: Loaded<ReportEmailStatus[]> | null;
+}) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [problem, setProblem] = useState<Problem | null>(null);
-  const [result, setResult] = useState<PublishResult | null>(null);
+  const [result, setResult] = useState<{ data: PublishResult; notified: boolean } | null>(null);
+  const [notify, setNotify] = useState(true);
+  const [emailsVersion, setEmailsVersion] = useState(0);
   const preview = publishPreview(summary);
   const href = (studentId: string) => `/admin/reports/${summary.classRoomId}/${studentId}?termId=${summary.termId}`;
   const attendanceHref = `/admin/reports/${summary.classRoomId}/attendance?termId=${summary.termId}`;
@@ -53,13 +71,16 @@ export function ClassReports({ summary, isAdmin, canAttendance, traitCount }: { 
         </Alert>
       )}
       {result && (
-        <Alert tone="success" title={`${result.published} ${result.published === 1 ? "report" : "reports"} published`}>
-          <p>Class average {formatAverage(result.classAverage)}. Scores, comments and attendance for these students are now locked.</p>
-          {result.skipped.length > 0 && (
+        <Alert tone="success" title={publishToast(result.data, result.notified)}>
+          <p>Class average {formatAverage(result.data.classAverage)}. Scores, comments and attendance for these students are now locked.</p>
+          {noGuardianEmails(result.data, result.notified) && (
+            <p className="mt-2 text-warning">No emails were queued: none of these students&apos; guardians has an email address. Add addresses on the guardians&apos; records to email report cards.</p>
+          )}
+          {result.data.skipped.length > 0 && (
             <div className="mt-2">
               <p className="font-medium">Skipped:</p>
               <ul className="list-disc pl-5">
-                {result.skipped.map((s) => (
+                {result.data.skipped.map((s) => (
                   <li key={s.studentId}>
                     {s.name}: {s.reason}
                   </li>
@@ -94,11 +115,15 @@ export function ClassReports({ summary, isAdmin, canAttendance, traitCount }: { 
                 onConfirm={async () => {
                   setProblem(null);
                   setResult(null);
-                  const r = await runAction(() => publishClass(summary.classRoomId, summary.termId), {
-                    success: (x) => `${x.published} reports published`,
+                  const notified = notify;
+                  const r = await runAction(() => publishClass(summary.classRoomId, summary.termId, notified), {
+                    success: (x) => publishToast(x, notified),
                     onProblem: setProblem,
                   });
-                  if (r) setResult(r);
+                  if (r) {
+                    setResult({ data: r, notified });
+                    setEmailsVersion((v) => v + 1);
+                  }
                   return true;
                 }}
               >
@@ -112,6 +137,13 @@ export function ClassReports({ summary, isAdmin, canAttendance, traitCount }: { 
                   .
                 </p>
                 <p className="mt-2">Figures are frozen, and scores, comments and attendance lock. Parents will see published reports.</p>
+                <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-input border border-border p-3 text-text">
+                  <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]" />
+                  <span>
+                    Email each parent a copy of the report (PDF)
+                    <span className="block text-xs text-muted">Sent to guardians with an email address on file.</span>
+                  </span>
+                </label>
                 {preview.missingAttendance.length > 0 && (
                   <p className="mt-2 flex items-start gap-1.5 text-warning">
                     <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -225,6 +257,7 @@ export function ClassReports({ summary, isAdmin, canAttendance, traitCount }: { 
           </tbody>
         </table>
       </div>
+      {isAdmin && emails && <ReportEmails classRoomId={summary.classRoomId} termId={summary.termId} initial={emails} version={emailsVersion} />}
     </div>
   );
 }

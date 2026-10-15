@@ -63,8 +63,8 @@ export function GuardianForm({ guardian }: { guardian: GuardianDetail }) {
         <Field id="gd-phone" label="Phone" error={errors.phone?.message} hint="Saved as +234…">
           <Input {...describedBy("gd-phone", errors.phone?.message, true)} {...register("phone")} type="tel" inputMode="tel" autoComplete="off" />
         </Field>
-        <Field id="gd-email" label="Email (optional)" error={errors.email?.message}>
-          <Input {...describedBy("gd-email", errors.email?.message)} {...register("email")} type="email" autoComplete="off" spellCheck={false} />
+        <Field id="gd-email" label="Email (optional)" error={errors.email?.message} hint="Used to send report cards when results are published.">
+          <Input {...describedBy("gd-email", errors.email?.message, true)} {...register("email")} type="email" autoComplete="off" spellCheck={false} />
         </Field>
         <Field id="gd-occupation" label="Occupation (optional)" error={errors.occupation?.message}>
           <Input {...describedBy("gd-occupation", errors.occupation?.message)} {...register("occupation")} autoComplete="off" />

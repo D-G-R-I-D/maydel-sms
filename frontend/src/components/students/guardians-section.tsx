@@ -165,7 +165,7 @@ function AddGuardianForm({ studentId, isFirst, close }: { studentId: string; isF
             ))}
           </Select>
         </Field>
-        <Field id="g-email" label="Email (optional)" error={errors.email?.message} hint="Becomes their username; otherwise their phone is.">
+        <Field id="g-email" label="Email (optional)" error={errors.email?.message} hint="Used to send report cards when results are published, and becomes their username (otherwise their phone is).">
           <Input {...describedBy("g-email", errors.email?.message, true)} {...register("email")} type="email" autoComplete="off" spellCheck={false} />
         </Field>
         <Field id="g-occupation" label="Occupation (optional)" error={errors.occupation?.message}>
