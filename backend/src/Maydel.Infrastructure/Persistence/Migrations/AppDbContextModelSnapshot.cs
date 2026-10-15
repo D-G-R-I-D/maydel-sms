@@ -1150,6 +1150,13 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("ClassRoomId")
                         .HasColumnType("uuid");
 
@@ -1196,8 +1203,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1210,20 +1217,27 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<DateOnly>("PaidOn")
                         .HasColumnType("date");
 
                     b.Property<string>("ReceiptNumber")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<Guid?>("ReceivedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Reference")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ReversesPaymentId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1234,6 +1248,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ReceiptNumber")
                         .IsUnique();
+
+                    b.HasIndex("ReversesPaymentId")
+                        .IsUnique()
+                        .HasFilter("\"ReversesPaymentId\" IS NOT NULL");
 
                     b.ToTable("Payments");
                 });
@@ -2004,6 +2022,11 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Finance.Payment", null)
+                        .WithMany()
+                        .HasForeignKey("ReversesPaymentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Invoice");
                 });

@@ -148,6 +148,17 @@ public static class FeeRules
 
     /// <summary>"2026/2027" and 7 → "INV-2026-2027-0007".</summary>
     public static string InvoiceNumber(string sessionName, int sequence) => $"INV-{sessionName.Replace('/', '-')}-{sequence:0000}";
+
+    /// <summary>"2026/2027" and 12 → "RCT-2026-2027-00012". Receipts are numbered per session, gap-free in normal use.</summary>
+    public static string ReceiptNumber(string sessionName, int sequence) => $"RCT-{sessionName.Replace('/', '-')}-{sequence:00000}";
+
+    /// <summary>
+    /// How much should have been paid by <paramref name="date"/>: the instalments due by then, or the whole total once
+    /// <paramref name="dueOn"/> has passed when there's no plan.
+    /// </summary>
+    public static decimal DueBy(DateOnly date, decimal total, DateOnly? dueOn, IReadOnlyList<(decimal Amount, DateOnly DueOn)> schedule) =>
+        schedule.Count > 0 ? schedule.Where(s => s.DueOn <= date).Sum(s => s.Amount)
+        : dueOn is { } due && due <= date ? total : 0;
 }
 
 public class Invoice : Entity
@@ -161,6 +172,8 @@ public class Invoice : Entity
     public Term Term { get; set; } = null!;
     public DateOnly? DueOn { get; set; }
     public bool IsCancelled { get; set; }
+    public DateTimeOffset? CancelledAt { get; set; }
+    public string? CancelReason { get; set; }
     public List<InvoiceLine> Lines { get; set; } = [];
     public List<Payment> Payments { get; set; } = [];
 
@@ -173,25 +186,75 @@ public class Invoice : Entity
         : AmountPaid < Total ? InvoiceStatus.PartiallyPaid
         : InvoiceStatus.Paid;
 
-    public Payment RecordPayment(decimal amount, PaymentMethod method, string? reference, DateOnly paidOn, Guid? receivedBy)
+    private static readonly DomainError Cancelled = new("invoice.cancelled", "This invoice is cancelled.");
+
+    /// <summary>
+    /// Records a payment (E10.3). It can't exceed the balance. Without an enabled instalment plan the balance must be paid
+    /// in full; with one, any part payment is fine. Receipts are never edited afterwards: mistakes are reversed.
+    /// </summary>
+    public (Payment? Payment, DomainError? Error) RecordPayment(
+        decimal amount, PaymentMethod method, string? reference, DateOnly paidOn, Guid? receivedBy, string receiptNumber, bool instalmentsAllowed)
     {
-        if (IsCancelled) throw new DomainException("Cannot record a payment on a cancelled invoice.");
-        if (amount <= 0) throw new DomainException("Payment amount must be greater than zero.");
-        if (amount > Balance) throw new DomainException($"Payment of {amount:N2} exceeds the outstanding balance of {Balance:N2}.");
+        if (IsCancelled) return (null, Cancelled);
+        if (amount <= 0 || decimal.Round(amount, 2) != amount)
+            return (null, new("payment.amount", "Enter an amount above ₦0 with at most 2 decimal places.", "amount"));
+        if (amount > Balance)
+            return (null, new("payment.exceeds_balance", $"That's more than the outstanding balance of ₦{Balance:N2}.", "amount"));
+        if (!instalmentsAllowed && amount != Balance)
+            return (null, new("payment.full_required", $"Instalments aren't enabled for this term: the full balance of ₦{Balance:N2} is due.", "amount"));
 
         var payment = new Payment
         {
-            InvoiceId = Id,
-            Amount = amount,
-            Method = method,
-            Reference = reference,
-            PaidOn = paidOn,
-            ReceivedByUserId = receivedBy,
-            ReceiptNumber = $"RCT-{Guid.CreateVersion7().ToString("N")[..10].ToUpperInvariant()}",
+            InvoiceId = Id, Amount = amount, Method = method, Reference = Clean(reference), PaidOn = paidOn,
+            ReceivedByUserId = receivedBy, ReceiptNumber = receiptNumber,
         };
         Payments.Add(payment);
-        return payment;
+        return (payment, null);
     }
+
+    /// <summary>Undoes a payment with an equal and opposite entry; the original receipt stays as it was.</summary>
+    public (Payment? Reversal, DomainError? Error) Reverse(Payment original, string reason, DateOnly on, Guid? by, string receiptNumber)
+    {
+        if (original.IsReversal) return (null, new("payment.is_reversal", "A reversal can't itself be reversed."));
+        if (Payments.Any(p => p.ReversesPaymentId == original.Id)) return (null, new("payment.already_reversed", "That payment has already been reversed."));
+        if (string.IsNullOrWhiteSpace(reason)) return (null, new("payment.reason", "Say why the payment is being reversed.", "reason"));
+
+        var reversal = new Payment
+        {
+            InvoiceId = Id, Amount = -original.Amount, Method = original.Method, Reference = original.ReceiptNumber, PaidOn = on,
+            ReceivedByUserId = by, ReceiptNumber = receiptNumber, ReversesPaymentId = original.Id, Note = reason.Trim(),
+        };
+        Payments.Add(reversal);
+        return (reversal, null);
+    }
+
+    /// <summary>Cancels an invoice that has no money on it (reverse payments first). The student can then be invoiced again.</summary>
+    public DomainError? Cancel(string reason, DateTimeOffset at)
+    {
+        if (IsCancelled) return Cancelled;
+        if (AmountPaid != 0) return new("invoice.has_payments", "This invoice has payments. Reverse them before cancelling it.");
+        if (string.IsNullOrWhiteSpace(reason)) return new("invoice.reason", "Say why the invoice is being cancelled.", "reason");
+        (IsCancelled, CancelledAt, CancelReason) = (true, at, reason.Trim());
+        return null;
+    }
+
+    /// <summary>
+    /// Adds a line after invoicing: negative for a scholarship or one-off discount, positive for an extra charge.
+    /// The total can't drop below what's already been paid.
+    /// </summary>
+    public DomainError? Adjust(string description, decimal amount)
+    {
+        if (IsCancelled) return Cancelled;
+        if (string.IsNullOrWhiteSpace(description)) return new("invoice.adjustment_description", "Describe the adjustment.", "description");
+        if (amount == 0 || decimal.Round(amount, 2) != amount)
+            return new("invoice.adjustment_amount", "Enter a non-zero amount with at most 2 decimal places.", "amount");
+        if (Total + amount < AmountPaid)
+            return new("invoice.adjustment_below_paid", $"That would bring the total below the ₦{AmountPaid:N2} already paid.", "amount");
+        Lines.Add(new InvoiceLine { Description = description.Trim(), Amount = amount });
+        return null;
+    }
+
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 public class InvoiceLine
@@ -212,4 +275,10 @@ public class Payment : Entity
     public string? Reference { get; set; }
     public DateOnly PaidOn { get; set; }
     public Guid? ReceivedByUserId { get; set; }
+
+    /// <summary>Set on a reversal entry: the payment it undoes. Reversals have a negative amount.</summary>
+    public Guid? ReversesPaymentId { get; set; }
+    public string? Note { get; set; }
+
+    public bool IsReversal => ReversesPaymentId is not null;
 }
