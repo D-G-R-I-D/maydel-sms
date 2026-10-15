@@ -209,6 +209,23 @@ internal sealed class SchoolProfileConfig : IEntityTypeConfiguration<Domain.Sett
     }
 }
 
+internal sealed class OutboxEmailConfig : IEntityTypeConfiguration<Domain.Communication.OutboxEmail>
+{
+    public void Configure(EntityTypeBuilder<Domain.Communication.OutboxEmail> b)
+    {
+        b.ToTable("OutboxEmails");
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.ToAddress).HasMaxLength(254);
+        b.Property(x => x.ToName).HasMaxLength(120);
+        b.Property(x => x.Subject).HasMaxLength(200);
+        b.Property(x => x.Body).HasMaxLength(4000);
+        b.Property(x => x.LastError).HasMaxLength(500);
+        b.HasIndex(x => new { x.Status, x.NextAttemptAt });
+        b.HasIndex(x => new { x.StudentId, x.TermId });
+    }
+}
+
 internal sealed class BehaviourTraitConfig : IEntityTypeConfiguration<BehaviourTrait>
 {
     public void Configure(EntityTypeBuilder<BehaviourTrait> b) => b.Property(x => x.Name).HasMaxLength(60);

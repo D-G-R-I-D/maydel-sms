@@ -38,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<Reports.ReportBuilder>();
         services.AddScoped<Reports.ReportPdfs>();
         services.AddScoped<Portal.PortalReports>();
+        services.AddScoped<Notifications.ReportEmails>();
+        services.AddScoped<Notifications.EmailDispatcher>();
         return services;
     }
 }
