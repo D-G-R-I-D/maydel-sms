@@ -110,6 +110,14 @@
     outline: 2px solid var(--brand);
     outline-offset: 2px;
   }
+  /* A horizontal scroller must be the containing block of absolutely positioned descendants
+     (e.g. `.sr-only` text in table cells). Otherwise they are placed against an outer ancestor,
+     escape the scroller's clipping and widen the whole page sideways on phones. Utilities such as
+     `absolute`/`sticky` still win (they're in a later layer). */
+  .overflow-x-auto,
+  .overflow-auto {
+    position: relative;
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
