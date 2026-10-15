@@ -28,7 +28,7 @@ const tiles: Tile[] = [
   { title: "Assessment settings", body: "Score components and the grading scale.", icon: SlidersHorizontal, roles: ["Admin"], href: "/admin/settings/assessment" },
   { title: "Audit log", body: "Every change to school records: who, what, when and from where.", icon: ScrollText, roles: ["Admin"], href: "/admin/audit" },
   { title: "Change password", body: "Keep your account safe. Other devices get signed out.", icon: KeyRound, roles: ["Admin", "Teacher", "Bursar"], href: "/change-password" },
-  { title: "Attendance", body: "Daily register in a couple of taps. Term attendance is on the Reports page for now.", icon: CalendarCheck, roles: ["Admin", "Teacher"] },
+  { title: "Attendance", body: "Daily register in a couple of taps, and term attendance per student.", icon: CalendarCheck, roles: ["Admin", "Teacher"], href: "/admin/attendance" },
   { title: "Fees & payments", body: "Invoices, receipts and who still owes.", icon: Wallet, roles: ["Admin", "Bursar"] },
 ];
 

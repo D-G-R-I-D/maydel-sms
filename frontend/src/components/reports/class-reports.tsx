@@ -33,6 +33,7 @@ export function ClassReports({
   canAttendance,
   traitCount,
   emails,
+  registerDays,
 }: {
   summary: ClassReportSummary;
   isAdmin: boolean;
@@ -40,6 +41,8 @@ export function ClassReports({
   traitCount: number | null;
   /** Parent-email statuses (admin only). */
   emails: Loaded<ReportEmailStatus[]> | null;
+  /** Days the daily register was taken this term; used when attendance wasn't typed in. */
+  registerDays: number;
 }) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -47,7 +50,10 @@ export function ClassReports({
   const [notify, setNotify] = useState(true);
   const [emailsVersion, setEmailsVersion] = useState(0);
   const router = useRouter();
-  const preview = publishPreview(summary);
+  const fromRegister = summary.daysOpened === null && registerDays > 0;
+  const basePreview = publishPreview(summary);
+  // With register totals available, publishing copies them in, so attendance isn't missing.
+  const preview = fromRegister ? { ...basePreview, missingAttendance: [] } : basePreview;
   const reports = (n: number) => `${n} ${n === 1 ? "report" : "reports"}`;
   const href = (studentId: string) => `/admin/reports/${summary.classRoomId}/${studentId}?termId=${summary.termId}`;
   const attendanceHref = `/admin/reports/${summary.classRoomId}/attendance?termId=${summary.termId}`;
@@ -101,7 +107,7 @@ export function ClassReports({
             <Link href={attendanceHref} className={buttonClasses("secondary")}>
               <CalendarCheck className="size-4" aria-hidden />
               Attendance
-              {summary.daysOpened === null && <Badge tone="warning">Not entered</Badge>}
+              {summary.daysOpened === null && (fromRegister ? <Badge>From register</Badge> : <Badge tone="warning">Not entered</Badge>)}
             </Link>
           )}
           {isAdmin && (

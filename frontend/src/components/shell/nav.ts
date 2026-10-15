@@ -41,7 +41,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Reports", href: "/admin/reports", icon: "reports", roles: AT, ready: true },
     ],
   },
-  { label: "Attendance", items: [{ label: "Attendance", href: "/admin/attendance", icon: "attendance", roles: AT }] },
+  { label: "Attendance", items: [{ label: "Attendance", href: "/admin/attendance", icon: "attendance", roles: AT, ready: true }] },
   {
     label: "Finance",
     items: [
