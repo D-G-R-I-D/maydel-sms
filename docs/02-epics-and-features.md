@@ -82,7 +82,7 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 ## E6 — Parent & student portal
 - **E6.1** 🟡 *API: children + latest published result ✅ 2026-10-14 (fees, attendance, notices later); UI pending.* Dashboard: children switcher (parent), current class, latest published result summary, fee balance, attendance %, latest notices.
 - **E6.2** 🟡 *API ✅ 2026-10-14 (published only; other families and drafts are 404; PDF); UI pending.* Results: list of published terms → report card view + PDF download. AC: drafts never visible (tested).
-- **E6.3** Fees: invoices, payments, receipts (PDF), outstanding balance; Pay online button (E10.5).
+- **E6.3** 🟡 *API ✅ 2026-10-15 (invoices, payments, balance, overdue, invoice and receipt PDFs; Pay online with E10.5); UI pending.* Fees: invoices, payments, receipts (PDF), outstanding balance; Pay online button (E10.5).
 - **E6.4** Attendance: term calendar with absences/lates.
 - **E6.5** Profile: biodata (read-only), guardians, request-correction link.
 - **E6.6** Notices & events relevant to the audience.
@@ -111,7 +111,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 ## E10 — Fees & payments
 - **E10.1** 🟡 *API ✅ 2026-10-15 (per term, class level or school-wide, optional items by per-student opt-in, copy between terms); UI pending.* Fee items per term and class level (mandatory / optional e.g. bus, lunch).
 - **E10.2** 🟡 *API ✅ 2026-10-15 (idempotent, INV-{session}-{seq}, sibling discount None/Percentage/FixedAmount set by admin, 2–3 part instalment plans per term or session); scholarships and cancel pending.* Generate invoices for a term (all students of a level), with discounts/scholarships (sibling discount rule). AC: idempotent per student-term; numbered `INV-{session}-{seq}`.
-- **E10.3** 🟡 *API ✅ 2026-10-15 (cash/transfer/POS, RCT-{session}-{seq}, full payment unless instalments enabled, admin reversals as new entries, cancel, adjustments); receipt PDF pending.* Record manual payments (cash, transfer, POS) with receipt numbers. AC: cannot exceed balance; cannot pay a cancelled invoice; receipts immutable (reversal = new entry).
+- **E10.3** 🟡 *API ✅ 2026-10-15 (cash/transfer/POS, RCT-{session}-{seq}, full payment unless instalments enabled, admin reversals as new entries, cancel, adjustments); invoice and receipt PDFs ✅ 2026-10-15.* Record manual payments (cash, transfer, POS) with receipt numbers. AC: cannot exceed balance; cannot pay a cancelled invoice; receipts immutable (reversal = new entry).
 - **E10.4** 🟡 *API ✅ 2026-10-15 (student statement with running balance, debtors with overdue-by-plan, CSV export); collections report pending.* Statements, debtors list, collections report by class/term; CSV export.
 - **E10.5** Online payment via Paystack: initialise → redirect → **webhook verified by signature** → payment recorded idempotently by gateway reference. AC: amount re-verified server-side via Paystack verify API; replayed webhooks ignored.
 

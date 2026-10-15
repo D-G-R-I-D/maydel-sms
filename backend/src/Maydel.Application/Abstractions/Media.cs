@@ -60,6 +60,19 @@ public sealed record ReportBranding(
     string Name, string? Motto, string Address, string? Phone, string? Email, string? Website, string? PrincipalName,
     byte[]? Logo, byte[]? Signature);
 
+/// <summary>An invoice to print (E10). <c>Guardian</c>: the primary contact, shown as "Bill to".</summary>
+public sealed record InvoiceDocument(Finance.InvoiceDetail Invoice, string? Guardian, DateOnly PrintedOn);
+
+/// <summary>A receipt or reversal to print. Totals are as at this payment, so reprints never change.</summary>
+public sealed record ReceiptDocument(Finance.ReceiptDto Receipt, decimal InvoiceTotal, decimal PaidToDate, string? Note, string? ReversesReceipt);
+
+/// <summary>Renders invoices (A4) and receipts (A5) with the school's branding (E10.3).</summary>
+public interface IFinanceDocumentRenderer
+{
+    byte[] Invoice(InvoiceDocument document, ReportBranding school);
+    byte[] Receipt(ReceiptDocument document, ReportBranding school);
+}
+
 public interface IReportCardRenderer
 {
     byte[] Render(IReadOnlyList<ReportCardDocument> cards, ReportBranding school);

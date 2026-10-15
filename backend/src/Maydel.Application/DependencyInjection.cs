@@ -40,6 +40,8 @@ public static class DependencyInjection
         services.AddScoped<Portal.PortalReports>();
         services.AddScoped<Notifications.ReportEmails>();
         services.AddScoped<Attendance.RegisterReader>();
+        services.AddScoped<SchoolSettings.SchoolBranding>();
+        services.AddScoped<Finance.FinanceDocuments>();
         services.AddScoped<Notifications.EmailDispatcher>();
         return services;
     }

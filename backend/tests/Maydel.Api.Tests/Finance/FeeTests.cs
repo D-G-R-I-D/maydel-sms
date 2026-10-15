@@ -79,6 +79,22 @@ public sealed class FeeTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task One_term_can_opt_out_of_its_sessions_plan_without_touching_the_others()
+    {
+        var admin = await Api.ClientAsync(Roles.Admin);
+        var (year, first, second) = await SessionAsync(admin);
+        await PlanAsync(admin, first, PlanScope.Session, (60, $"{year}-09-14"), (40, $"{year}-10-30"));
+
+        var optOut = await admin.PutAsJsonAsync("/api/finance/instalment-plan", new { termId = first, scope = "Term", enabled = false, instalments = Array.Empty<object>() });
+
+        optOut.EnsureSuccessStatusCode();
+        var plan = (await optOut.Content.ReadFromJsonAsync<InstalmentPlanDto>(Json.Options))!;
+        Assert.Equal((PlanScope.Term, false), (plan.Scope, plan.Enabled));
+        var other = (await admin.GetFromJsonAsync<InstalmentPlanDto>($"/api/finance/instalment-plan?termId={second}", Json.Options))!;
+        Assert.Equal((PlanScope.Session, true), (other.Scope, other.Enabled));
+    }
+
+    [Fact]
     public async Task Plans_need_2_or_3_parts_adding_to_100_and_only_admins_set_them()
     {
         var admin = await Api.ClientAsync(Roles.Admin);
