@@ -88,6 +88,36 @@ public sealed class ReportTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Publishing_twice_is_refused_and_late_students_only_add_themselves()
+    {
+        var s = await SchoolBuilder.SetUpAsync(Api);
+        var admin = await Api.ClientAsync(Roles.Admin);
+        await ScoreAsync(admin, s, s.SubjectId, (s.Students[0], 25, 40), (s.Students[1], 20, 40)); // 65, 60; Chidi has none yet
+        await AttendanceAsync(admin, s, 50, (s.Students[0], 50), (s.Students[1], 49), (s.Students[2], 48));
+        var first = await PublishResultAsync(admin, s);
+        Assert.Equal((2, 0), (first.Published, first.AlreadyPublished));
+        var publishedAt = (await CardAsync(admin, s.Students[0], s.TermId)).PublishedAt;
+
+        await (await admin.PostAsJsonAsync("/api/reports/publish", new { classRoomId = s.ClassRoomId, termId = s.TermId }))
+            .AssertProblemAsync(HttpStatusCode.UnprocessableEntity, "report.already_published");
+
+        // Chidi's scores arrive late and top the class: only he is published, but everyone's position follows.
+        await ScoreAsync(admin, s, s.SubjectId, (s.Students[2], 30, 40));
+        var late = await PublishResultAsync(admin, s);
+        Assert.Equal((1, 2), (late.Published, late.AlreadyPublished));
+        var adaeze = await CardAsync(admin, s.Students[0], s.TermId);
+        Assert.Equal((2, 3, publishedAt), (adaeze.Position!.Value, adaeze.ClassSize, adaeze.PublishedAt));
+        Assert.Equal(1, (await CardAsync(admin, s.Students[2], s.TermId)).Position);
+    }
+
+    private static async Task<PublishResult> PublishResultAsync(HttpClient admin, School s)
+    {
+        var response = await admin.PostAsJsonAsync("/api/reports/publish", new { classRoomId = s.ClassRoomId, termId = s.TermId });
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<PublishResult>(Json.Options))!;
+    }
+
+    [Fact]
     public async Task Tied_averages_share_a_position()
     {
         var s = await SchoolBuilder.SetUpAsync(Api);
