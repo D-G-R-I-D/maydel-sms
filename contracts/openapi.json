@@ -7331,8 +7331,10 @@
             "format": "uuid"
           },
           "notifyParents": {
-            "type": "boolean",
-            "default": true
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },

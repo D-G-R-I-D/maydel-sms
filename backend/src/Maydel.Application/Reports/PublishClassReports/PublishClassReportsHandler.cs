@@ -33,7 +33,7 @@ internal sealed class PublishClassReportsHandler(IAppDbContext db, ReportBuilder
             report.Publish(figures.Averages[s.Id], figures.ClassAverage, figures.Positions[s.Id], figures.Averages.Count, now, me.UserId);
         }
         // Same transaction as the publish: either both happen or neither does.
-        var queued = c.NotifyParents ? await emails.QueueAsync([.. toPublish.Select(s => s.Id)], c.TermId, now, ct) : 0;
+        var queued = (c.NotifyParents ?? true) ? await emails.QueueAsync([.. toPublish.Select(s => s.Id)], c.TermId, now, ct) : 0;
         await db.SaveChangesAsync(ct);
 
         var skipped = students.Where(s => !figures.Averages.ContainsKey(s.Id))

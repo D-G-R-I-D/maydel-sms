@@ -788,6 +788,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListReportEmails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/emails/{emailId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RetryReportEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/unpublish": {
         parameters: {
             query?: never;
@@ -1168,6 +1200,8 @@ export interface components {
             /** @default true */
             isActive: boolean;
         };
+        /** @enum {unknown} */
+        EmailStatus: "Pending" | "Sent" | "Failed" | "Skipped";
         GoogleLoginCommand: {
             idToken: string;
         };
@@ -1453,6 +1487,7 @@ export interface components {
             classRoomId: string;
             /** Format: uuid */
             termId: string;
+            notifyParents?: null | boolean;
         };
         PublishResult: {
             /** Format: int32 */
@@ -1460,6 +1495,8 @@ export interface components {
             /** Format: double */
             classAverage: number;
             skipped: components["schemas"]["SkippedStudent"][];
+            /** Format: int32 */
+            emailsQueued: number;
         };
         RatingKeyEntry: {
             rating: string;
@@ -1523,6 +1560,23 @@ export interface components {
             behaviour: components["schemas"]["TraitRatingLine"][];
             clubs: components["schemas"]["ClubLine"][];
             behaviourKey: components["schemas"]["RatingKeyEntry"][];
+        };
+        ReportEmailStatus: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            studentId: string;
+            student: string;
+            guardian: string;
+            toAddress: string;
+            status: components["schemas"]["EmailStatus"];
+            /** Format: int32 */
+            attempts: number;
+            lastError: null | string;
+            /** Format: date-time */
+            queuedAt: string;
+            /** Format: date-time */
+            sentAt: null | string;
         };
         /** @enum {unknown} */
         ReportStatus: "Draft" | "Published";
@@ -5439,6 +5493,112 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PublishResult"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListReportEmails: {
+        parameters: {
+            query: {
+                classRoomId: string;
+                termId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportEmailStatus"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RetryReportEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                emailId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
