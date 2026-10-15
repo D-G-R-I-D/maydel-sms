@@ -30,14 +30,16 @@ export function RegisterEditor({ initial, readOnlyHint }: { initial: ClassRegist
   const [register, setRegister] = useState(initial);
   const [saved, setSaved] = useState(() => marksFrom(initial));
   const [marks, setMarks] = useState<RegisterMarks>(() => marksFrom(initial));
-  const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const editable = register.canEdit && !register.problem;
+  // Every row locked (all reports published) means there's nothing to take.
+  const allLocked = register.entries.length > 0 && register.entries.every((e) => e.locked);
+  const editable = register.canEdit && !register.problem && !allLocked;
   const dirty = marksDirty(marks, saved);
   const errors = noteErrors(marks);
   const counts = countMarks(marks);
+  const takenAt = register.takenAt ? new Date(register.takenAt) : null;
   const draft = useDraft({
     scope: ["register", register.classRoomId, register.date],
     value: marks,
@@ -63,7 +65,6 @@ export function RegisterEditor({ initial, readOnlyHint }: { initial: ClassRegist
       setRegister(result);
       setSaved(m);
       setMarks(m);
-      setSavedAt(new Date());
       draft.clear();
     }
   };
@@ -94,9 +95,9 @@ export function RegisterEditor({ initial, readOnlyHint }: { initial: ClassRegist
   return (
     <div className="space-y-4">
       {editable && <DraftBanner draft={draft} onDiscard={() => { draft.clear(); setMarks(saved); }} />}
-      {!editable && readOnlyHint && (
+      {!editable && (readOnlyHint || allLocked) && (
         <Alert tone="info" title="View only">
-          {readOnlyHint}
+          {allLocked ? "Every student's term report is published, so this register is locked. Ask an administrator to unpublish to make changes." : readOnlyHint}
         </Alert>
       )}
       {problem && problem.status > 0 && problem.status < 500 && problem.status !== 429 && (
@@ -180,14 +181,20 @@ export function RegisterEditor({ initial, readOnlyHint }: { initial: ClassRegist
 
       <div className="sticky bottom-0 z-10 -mx-4 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-card sm:border sm:shadow-low">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <p className="tabular flex flex-1 flex-wrap gap-1.5 text-sm" aria-live="polite">
-            <Badge tone="success">{counts.Present} present</Badge>
-            <Badge tone="danger">{counts.Absent} absent</Badge>
-            <Badge tone="warning">{counts.Late} late</Badge>
-            <Badge>{counts.Excused} excused</Badge>
+          <p className="tabular flex flex-1 flex-nowrap gap-1.5 text-sm" aria-live="polite">
+            {STATUSES.map((st) => (
+              <Badge key={st.value} tone={st.value === "Present" ? "success" : st.value === "Absent" ? "danger" : st.value === "Late" ? "warning" : "neutral"}>
+                {counts[st.value]}
+                <span className="sm:hidden" aria-hidden>
+                  {" "}
+                  {st.short}
+                </span>
+                <span className="sr-only sm:not-sr-only"> {st.label.toLowerCase()}</span>
+              </Badge>
+            ))}
           </p>
           <span className="text-xs text-muted">
-            {dirty ? "Unsaved changes" : savedAt ? `Saved ${timeFormat.format(savedAt)}` : register.taken ? "Register taken" : "Not taken yet"}
+            {dirty ? "Unsaved changes" : takenAt ? `Saved ${timeFormat.format(takenAt)}` : register.taken ? "Register taken" : "Not taken yet"}
           </span>
           {editable && (
             <Button onClick={() => void save()} loading={busy} loadingText="Saving…" disabled={!dirty || Object.keys(errors).length > 0}>

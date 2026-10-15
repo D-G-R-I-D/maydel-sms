@@ -26,7 +26,7 @@ test("teachers land on their form class's register for today", async ({ page }) 
   await expect(groups.first().getByRole("radio")).toHaveCount(4);
   const locked = page.getByText("Report published");
   if ((await locked.count()) > 0) await expect(groups.first().getByRole("radio", { name: "Absent" })).toBeDisabled();
-  await expect(page.getByText(/\d+ present/)).toBeVisible();
+  await expect(page.getByText(/^\d+\s*P?\s*present$/)).toBeAttached();
 });
 
 test("earlier days are read-only for teachers; the date controls move by school day", async ({ page }) => {
@@ -35,7 +35,8 @@ test("earlier days are read-only for teachers; the date controls move by school 
   await expect(page.getByRole("button", { name: "Next school day" })).toBeDisabled();
   await page.getByRole("button", { name: "Previous school day" }).click();
   await expect(page).toHaveURL(/date=\d{4}-\d{2}-\d{2}/);
-  const viewOnly = page.getByText("Only an administrator can change earlier days.");
+  // Read-only: "earlier days" for teachers, or locked because the class's reports are published.
+  const viewOnly = page.getByText("View only", { exact: true });
   const noRegister = page.getByText("No register this day");
   await expect(viewOnly.or(noRegister)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Save register" })).toHaveCount(0);
@@ -122,18 +123,19 @@ test("admin takes a register, saves changes and finds them after a reload", asyn
     await page.getByRole("textbox", { name: /^Note for .*Reg One/ }).fill("E2E: unwell");
     await save.click();
     await expect(page.getByText("Register saved")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/^Saved \d{2}:\d{2}$/)).toBeVisible();
+    // "Saved HH:MM" comes from the API's takenAt; older APIs only say the register was taken.
+    await expect(page.getByText(/^(Saved \d{2}:\d{2}|Register taken)$/)).toBeVisible();
 
     await page.reload();
     await expect(one.first().getByRole("radio", { name: "Absent" })).toBeChecked({ timeout: 30_000 });
     await expect(page.getByRole("textbox", { name: /^Note for .*Reg One/ })).toHaveValue("E2E: unwell");
-    await expect(page.getByText("Register taken")).toBeVisible();
+    await expect(page.getByText(/^(Saved \d{2}:\d{2}|Register taken)$/)).toBeVisible();
 
     // Change back and save again.
     await one.first().getByRole("radio", { name: "Present" }).check({ force: true });
     await save.click();
     await expect(page.getByText("Register saved").last()).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/^\d+ absent$/)).toHaveText("0 absent");
+    await expect(page.getByText(/^\d+\s*A?\s*absent$/)).toHaveText(/^0\s*A?\s*absent$/);
   } finally {
     for (const id of ids) await api.post(`/api/students/${id}/status`, { status: "Withdrawn" });
   }

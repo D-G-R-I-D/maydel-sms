@@ -73,7 +73,7 @@ test("report preview shows a draft watermark and saves the principal's comment",
 test("attendance form checks days present against days opened", async ({ page }) => {
   await signIn(page, "teacher@maydel.test");
   await openClass(page);
-  await page.getByRole("link", { name: /Attendance/ }).first().click();
+  await page.getByRole("main").getByRole("link", { name: /Attendance/ }).first().click();
   await page.waitForURL(/\/attendance\?termId=/);
   const locked = page.getByText("Every report in this class is published");
   await expect(page.getByLabel("Days school opened this term")).toBeVisible({ timeout: 30_000 });
