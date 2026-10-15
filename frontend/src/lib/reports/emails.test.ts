@@ -3,9 +3,10 @@ import { emailCounts, hasPendingEmails, noGuardianEmails, publishToast } from ".
 
 describe("report emails", () => {
   it("summarises the publish result", () => {
-    expect(publishToast({ published: 5, emailsQueued: 7 }, true)).toBe("Published 5 reports · 7 emails queued");
-    expect(publishToast({ published: 1, emailsQueued: 1 }, true)).toBe("Published 1 report · 1 email queued");
-    expect(publishToast({ published: 3, emailsQueued: 0 }, false)).toBe("Published 3 reports");
+    expect(publishToast({ published: 5, emailsQueued: 7, alreadyPublished: 0 }, true)).toBe("Published 5 reports · 7 emails queued");
+    expect(publishToast({ published: 1, emailsQueued: 2, alreadyPublished: 4 }, true)).toBe("Published 1 report · 4 already published · 2 emails queued");
+    expect(publishToast({ published: 1, emailsQueued: 1, alreadyPublished: 0 }, true)).toBe("Published 1 report · 1 email queued");
+    expect(publishToast({ published: 3, emailsQueued: 0, alreadyPublished: 1 }, false)).toBe("Published 3 reports · 1 already published");
   });
 
   it("flags a ticked box with no guardian addresses", () => {
