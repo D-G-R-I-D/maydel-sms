@@ -7,13 +7,14 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { formatDay } from "@/lib/validation/academics";
 import { ageOn, statusTone } from "@/lib/validation/students";
-import { Badge, Card } from "@/components/ui/primitives";
+import { Badge, Card, cn } from "@/components/ui/primitives";
 import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
 import { PhotoControls } from "@/components/media/photo-controls";
 import { IssueLoginButton } from "@/components/credentials/issue-login";
 import { EditStudentButton } from "@/components/students/edit-student";
 import { GuardiansSection } from "@/components/students/guardians-section";
 import { StatusMenu } from "@/components/students/status-menu";
+import { StudentStatementView } from "@/components/finance/student-statement";
 
 export const metadata: Metadata = { title: "Student" };
 
@@ -26,8 +27,15 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default async function StudentProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StudentProfilePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
   const user = await requireSessionUser();
   const back = (
     <Link href="/admin/students" className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-sm text-brand hover:underline">
@@ -47,9 +55,12 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
   }
 
   const isAdmin = hasAnyRole(user.roles, ["Admin"]);
-  const [result, classrooms] = await Promise.all([
+  const canSeeFees = hasAnyRole(user.roles, ["Admin", "Bursar"]);
+  const tab = canSeeFees && (Array.isArray(sp.tab) ? sp.tab[0] : sp.tab) === "fees" ? "fees" : "profile";
+  const [result, classrooms, statement] = await Promise.all([
     load((api) => api.GET("/api/students/{id}", { params: { path: { id } } })),
     isAdmin ? load((api) => api.GET("/api/academics/classrooms")) : Promise.resolve(null),
+    tab === "fees" ? load((api) => api.GET("/api/finance/students/{id}/statement", { params: { path: { id } } })) : Promise.resolve(null),
   ]);
   if (!result.ok && result.problem.status === 404) notFound();
   if (!result.ok) {
@@ -118,6 +129,33 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
         </Alert>
       )}
 
+      {canSeeFees && (
+        <nav aria-label="Student sections" className="mb-5 inline-flex rounded-input bg-surface-2 p-1">
+          {(
+            [
+              ["profile", "Profile", `/admin/students/${s.id}`],
+              ["fees", "Fees", `/admin/students/${s.id}?tab=fees`],
+            ] as const
+          ).map(([key, label, href]) => (
+            <Link
+              key={key}
+              href={href}
+              aria-current={tab === key ? "page" : undefined}
+              className={cn("inline-flex min-h-9 items-center rounded-[6px] px-3 text-sm transition-colors", tab === key ? "bg-surface font-medium text-text shadow-low" : "text-muted hover:text-text")}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
+
+      {tab === "fees" ? (
+        statement?.ok ? (
+          <StudentStatementView statement={statement.data} />
+        ) : (
+          <Card>{statement && !statement.ok && <ProblemState problem={statement.problem} />}</Card>
+        )
+      ) : (
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <Card className="p-5">
           <h2 className="mb-2 font-display text-lg font-semibold">Biodata</h2>
@@ -136,6 +174,7 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
         </Card>
         <GuardiansSection studentId={s.id} studentName={s.fullName} guardians={s.guardians} canEdit={isAdmin} />
       </div>
+      )}
     </>
   );
 }

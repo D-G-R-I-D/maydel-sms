@@ -7,15 +7,25 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { GUID } from "@/lib/media/binary-proxy";
 import { formatNaira, invoiceStatusLabel, invoiceStatusTone } from "@/lib/finance/rules";
+import { scheduleStates, signed, type ScheduleState } from "@/lib/finance/payments";
+import { schoolToday } from "@/lib/validation/students";
 import { Badge, Card, PageHeader, cn } from "@/components/ui/primitives";
-import { AccessDenied, ProblemState } from "@/components/ui/states";
+import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
+import { InvoiceAdminActions, PaymentsTable, RecordPaymentButton } from "@/components/finance/invoice-actions";
+
+const stateBadge: Record<ScheduleState, { label: string; tone: "success" | "danger" | "warning" | "neutral" }> = {
+  paid: { label: "Paid", tone: "success" },
+  overdue: { label: "Overdue", tone: "danger" },
+  due: { label: "Due now", tone: "warning" },
+  upcoming: { label: "Upcoming", tone: "neutral" },
+};
 
 export const metadata: Metadata = { title: "Invoice" };
 
 const dateFormat = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 const day = (iso: string) => dateFormat.format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
 
-/** E10 part 1: one invoice: lines (discounts negative), totals and the instalment schedule. */
+/** E10: one invoice: lines (discounts negative), totals, the instalment schedule, payments and (admin) corrections. */
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireSessionUser();
@@ -49,6 +59,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     );
   }
   const inv = invoice.data;
+  const isAdmin = hasAnyRole(user.roles, ["Admin"]);
+  const today = schoolToday();
+  const cancelled = inv.status === "Cancelled";
+  const states = scheduleStates(inv.schedule, inv.paid, today);
 
   return (
     <>
@@ -61,8 +75,23 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             {inv.classRoom ? ` · ${inv.classRoom}` : ""} · {inv.term} {inv.session}
           </>
         }
-        actions={<Badge tone={invoiceStatusTone[inv.status]}>{invoiceStatusLabel[inv.status]}</Badge>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={invoiceStatusTone[inv.status]}>{invoiceStatusLabel[inv.status]}</Badge>
+            {!cancelled && <RecordPaymentButton invoice={inv} today={today} />}
+          </div>
+        }
       />
+      {cancelled && (
+        <Alert tone="warning" className="mb-5" title="Cancelled">
+          {inv.cancelReason ?? "This invoice was cancelled."} Generate invoices again to bill this student for the term.
+        </Alert>
+      )}
+      {!cancelled && inv.overdue > 0 && (
+        <Alert tone="danger" className="mb-5" title={`${formatNaira(inv.overdue)} overdue`}>
+          {formatNaira(inv.dueNow)} should have been paid by today; {formatNaira(inv.paid)} has been.
+        </Alert>
+      )}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Card className="overflow-hidden">
           <h2 className="border-b border-border px-5 py-3 font-display text-lg font-semibold">Charges</h2>
@@ -71,7 +100,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               {inv.lines.map((l, i) => (
                 <tr key={i}>
                   <td className="px-5 py-2.5">{l.description}</td>
-                  <td className={cn("tabular px-5 py-2.5 text-right", l.amount < 0 && "text-success")}>{l.amount < 0 ? `−${formatNaira(-l.amount)}` : formatNaira(l.amount)}</td>
+                  <td className={cn("tabular px-5 py-2.5 text-right", l.amount < 0 && "text-success")}>{signed(l.amount, formatNaira)}</td>
                 </tr>
               ))}
             </tbody>
@@ -104,17 +133,21 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                 <tr>
                   <th className="px-5 py-2 font-medium">Part</th>
                   <th className="px-3 py-2 font-medium">Due</th>
-                  <th className="px-5 py-2 text-right font-medium">Amount</th>
+                  <th className="px-3 py-2 text-right font-medium">Amount</th>
+                  <th className="px-5 py-2 font-medium">
+                    <span className="sr-only">Status</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {inv.schedule.map((s) => (
+                {inv.schedule.map((s, i) => (
                   <tr key={s.order}>
                     <td className="px-5 py-2.5">
                       {s.order} <span className="text-muted">({s.percent}%)</span>
                     </td>
                     <td className="px-3 py-2.5">{day(s.dueOn)}</td>
-                    <td className="tabular px-5 py-2.5 text-right">{formatNaira(s.amount)}</td>
+                    <td className="tabular px-3 py-2.5 text-right">{formatNaira(s.amount)}</td>
+                    <td className="px-5 py-2.5">{!cancelled && <Badge tone={stateBadge[states[i]].tone}>{stateBadge[states[i]].label}</Badge>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -125,6 +158,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           </p>
         </Card>
       </div>
+
+      <Card className="mt-5 overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
+          <h2 className="font-display text-lg font-semibold">Payments</h2>
+          {isAdmin && !cancelled && <InvoiceAdminActions invoice={inv} />}
+        </div>
+        <PaymentsTable payments={inv.payments} isAdmin={isAdmin} />
+      </Card>
     </>
   );
 }

@@ -9,6 +9,7 @@ import { formatNaira, instalmentErrors, instalmentTotal, siblingErrors, siblingP
 import { runAction } from "@/lib/client/action";
 import { Button, Card, Field, Input, cn, describedBy } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
+import { ConfirmDialog } from "@/components/ui/dialog";
 
 const EXAMPLE_TUITION = 150_000;
 
@@ -142,7 +143,8 @@ export function InstalmentPlanForm({ termId, termLabel, initial, canEdit }: { te
     setBusy(true);
     const body =
       choice === "Off"
-        ? { termId, scope: "None" as const, enabled: false, instalments: [], clearSession: savedChoice === "Session" }
+        ? // A switched-off override for this term only; other terms keep the session plan.
+          { termId, scope: "Term" as const, enabled: false, instalments: [], clearSession: false }
         : { termId, scope: choice, enabled: true, instalments: rows.map((r) => ({ percent: Number(r.percent), dueOn: r.dueOn })), clearSession: false };
     const r = await runAction(() => saveInstalmentPlan(body), { success: choice === "Off" ? "Instalments switched off" : "Instalment plan saved", onProblem: setProblem });
     setBusy(false);
@@ -166,7 +168,7 @@ export function InstalmentPlanForm({ termId, termLabel, initial, canEdit }: { te
       )}
       <RadioCards name="plan-scope" value={choice} options={choices} onChange={setChoice} disabled={!canEdit} />
       {choice === "Off" && savedChoice === "Session" && canEdit && (
-        <p className="mt-3 text-sm text-warning">This also removes the whole-session plan, so every term of the session is paid in full.</p>
+        <p className="mt-3 text-sm text-muted">Only {termLabel} is paid in full; the other terms keep the whole-session plan.</p>
       )}
       {choice !== "Off" && (
         <div className="mt-4 space-y-3">
@@ -206,7 +208,34 @@ export function InstalmentPlanForm({ termId, termLabel, initial, canEdit }: { te
         </div>
       )}
       {canEdit && (
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+          {savedChoice === "Session" && (
+            <ConfirmDialog
+              title="Remove the plan for the whole session?"
+              confirmLabel="Remove for the whole session"
+              pendingLabel="Removing…"
+              tone="destructive"
+              trigger={
+                <Button variant="ghost" className="text-danger">
+                  Remove for the whole session
+                </Button>
+              }
+              onConfirm={async () => {
+                const r = await runAction(() => saveInstalmentPlan({ termId, scope: "None", enabled: false, instalments: [], clearSession: true }), {
+                  success: "Whole-session plan removed",
+                  onProblem: setProblem,
+                });
+                if (r) {
+                  setPlan(r);
+                  setChoice("Off");
+                  setRows(toRows(r));
+                }
+                return r !== null;
+              }}
+            >
+              <p>Every term of this session goes back to pay in full, unless a term has its own plan. Invoices already issued keep their schedules.</p>
+            </ConfirmDialog>
+          )}
           <Button onClick={save} loading={busy} loadingText="Saving…" disabled={!dirty || invalid}>
             <Save className="size-4" aria-hidden />
             Save instalments

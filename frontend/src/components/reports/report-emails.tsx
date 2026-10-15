@@ -107,7 +107,8 @@ export function ReportEmails({ classRoomId, termId, initial, version }: { classR
                 )}
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-3">
-                <span className="tabular text-xs text-muted">
+                {/* Node's and the browser's ICU can format dates slightly differently; the text is informational. */}
+                <span className="tabular text-xs text-muted" suppressHydrationWarning>
                   {e.status === "Sent" ? `Sent ${when(e.sentAt)}` : `Queued ${when(e.queuedAt)}`}
                   {e.attempts > 1 && ` · ${e.attempts} attempts`}
                 </span>
