@@ -247,8 +247,48 @@ internal sealed class FeeItemConfig : IEntityTypeConfiguration<FeeItem>
 {
     public void Configure(EntityTypeBuilder<FeeItem> b)
     {
+        b.Property(x => x.Name).HasMaxLength(80);
+        b.Property(x => x.Amount).HasPrecision(14, 2);
+        b.HasIndex(x => x.TermId);
         b.HasOne(x => x.Term).WithMany().HasForeignKey(x => x.TermId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.ClassLevel).WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsMany(x => x.OptIns, o =>
+        {
+            o.ToTable("FeeOptIns");
+            o.WithOwner().HasForeignKey(x => x.FeeItemId);
+            o.HasKey(x => new { x.FeeItemId, x.StudentId });
+            o.HasOne<Domain.People.Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+}
+
+internal sealed class FeeSettingsConfig : IEntityTypeConfiguration<FeeSettings>
+{
+    public void Configure(EntityTypeBuilder<FeeSettings> b)
+    {
+        b.ToTable("FeeSettings");
+        b.Property(x => x.SiblingMode).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.SecondChild).HasPrecision(14, 2);
+        b.Property(x => x.ThirdAndLater).HasPrecision(14, 2);
+    }
+}
+
+internal sealed class InstalmentPlanConfig : IEntityTypeConfiguration<InstalmentPlan>
+{
+    public void Configure(EntityTypeBuilder<InstalmentPlan> b)
+    {
+        b.HasIndex(x => x.TermId).IsUnique().HasFilter("\"TermId\" IS NOT NULL");
+        b.HasIndex(x => x.SessionId).IsUnique().HasFilter("\"SessionId\" IS NOT NULL");
+        b.HasOne<Term>().WithMany().HasForeignKey(x => x.TermId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Cascade);
+        b.ToTable(t => t.HasCheckConstraint("CK_InstalmentPlans_Scope", "(\"TermId\" IS NULL) <> (\"SessionId\" IS NULL)"));
+        b.OwnsMany(x => x.Instalments, i =>
+        {
+            i.ToTable("Instalments");
+            i.WithOwner().HasForeignKey(x => x.PlanId);
+            i.HasKey(x => new { x.PlanId, x.Order });
+            i.Property(x => x.Percent).HasPrecision(5, 2);
+        });
     }
 }
 
@@ -257,7 +297,10 @@ internal sealed class InvoiceConfig : IEntityTypeConfiguration<Invoice>
     public void Configure(EntityTypeBuilder<Invoice> b)
     {
         b.HasIndex(x => x.Number).IsUnique();
-        b.HasIndex(x => new { x.StudentId, x.TermId });
+        // One live invoice per student per term (E10.2): generating again never duplicates.
+        b.HasIndex(x => new { x.StudentId, x.TermId }).IsUnique().HasFilter("\"IsCancelled\" = false");
+        b.HasIndex(x => new { x.TermId, x.ClassRoomId });
+        b.Property(x => x.Number).HasMaxLength(40);
         b.Ignore(x => x.Total);
         b.Ignore(x => x.AmountPaid);
         b.Ignore(x => x.Balance);
@@ -270,6 +313,8 @@ internal sealed class InvoiceConfig : IEntityTypeConfiguration<Invoice>
             l.WithOwner().HasForeignKey(x => x.InvoiceId);
             l.HasKey(x => x.Id);
             l.Property(x => x.Id).ValueGeneratedNever();
+            l.Property(x => x.Description).HasMaxLength(120);
+            l.Property(x => x.Amount).HasPrecision(14, 2);
         });
         b.HasMany(x => x.Payments).WithOne(p => p.Invoice).HasForeignKey(p => p.InvoiceId).OnDelete(DeleteBehavior.Restrict);
     }

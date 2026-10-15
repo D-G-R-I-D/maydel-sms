@@ -1045,8 +1045,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
 
                     b.Property<Guid?>("ClassLevelId")
                         .HasColumnType("uuid");
@@ -1059,8 +1059,11 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<bool>("SiblingDiscount")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("TermId")
                         .HasColumnType("uuid");
@@ -1077,9 +1080,77 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("FeeItems");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Finance.FeeSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("SecondChild")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
+
+                    b.Property<string>("SiblingMode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<decimal>("ThirdAndLater")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FeeSettings", (string)null);
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Finance.InstalmentPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TermId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId")
+                        .IsUnique()
+                        .HasFilter("\"SessionId\" IS NOT NULL");
+
+                    b.HasIndex("TermId")
+                        .IsUnique()
+                        .HasFilter("\"TermId\" IS NOT NULL");
+
+                    b.ToTable("InstalmentPlans", t =>
+                        {
+                            t.HasCheckConstraint("CK_InstalmentPlans_Scope", "(\"TermId\" IS NULL) <> (\"SessionId\" IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Maydel.Domain.Finance.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ClassRoomId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -1093,8 +1164,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Number")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
@@ -1110,9 +1181,11 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.HasIndex("Number")
                         .IsUnique();
 
-                    b.HasIndex("TermId");
+                    b.HasIndex("StudentId", "TermId")
+                        .IsUnique()
+                        .HasFilter("\"IsCancelled\" = false");
 
-                    b.HasIndex("StudentId", "TermId");
+                    b.HasIndex("TermId", "ClassRoomId");
 
                     b.ToTable("Invoices");
                 });
@@ -1804,9 +1877,76 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Maydel.Domain.Finance.FeeOptIn", "OptIns", b1 =>
+                        {
+                            b1.Property<Guid>("FeeItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("StudentId")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("FeeItemId", "StudentId");
+
+                            b1.HasIndex("StudentId");
+
+                            b1.ToTable("FeeOptIns", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("FeeItemId");
+
+                            b1.HasOne("Maydel.Domain.People.Student", null)
+                                .WithMany()
+                                .HasForeignKey("StudentId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
+
                     b.Navigation("ClassLevel");
 
+                    b.Navigation("OptIns");
+
                     b.Navigation("Term");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Finance.InstalmentPlan", b =>
+                {
+                    b.HasOne("Maydel.Domain.Academics.AcademicSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Maydel.Domain.Academics.Term", null)
+                        .WithMany()
+                        .HasForeignKey("TermId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.OwnsMany("Maydel.Domain.Finance.Instalment", "Instalments", b1 =>
+                        {
+                            b1.Property<Guid>("PlanId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Order")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Order"));
+
+                            b1.Property<DateOnly>("DueOn")
+                                .HasColumnType("date");
+
+                            b1.Property<decimal>("Percent")
+                                .HasPrecision(5, 2)
+                                .HasColumnType("numeric(5,2)");
+
+                            b1.HasKey("PlanId", "Order");
+
+                            b1.ToTable("Instalments", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PlanId");
+                        });
+
+                    b.Navigation("Instalments");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Finance.Invoice", b =>
@@ -1829,13 +1969,13 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                                 .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
-                                .HasPrecision(12, 2)
-                                .HasColumnType("numeric(12,2)");
+                                .HasPrecision(14, 2)
+                                .HasColumnType("numeric(14,2)");
 
                             b1.Property<string>("Description")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("character varying(256)");
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
 
                             b1.Property<Guid>("InvoiceId")
                                 .HasColumnType("uuid");
