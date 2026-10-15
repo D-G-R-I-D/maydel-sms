@@ -29,7 +29,7 @@ const tiles: Tile[] = [
   { title: "Audit log", body: "Every change to school records: who, what, when and from where.", icon: ScrollText, roles: ["Admin"], href: "/admin/audit" },
   { title: "Change password", body: "Keep your account safe. Other devices get signed out.", icon: KeyRound, roles: ["Admin", "Teacher", "Bursar"], href: "/change-password" },
   { title: "Attendance", body: "Daily register in a couple of taps, and term attendance per student.", icon: CalendarCheck, roles: ["Admin", "Teacher"], href: "/admin/attendance" },
-  { title: "Fees & payments", body: "Invoices, receipts and who still owes.", icon: Wallet, roles: ["Admin", "Bursar"] },
+  { title: "Fees & invoices", body: "Fee items, sibling discount, instalments and each student's invoice for the term.", icon: Wallet, roles: ["Admin", "Bursar"], href: "/admin/invoices" },
 ];
 
 export default async function DashboardPage() {
