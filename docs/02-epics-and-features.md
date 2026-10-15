@@ -104,8 +104,8 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E8.3** Everyone receives new credentials (Firebase passwords cannot be exported); printable credential slips per family.
 
 ## E9 — Attendance
-- **E9.1** Daily register per class (default all present; mark absent/late/excused with note). AC: one record per student per day; editable same day by form teacher, later by admin only.
-- **E9.2** Attendance summaries per student/class/term; feeds report cards.
+- **E9.1** 🟡 *API ✅ 2026-10-15 (default present, form teacher today / admin earlier days, school days only, locked after publish); UI pending.* Daily register per class (default all present; mark absent/late/excused with note). AC: one record per student per day; editable same day by form teacher, later by admin only.
+- **E9.2** 🟡 *API ✅ 2026-10-15 (class term summary; report cards and publishing use register totals when attendance isn't entered by hand); UI pending.* Attendance summaries per student/class/term; feeds report cards.
 - **E9.3 (S)** Absence notification to guardians (E12).
 
 ## E10 — Fees & payments

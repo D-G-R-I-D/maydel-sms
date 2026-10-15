@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<Reports.ReportPdfs>();
         services.AddScoped<Portal.PortalReports>();
         services.AddScoped<Notifications.ReportEmails>();
+        services.AddScoped<Attendance.RegisterReader>();
         services.AddScoped<Notifications.EmailDispatcher>();
         return services;
     }

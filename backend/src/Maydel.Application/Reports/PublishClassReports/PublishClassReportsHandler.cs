@@ -24,6 +24,16 @@ internal sealed class PublishClassReportsHandler(IAppDbContext db, ReportBuilder
         var scored = students.Where(s => figures.Averages.ContainsKey(s.Id)).ToList();
         var fresh = scored.Where(s => !rows.TryGetValue(s.Id, out var r) || !r.IsPublished).ToList();
         if (fresh.Count == 0) return ReportErrors.AlreadyPublished;
+        // Days opened / present come from the daily register (E9.2) when the form teacher hasn't entered them by hand.
+        var term = await db.Terms.AsNoTracking().FirstAsync(t => t.Id == c.TermId, ct);
+        var register = await Attendance.AttendanceTotals.ForClassAsync(db, c.ClassRoomId, term, ct);
+        if (register.DaysOpened > 0)
+            foreach (var s in fresh)
+            {
+                if (!rows.TryGetValue(s.Id, out var r)) rows[s.Id] = r = await reports.GetOrCreateAsync(s.Id, c.TermId, c.ClassRoomId, ct);
+                if (r.DaysOpened == 0) r.SetAttendance(register.DaysOpened, register.ByStudent.GetValueOrDefault(s.Id).Present);
+            }
+
         var missingAttendance = fresh.Where(s => !rows.TryGetValue(s.Id, out var r) || r.DaysOpened == 0).Select(s => s.Name).ToList();
         if (missingAttendance.Count > 0) return ReportErrors.AttendanceMissing(missingAttendance);
 

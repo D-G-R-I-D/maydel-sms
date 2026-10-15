@@ -15,6 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ISchoolClock, Time.SchoolClock>();
         services.AddScoped<AuditInterceptor>();
 
         // Resolved lazily so tests and tooling can supply configuration after registration.

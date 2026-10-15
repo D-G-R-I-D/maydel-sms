@@ -5450,6 +5450,243 @@
           }
         }
       }
+    },
+    "/api/attendance/register": {
+      "get": {
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "GetRegister",
+        "parameters": [
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassRegister"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "SaveRegister",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRegisterCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassRegister"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attendance/summary": {
+      "get": {
+        "tags": [
+          "Attendance"
+        ],
+        "operationId": "GetAttendanceSummary",
+        "parameters": [
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassAttendanceSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5491,6 +5728,14 @@
             "format": "int32"
           }
         }
+      },
+      "AttendanceStatus": {
+        "enum": [
+          "Present",
+          "Absent",
+          "Late",
+          "Excused"
+        ]
       },
       "AuditAction": {
         "enum": [
@@ -5711,6 +5956,43 @@
           }
         }
       },
+      "ClassAttendanceSummary": {
+        "required": [
+          "classRoomId",
+          "classRoom",
+          "termId",
+          "term",
+          "daysOpened",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classRoom": {
+            "type": "string"
+          },
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "term": {
+            "type": "string"
+          },
+          "daysOpened": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentAttendance"
+            }
+          }
+        }
+      },
       "ClassLevelDto": {
         "required": [
           "id",
@@ -5733,6 +6015,84 @@
           "order": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ClassRegister": {
+        "required": [
+          "classRoomId",
+          "classRoom",
+          "date",
+          "termId",
+          "term",
+          "problem",
+          "taken",
+          "canEdit",
+          "present",
+          "absent",
+          "late",
+          "excused",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classRoom": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "termId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "term": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "problem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taken": {
+            "type": "boolean"
+          },
+          "canEdit": {
+            "type": "boolean"
+          },
+          "present": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "absent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "late": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "excused": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegisterEntry"
+            }
           }
         }
       },
@@ -7414,6 +7774,68 @@
           }
         }
       },
+      "RegisterEntry": {
+        "required": [
+          "studentId",
+          "admissionNumber",
+          "name",
+          "status",
+          "note",
+          "recorded",
+          "locked"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AttendanceStatus"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recorded": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RegisterEntryInput": {
+        "required": [
+          "studentId",
+          "status",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AttendanceStatus"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ReportCard": {
         "required": [
           "studentId",
@@ -7922,6 +8344,30 @@
           }
         }
       },
+      "SaveRegisterCommand": {
+        "required": [
+          "classRoomId",
+          "date",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegisterEntryInput"
+            }
+          }
+        }
+      },
       "SchoolProfileDto": {
         "required": [
           "name",
@@ -8344,6 +8790,59 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "StudentAttendance": {
+        "required": [
+          "studentId",
+          "admissionNumber",
+          "name",
+          "daysOpened",
+          "present",
+          "absent",
+          "late",
+          "excused",
+          "percentage"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "daysOpened": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "present": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "absent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "late": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "excused": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "percentage": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -9028,6 +9527,9 @@
     },
     {
       "name": "School"
+    },
+    {
+      "name": "Attendance"
     }
   ]
 }
