@@ -45,8 +45,8 @@ export const consoleNav: NavGroup[] = [
   {
     label: "Finance",
     items: [
-      { label: "Fee items", href: "/admin/fees", icon: "fees", roles: AB },
-      { label: "Invoices", href: "/admin/invoices", icon: "invoices", roles: AB },
+      { label: "Fee items", href: "/admin/fees", icon: "fees", roles: AB, ready: true },
+      { label: "Invoices", href: "/admin/invoices", icon: "invoices", roles: AB, ready: true },
       { label: "Payments", href: "/admin/payments", icon: "payments", roles: AB },
       { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB },
     ],
@@ -66,6 +66,7 @@ export const consoleNav: NavGroup[] = [
     items: [
       { label: "School profile", href: "/admin/settings/school", icon: "school", roles: A, ready: true },
       { label: "Assessment", href: "/admin/settings/assessment", icon: "assessment", roles: AT, ready: true },
+      { label: "Fees", href: "/admin/settings/fees", icon: "fees", roles: AB, ready: true },
       { label: "Users", href: "/admin/settings/users", icon: "users", roles: A },
     ],
   },
