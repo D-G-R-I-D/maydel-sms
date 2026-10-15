@@ -61,6 +61,12 @@ public interface IAppDbContext
 }
 
 /// <summary>The authenticated caller and their client, resolved per request by the API layer.</summary>
+/// <summary>The school's calendar "today" (West Africa Time). Replaced in tests so date rules are deterministic.</summary>
+public interface ISchoolClock
+{
+    DateOnly Today { get; }
+}
+
 public interface ICurrentUser
 {
     Guid? UserId { get; }

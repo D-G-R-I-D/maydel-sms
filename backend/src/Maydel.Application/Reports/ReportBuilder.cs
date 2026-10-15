@@ -119,6 +119,20 @@ public sealed class ReportBuilder(IAppDbContext db)
         Trend? trend = average is { } current && lastTerm is not null ? ReportMath.TrendOf(current, lastTerm.Average) : null;
         decimal? cumulative = average is { } thisTerm ? ReportMath.Cumulative([.. earlier.Select(e => e.Average), thisTerm]) : null;
         var hasAttendance = report is not null && report.DaysOpened > 0;
+        if (!hasAttendance && report is not { IsPublished: true })
+        {
+            // Draft preview: show the register's running totals until the form teacher enters attendance by hand (E9.2).
+            var termEntity = await db.Terms.AsNoTracking().FirstAsync(t => t.Id == termId, ct);
+            var register = await Attendance.AttendanceTotals.ForClassAsync(db, classRoomId, termEntity, ct);
+            if (register.DaysOpened > 0)
+            {
+                var present = register.ByStudent.GetValueOrDefault(studentId).Present;
+                report = new TermReport { StudentId = studentId, TermId = termId, ClassRoomId = classRoomId, DaysOpened = register.DaysOpened, DaysPresent = present,
+                    FormTeacherComment = report?.FormTeacherComment, PrincipalComment = report?.PrincipalComment, Status = report?.Status ?? ReportStatus.Draft,
+                    TraitRatings = report?.TraitRatings ?? [], Clubs = report?.Clubs ?? [] };
+                hasAttendance = true;
+            }
+        }
         return new ReportCard(
             student.Id, name, student.AdmissionNumber, student.Sex, student.DateOfBirth, student.House, Photos.PhotoStore.VersionOf(student.PhotoPath),
             classRoomId, room.Name, term.Id, $"{term.Number} Term", term.Session, term.EndsOn, nextTerm,

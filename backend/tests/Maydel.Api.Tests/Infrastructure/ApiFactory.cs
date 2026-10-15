@@ -46,6 +46,7 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
     public static readonly string StorageRoot = Path.Combine(Path.GetTempPath(), "maydel-tests-" + Guid.NewGuid().ToString("N")[..8]);
     public FakeGoogleVerifier Google { get; } = new();
     public FakeEmailSender Email { get; } = new();
+    public FakeSchoolClock Clock { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -66,6 +67,8 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             services.RemoveAll<IGoogleIdTokenVerifier>();
             services.AddSingleton<IGoogleIdTokenVerifier>(Google);
             // No background sending in tests: they call EmailDispatcher directly against this fake.
+            services.RemoveAll<ISchoolClock>();
+            services.AddSingleton<ISchoolClock>(Clock);
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Email);
             foreach (var worker in services.Where(d => d.ImplementationType?.Name == "EmailOutboxWorker").ToList()) services.Remove(worker);
