@@ -6032,7 +6032,8 @@
           "absent",
           "late",
           "excused",
-          "entries"
+          "entries",
+          "takenAt"
         ],
         "type": "object",
         "properties": {
@@ -6093,6 +6094,13 @@
             "items": {
               "$ref": "#/components/schemas/RegisterEntry"
             }
+          },
+          "takenAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

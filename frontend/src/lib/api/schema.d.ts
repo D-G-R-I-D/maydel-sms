@@ -1120,6 +1120,8 @@ export interface components {
             /** Format: int32 */
             excused: number;
             entries: components["schemas"]["RegisterEntry"][];
+            /** Format: date-time */
+            takenAt: null | string;
         };
         ClassReportRow: {
             /** Format: uuid */

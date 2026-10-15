@@ -11,11 +11,11 @@ public sealed record RegisterEntry(
 
 /// <summary>
 /// One class's register for one day (E9.1). <c>Problem</c> explains why there can't be a register that day (weekend,
-/// mid-term, outside a term). <c>Taken</c>: saved at least once. <c>CanEdit</c>: the caller may save it now.
+/// mid-term, outside a term). <c>Taken</c>: saved at least once; <c>TakenAt</c>: when it was last saved. <c>CanEdit</c>: the caller may save it now.
 /// </summary>
 public sealed record ClassRegister(
     Guid ClassRoomId, string ClassRoom, DateOnly Date, Guid? TermId, string? Term, string? Problem, bool Taken, bool CanEdit,
-    int Present, int Absent, int Late, int Excused, IReadOnlyList<RegisterEntry> Entries);
+    int Present, int Absent, int Late, int Excused, IReadOnlyList<RegisterEntry> Entries, DateTimeOffset? TakenAt);
 
 public sealed record RegisterEntryInput(Guid StudentId, AttendanceStatus Status, string? Note);
 

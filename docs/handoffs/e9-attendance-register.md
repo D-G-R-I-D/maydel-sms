@@ -29,7 +29,7 @@ type AttendanceStatus = "Present" | "Absent" | "Late" | "Excused";
 type ClassRegister = {
   classRoomId: string; classRoom: string; date: string; termId: string | null; term: string | null;
   problem: string | null;          // why there's no register that day; null on school days
-  taken: boolean; canEdit: boolean;
+  taken: boolean; takenAt: string | null; canEdit: boolean;   // takenAt: last save time
   present: number; absent: number; late: number; excused: number;
   entries: { studentId: string; admissionNumber: string; name: string; status: AttendanceStatus; note: string | null;
              recorded: boolean; locked: boolean }[];
