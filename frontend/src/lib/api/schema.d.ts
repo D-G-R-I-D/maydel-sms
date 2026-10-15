@@ -1497,6 +1497,8 @@ export interface components {
             skipped: components["schemas"]["SkippedStudent"][];
             /** Format: int32 */
             emailsQueued: number;
+            /** Format: int32 */
+            alreadyPublished: number;
         };
         RatingKeyEntry: {
             rating: string;
