@@ -1,5 +1,5 @@
 import type { InvoiceDetail, PaymentMethod } from "@/lib/api/types";
-import { parseAmount } from "./rules";
+import { formatNaira, parseAmount } from "./rules";
 
 /** Payments (E10 part 2a): client mirror of the API's rules, plus schedule status. The API re-checks. */
 
@@ -20,7 +20,7 @@ export type PaymentFormErrors = Partial<Record<"amount" | "paidOn" | "reference"
 
 export function paymentErrors(
   input: { amount: string; paidOn: string; reference: string },
-  invoice: Pick<InvoiceDetail, "balance" | "instalmentsAllowed">,
+  invoice: Pick<InvoiceDetail, "balance" | "instalmentsAllowed" | "minimumPayment">,
   today: string,
 ): PaymentFormErrors {
   const errors: PaymentFormErrors = {};
@@ -28,6 +28,9 @@ export function paymentErrors(
   if (amount === null || amount <= 0) errors.amount = "Enter an amount above ₦0 with at most 2 decimal places.";
   else if (amount > invoice.balance) errors.amount = "That's more than the balance.";
   else if (!invoice.instalmentsAllowed && amount !== invoice.balance) errors.amount = "Full payment only this term: pay the whole balance.";
+  // Each payment must at least complete the next instalment (or clear the balance).
+  else if (amount < invoice.minimumPayment && amount !== invoice.balance)
+    errors.amount = `Pay at least ${formatNaira(invoice.minimumPayment)} to complete the next instalment, or the full balance of ${formatNaira(invoice.balance)}.`;
   if (input.paidOn && input.paidOn > today) errors.paidOn = "The payment date can't be in the future.";
   if (input.reference.trim().length > 100) errors.reference = "Use 100 characters or fewer.";
   return errors;

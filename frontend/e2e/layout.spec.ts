@@ -27,6 +27,7 @@ const pages = [
   "/admin/attendance?tab=summary",
   "/admin/fees",
   "/admin/invoices",
+  "/admin/debtors",
   "/admin/settings/school",
   "/admin/settings/assessment",
   "/admin/settings/fees",

@@ -120,7 +120,7 @@ export function RecordPaymentButton({ invoice, today }: { invoice: InvoiceDetail
               </Alert>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="pay-amount" label="Amount (₦)" error={errors.amount} hint={`Balance ${formatNaira(invoice.balance)}`}>
+              <Field id="pay-amount" label="Amount (₦)" error={errors.amount} hint={invoice.instalmentsAllowed && invoice.minimumPayment < invoice.balance ? `Minimum ${formatNaira(invoice.minimumPayment)} · balance ${formatNaira(invoice.balance)}` : `Balance ${formatNaira(invoice.balance)}`}>
                 <Input {...describedBy("pay-amount", errors.amount, true)} value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="tabular" readOnly={!invoice.instalmentsAllowed} />
               </Field>
               <Field id="pay-method" label="Method">
