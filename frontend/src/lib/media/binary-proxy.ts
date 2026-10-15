@@ -4,6 +4,7 @@ import { apiBaseUrl } from "@/lib/api/config";
 import { problemMessage, toProblem } from "@/lib/api/problem";
 import { withSession, type ApiReply } from "@/lib/auth/bff";
 import { forwardingHeaders } from "@/lib/auth/forwarding";
+import { toInline } from "@/lib/reports/save-pdf";
 
 export const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -39,5 +40,7 @@ export async function proxyBinaryGet(request: NextRequest, apiPath: string): Pro
     const v = res.headers.get(h);
     if (v) headers.set(h, v);
   }
+  // ?inline=1: open in the browser's viewer instead of downloading (the "View" action).
+  if (request.nextUrl.searchParams.get("inline") === "1") headers.set("content-disposition", toInline(res.headers.get("content-disposition")));
   return finish(new NextResponse(res.body, { status: 200, headers }));
 }
