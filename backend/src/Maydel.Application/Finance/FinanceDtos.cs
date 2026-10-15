@@ -46,7 +46,7 @@ public sealed record InvoiceDetail(
     Guid Id, string Number, Guid StudentId, string AdmissionNumber, string StudentName, string? ClassRoom, Guid TermId, string Term, string Session,
     IReadOnlyList<InvoiceLineDto> Lines, decimal Total, decimal Paid, decimal Balance, InvoiceStatus Status, DateOnly? DueOn,
     IReadOnlyList<ScheduleItem> Schedule, DateTimeOffset IssuedAt,
-    IReadOnlyList<PaymentDto> Payments, bool InstalmentsAllowed, decimal DueNow, decimal Overdue, string? CancelReason);
+    IReadOnlyList<PaymentDto> Payments, bool InstalmentsAllowed, decimal DueNow, decimal Overdue, string? CancelReason, decimal MinimumPayment);
 
 /// <summary>
 /// A receipt or a reversal (negative amount, <c>ReversesReceipt</c> set). <c>ReversedBy</c>: the receipt number of the

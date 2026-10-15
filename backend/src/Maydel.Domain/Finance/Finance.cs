@@ -149,6 +149,21 @@ public static class FeeRules
     /// <summary>"2026/2027" and 7 → "INV-2026-2027-0007".</summary>
     public static string InvoiceNumber(string sessionName, int sequence) => $"INV-{sessionName.Replace('/', '-')}-{sequence:0000}";
 
+    /// <summary>
+    /// The least a payment must be to complete the next unpaid instalment, given what's already paid. Instalments are
+    /// cumulative milestones: with ₦60k + ₦40k, nothing paid needs ₦60k; ₦70k paid needs ₦30k more.
+    /// </summary>
+    public static decimal NextInstalmentMinimum(IReadOnlyList<decimal> instalments, decimal paid)
+    {
+        decimal milestone = 0;
+        foreach (var part in instalments)
+        {
+            milestone += part;
+            if (milestone > paid) return milestone - paid;
+        }
+        return 0;
+    }
+
     /// <summary>"2026/2027" and 12 → "RCT-2026-2027-00012". Receipts are numbered per session, gap-free in normal use.</summary>
     public static string ReceiptNumber(string sessionName, int sequence) => $"RCT-{sessionName.Replace('/', '-')}-{sequence:00000}";
 
@@ -189,19 +204,24 @@ public class Invoice : Entity
     private static readonly DomainError Cancelled = new("invoice.cancelled", "This invoice is cancelled.");
 
     /// <summary>
-    /// Records a payment (E10.3). It can't exceed the balance. Without an enabled instalment plan the balance must be paid
-    /// in full; with one, any part payment is fine. Receipts are never edited afterwards: mistakes are reversed.
+    /// Records a payment (E10.3). It can't exceed the balance. Without an instalment plan (<paramref name="instalments"/>
+    /// empty) the balance must be paid in full. With one, each payment must at least complete the next instalment:
+    /// with 60% / 40%, the first payment is at least 60% and the next at least the remaining 40%; paying more is fine.
+    /// Receipts are never edited afterwards: mistakes are reversed.
     /// </summary>
     public (Payment? Payment, DomainError? Error) RecordPayment(
-        decimal amount, PaymentMethod method, string? reference, DateOnly paidOn, Guid? receivedBy, string receiptNumber, bool instalmentsAllowed)
+        decimal amount, PaymentMethod method, string? reference, DateOnly paidOn, Guid? receivedBy, string receiptNumber, IReadOnlyList<decimal> instalments)
     {
         if (IsCancelled) return (null, Cancelled);
         if (amount <= 0 || decimal.Round(amount, 2) != amount)
             return (null, new("payment.amount", "Enter an amount above ₦0 with at most 2 decimal places.", "amount"));
         if (amount > Balance)
             return (null, new("payment.exceeds_balance", $"That's more than the outstanding balance of ₦{Balance:N2}.", "amount"));
-        if (!instalmentsAllowed && amount != Balance)
+        if (instalments.Count == 0 && amount != Balance)
             return (null, new("payment.full_required", $"Instalments aren't enabled for this term: the full balance of ₦{Balance:N2} is due.", "amount"));
+        if (instalments.Count > 0 && amount != Balance && amount < FeeRules.NextInstalmentMinimum(instalments, AmountPaid))
+            return (null, new("payment.instalment_minimum",
+                $"Pay at least ₦{FeeRules.NextInstalmentMinimum(instalments, AmountPaid):N2} to complete the next instalment, or the full balance of ₦{Balance:N2}.", "amount"));
 
         var payment = new Payment
         {
