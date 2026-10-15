@@ -28,6 +28,8 @@ public sealed class RegisterTests(PostgresFixture fixture)
         var saved = await SaveAsync(s.FormTeacher, s, Today, (s.Students[1], AttendanceStatus.Absent, " Sick "), (s.Students[2], AttendanceStatus.Late, null));
 
         Assert.True(saved.Taken);
+        Assert.NotNull(saved.TakenAt);
+        Assert.Null(empty.TakenAt);
         Assert.Equal((1, 1, 1, 0), (saved.Present, saved.Absent, saved.Late, saved.Excused));
         var bola = saved.Entries.Single(e => e.StudentId == s.Students[1]);
         Assert.Equal((AttendanceStatus.Absent, "Sick", true), (bola.Status, bola.Note, bola.Recorded));

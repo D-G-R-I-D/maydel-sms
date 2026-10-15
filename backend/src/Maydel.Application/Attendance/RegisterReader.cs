@@ -36,6 +36,7 @@ public sealed class RegisterReader(IAppDbContext db, AccessRules access, ISchool
             : new RegisterEntry(s.Id, s.AdmissionNumber, s.Name, AttendanceStatus.Present, null, false, published.Contains(s.Id))).ToList();
         return new ClassRegister(classRoomId, room, date, term?.Id, term?.DisplayName, problem, saved.Count > 0, canEdit,
             entries.Count(e => e.Status == AttendanceStatus.Present), entries.Count(e => e.Status == AttendanceStatus.Absent),
-            entries.Count(e => e.Status == AttendanceStatus.Late), entries.Count(e => e.Status == AttendanceStatus.Excused), entries);
+            entries.Count(e => e.Status == AttendanceStatus.Late), entries.Count(e => e.Status == AttendanceStatus.Excused), entries,
+            saved.Count == 0 ? null : saved.Values.Max(a => a.UpdatedAt ?? a.CreatedAt));
     }
 }
