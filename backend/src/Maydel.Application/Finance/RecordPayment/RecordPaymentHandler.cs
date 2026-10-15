@@ -18,8 +18,8 @@ internal sealed class RecordPaymentHandler(IAppDbContext db, ISchoolClock clock,
 
         var prefix = FeeRules.ReceiptNumber(invoice.Term.Session.Name, 0)[..^5];
         var number = FeeRules.ReceiptNumber(invoice.Term.Session.Name, await db.NextReceiptAsync(prefix, ct));
-        var allowed = await db.InstalmentsAllowedAsync(invoice.Term, ct);
-        var (payment, error) = invoice.RecordPayment(c.Amount, c.Method, c.Reference, paidOn, me.UserId, number, allowed);
+        var schedule = await db.ScheduleAsync(invoice.Term, invoice.Total, ct);
+        var (payment, error) = invoice.RecordPayment(c.Amount, c.Method, c.Reference, paidOn, me.UserId, number, [.. schedule.Select(s => s.Amount)]);
         if (error is not null) return error.ToError();
         db.Payments.Add(payment!);
         await db.SaveChangesAsync(ct);

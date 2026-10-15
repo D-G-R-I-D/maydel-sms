@@ -9540,7 +9540,8 @@
           "instalmentsAllowed",
           "dueNow",
           "overdue",
-          "cancelReason"
+          "cancelReason",
+          "minimumPayment"
         ],
         "type": "object",
         "properties": {
@@ -9637,6 +9638,10 @@
               "null",
               "string"
             ]
+          },
+          "minimumPayment": {
+            "type": "number",
+            "format": "double"
           }
         }
       },

@@ -38,14 +38,19 @@ public sealed class PaymentTests(PostgresFixture fixture)
     public async Task With_instalments_part_payments_show_what_is_overdue_on_the_debtors_list()
     {
         var (s, invoice, bursar, term) = await InvoicedAsync(plan: true); // 60% due 14 Sep 2026 (past), 40% due 2099
-        (await PayAsync(bursar, invoice, 50000)).EnsureSuccessStatusCode();
 
-        var detail = await DetailAsync(bursar, invoice);
-        Assert.Equal((InvoiceStatus.PartiallyPaid, 60000m, 10000m, true), (detail.Status, detail.DueNow, detail.Overdue, detail.InstalmentsAllowed));
-
+        var unpaid = await DetailAsync(bursar, invoice);
+        Assert.Equal((60000m, 60000m, 60000m, true), (unpaid.DueNow, unpaid.Overdue, unpaid.MinimumPayment, unpaid.InstalmentsAllowed));
         var debtors = (await bursar.GetFromJsonAsync<DebtorsReport>($"/api/finance/debtors?termId={term}&classRoomId={s.ClassRoomId}", Json.Options))!;
         var row = Assert.Single(debtors.Rows, r => r.InvoiceId == invoice);
-        Assert.Equal((50000m, 10000m, "Mrs. Fee Payer"), (row.Balance, row.Overdue, row.Guardian));
+        Assert.Equal((100000m, 60000m, "Mrs. Fee Payer"), (row.Balance, row.Overdue, row.Guardian));
+
+        // Each payment completes an instalment: at least 60% first, then at least the remaining 40%.
+        await (await PayAsync(bursar, invoice, 50000)).AssertProblemAsync(HttpStatusCode.BadRequest, "validation");
+        (await PayAsync(bursar, invoice, 70000)).EnsureSuccessStatusCode();
+        var detail = await DetailAsync(bursar, invoice);
+        Assert.Equal((InvoiceStatus.PartiallyPaid, 0m, 30000m), (detail.Status, detail.Overdue, detail.MinimumPayment));
+        await (await PayAsync(bursar, invoice, 20000)).AssertProblemAsync(HttpStatusCode.BadRequest, "validation");
         Assert.Equal(new DateOnly(2099, 1, 15), row.NextDueOn);
 
         var csv = await bursar.GetAsync($"/api/finance/debtors.csv?termId={term}&classRoomId={s.ClassRoomId}");
@@ -98,7 +103,7 @@ public sealed class PaymentTests(PostgresFixture fixture)
     {
         var (s, invoice, bursar, _) = await InvoicedAsync(plan: true);
         var admin = await Api.ClientAsync(Roles.Admin);
-        (await PayAsync(bursar, invoice, 30000)).EnsureSuccessStatusCode();
+        (await PayAsync(bursar, invoice, 60000)).EnsureSuccessStatusCode();
 
         var adjusted = await admin.PostAsJsonAsync($"/api/finance/invoices/{invoice}/adjustments", new { description = "Scholarship (25%)", amount = -25000 });
         Assert.Equal(75000m, (await adjusted.Content.ReadFromJsonAsync<InvoiceDetail>(Json.Options))!.Total);
@@ -107,9 +112,9 @@ public sealed class PaymentTests(PostgresFixture fixture)
         await (await bursar.PostAsJsonAsync($"/api/finance/invoices/{invoice}/adjustments", new { description = "x", amount = -1 })).AssertProblemAsync(HttpStatusCode.Forbidden);
 
         var statement = (await bursar.GetFromJsonAsync<StudentStatement>($"/api/finance/students/{s.Students[0]}/statement", Json.Options))!;
-        Assert.Equal((75000m, 30000m, 45000m), (statement.TotalBilled, statement.TotalPaid, statement.Balance));
+        Assert.Equal((75000m, 60000m, 15000m), (statement.TotalBilled, statement.TotalPaid, statement.Balance));
         Assert.Equal(["Invoice", "Payment"], statement.Entries.Select(e => e.Kind));
-        Assert.Equal(45000m, statement.Entries[^1].Balance);
+        Assert.Equal(15000m, statement.Entries[^1].Balance);
     }
 
     [Theory]

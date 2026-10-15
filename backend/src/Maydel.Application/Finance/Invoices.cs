@@ -19,9 +19,6 @@ internal static class Invoices
         return [.. parts.Select((x, n) => new ScheduleItem(x.Order, x.Percent, amounts[n], x.DueOn))];
     }
 
-    public static async Task<bool> InstalmentsAllowedAsync(this IAppDbContext db, Term term, CancellationToken ct) =>
-        await db.PlanForAsync(term, ct) is { Plan.Enabled: true };
-
     public static async Task<InvoiceDetail?> DetailAsync(this IAppDbContext db, Guid id, DateOnly today, CancellationToken ct)
     {
         var i = await db.Invoices.AsNoTracking().Include(x => x.Payments).Include(x => x.Student).Include(x => x.Term).ThenInclude(t => t.Session)
@@ -38,7 +35,11 @@ internal static class Invoices
         return new InvoiceDetail(i.Id, i.Number, i.StudentId, i.Student.AdmissionNumber, $"{i.Student.FirstName} {i.Student.LastName}", room,
             i.TermId, $"{i.Term.Number} Term", i.Term.Session.Name, [.. i.Lines.Select(l => new InvoiceLineDto(l.Description, l.Amount))],
             i.Total, i.AmountPaid, i.Balance, i.Status, i.DueOn, schedule, i.CreatedAt,
-            payments, schedule.Count > 0, dueNow, Math.Max(0, dueNow - i.AmountPaid), i.CancelReason);
+            payments, schedule.Count > 0, dueNow, Math.Max(0, dueNow - i.AmountPaid), i.CancelReason,
+            // The least the next payment can be: the rest of the next instalment, or the whole balance without a plan.
+            i.IsCancelled || i.Balance <= 0 ? 0
+                : schedule.Count == 0 ? i.Balance
+                : Math.Min(i.Balance, FeeRules.NextInstalmentMinimum([.. schedule.Select(s => s.Amount)], i.AmountPaid)));
     }
 
     public static ReceiptDto Receipt(Payment p, Invoice i, string? room) => new(

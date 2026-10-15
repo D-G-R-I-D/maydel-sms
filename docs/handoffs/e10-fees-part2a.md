@@ -59,3 +59,11 @@ type DebtorsReport = { termId; term; count; totalOutstanding; totalOverdue;
    - **Export CSV** downloads through the BFF.
 3. **Student statement:** a "Fees" tab on the student page listing entries with the running balance, and totals.
 4. Money is always shown as ₦, right-aligned with tabular numbers. Show negatives as −₦.
+
+## Update 2026-10-15: instalment minimums (user decision)
+- With an enabled plan, **each payment must at least complete the next instalment**.
+  - 60/40: the first payment is ≥ 60%, and the next is ≥ the remaining 40%.
+  - 50/30/20: payments must reach the 50% → 80% → 100% marks.
+  - Paying more than an instalment, or the full balance, is always fine.
+- Below the minimum → 400 `errors.amount` ("Pay at least ₦X to complete the next instalment, or the full balance of ₦Y.").
+- `InvoiceDetail.minimumPayment`: the least the next payment can be. It's the balance when there's no plan, and 0 when nothing is owed. The Record payment dialog should show it and validate against it.

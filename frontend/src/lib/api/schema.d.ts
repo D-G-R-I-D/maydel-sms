@@ -1922,6 +1922,8 @@ export interface components {
             /** Format: double */
             overdue: number;
             cancelReason: null | string;
+            /** Format: double */
+            minimumPayment: number;
         };
         InvoiceLineDto: {
             description: string;

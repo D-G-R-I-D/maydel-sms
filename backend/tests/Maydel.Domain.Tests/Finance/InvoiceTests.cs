@@ -13,27 +13,46 @@ public sealed class InvoiceTests
     public void Without_instalments_the_full_balance_is_due()
     {
         var invoice = Invoice();
-        Assert.Equal("payment.full_required", invoice.RecordPayment(60000, PaymentMethod.Cash, null, Today, null, "R1", instalmentsAllowed: false).Error?.Code);
+        Assert.Equal("payment.full_required", invoice.RecordPayment(60000, PaymentMethod.Cash, null, Today, null, "R1", []).Error?.Code);
 
-        var (payment, error) = invoice.RecordPayment(100000, PaymentMethod.BankTransfer, " TRF-123 ", Today, null, "R1", instalmentsAllowed: false);
+        var (payment, error) = invoice.RecordPayment(100000, PaymentMethod.BankTransfer, " TRF-123 ", Today, null, "R1", []);
 
         Assert.Null(error);
         Assert.Equal(("TRF-123", InvoiceStatus.Paid, 0m), (payment!.Reference, invoice.Status, invoice.Balance));
     }
 
+    private static readonly decimal[] SixtyForty = [60000, 40000];
+
     [Theory]
     [InlineData(0, "payment.amount")]
     [InlineData(10.001, "payment.amount")]
     [InlineData(100000.01, "payment.exceeds_balance")]
-    [InlineData(40000, null)]
-    public void With_instalments_any_part_up_to_the_balance(decimal amount, string? code) =>
-        Assert.Equal(code, Invoice().RecordPayment(amount, PaymentMethod.Pos, null, Today, null, "R1", instalmentsAllowed: true).Error?.Code);
+    [InlineData(40000, "payment.instalment_minimum")]   // less than the first instalment (60%)
+    [InlineData(60000, null)]
+    [InlineData(80000, null)]                            // more than an instalment is fine
+    [InlineData(100000, null)]
+    public void With_instalments_the_first_payment_covers_at_least_the_first_instalment(decimal amount, string? code) =>
+        Assert.Equal(code, Invoice().RecordPayment(amount, PaymentMethod.Pos, null, Today, null, "R1", SixtyForty).Error?.Code);
+
+    [Fact]
+    public void Each_later_payment_completes_the_next_instalment()
+    {
+        var invoice = Invoice();
+        decimal[] plan = [50000, 30000, 20000];
+        invoice.RecordPayment(55000, PaymentMethod.Cash, null, Today, null, "R1", plan);
+
+        Assert.Equal(25000, FeeRules.NextInstalmentMinimum(plan, invoice.AmountPaid)); // up to the 80% mark
+        Assert.Equal("payment.instalment_minimum", invoice.RecordPayment(20000, PaymentMethod.Cash, null, Today, null, "R2", plan).Error?.Code);
+        Assert.Null(invoice.RecordPayment(25000, PaymentMethod.Cash, null, Today, null, "R2", plan).Error);
+        Assert.Null(invoice.RecordPayment(20000, PaymentMethod.Cash, null, Today, null, "R3", plan).Error);
+        Assert.Equal(InvoiceStatus.Paid, invoice.Status);
+    }
 
     [Fact]
     public void Reversals_are_opposite_entries_once_per_payment()
     {
         var invoice = Invoice();
-        var (payment, _) = invoice.RecordPayment(40000, PaymentMethod.Cash, null, Today, null, "R1", true);
+        var (payment, _) = invoice.RecordPayment(40000, PaymentMethod.Cash, null, Today, null, "R1", [40000, 60000]);
 
         Assert.Equal("payment.reason", invoice.Reverse(payment!, " ", Today, null, "R2").Error?.Code);
         var (reversal, error) = invoice.Reverse(payment!, "Keyed twice", Today, null, "R2");
@@ -49,20 +68,20 @@ public sealed class InvoiceTests
     public void Invoices_with_money_on_them_cannot_be_cancelled()
     {
         var invoice = Invoice();
-        var (payment, _) = invoice.RecordPayment(40000, PaymentMethod.Cash, null, Today, null, "R1", true);
+        var (payment, _) = invoice.RecordPayment(40000, PaymentMethod.Cash, null, Today, null, "R1", [40000, 60000]);
         Assert.Equal("invoice.has_payments", invoice.Cancel("Left school", DateTimeOffset.UtcNow)?.Code);
 
         invoice.Reverse(payment!, "Refunded", Today, null, "R2");
         Assert.Null(invoice.Cancel("Left school", DateTimeOffset.UtcNow));
         Assert.Equal(InvoiceStatus.Cancelled, invoice.Status);
-        Assert.Equal("invoice.cancelled", invoice.RecordPayment(1, PaymentMethod.Cash, null, Today, null, "R3", true).Error?.Code);
+        Assert.Equal("invoice.cancelled", invoice.RecordPayment(1, PaymentMethod.Cash, null, Today, null, "R3", [40000, 60000]).Error?.Code);
     }
 
     [Fact]
     public void Adjustments_never_take_the_total_below_what_is_paid()
     {
         var invoice = Invoice();
-        invoice.RecordPayment(70000, PaymentMethod.Cash, null, Today, null, "R1", true);
+        invoice.RecordPayment(70000, PaymentMethod.Cash, null, Today, null, "R1", SixtyForty);
 
         Assert.Null(invoice.Adjust("Scholarship (25%)", -25000));
         Assert.Equal(75000, invoice.Total);
