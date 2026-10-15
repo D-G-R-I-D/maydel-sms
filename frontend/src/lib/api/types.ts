@@ -72,3 +72,5 @@ export type ClubLine = Schemas["ClubLine"];
 export type PortalChild = Schemas["PortalChild"];
 export type PortalResultSummary = Schemas["PortalResultSummary"];
 export type SchoolProfile = Schemas["SchoolProfileDto"];
+export type ReportEmailStatus = Schemas["ReportEmailStatus"];
+export type EmailStatus = Schemas["EmailStatus"];
