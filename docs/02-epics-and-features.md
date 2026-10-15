@@ -109,8 +109,8 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E9.3 (S)** Absence notification to guardians (E12).
 
 ## E10 — Fees & payments
-- **E10.1** Fee items per term and class level (mandatory / optional e.g. bus, lunch).
-- **E10.2** Generate invoices for a term (all students of a level), with discounts/scholarships (sibling discount rule). AC: idempotent per student-term; numbered `INV-{session}-{seq}`.
+- **E10.1** 🟡 *API ✅ 2026-10-15 (per term, class level or school-wide, optional items by per-student opt-in, copy between terms); UI pending.* Fee items per term and class level (mandatory / optional e.g. bus, lunch).
+- **E10.2** 🟡 *API ✅ 2026-10-15 (idempotent, INV-{session}-{seq}, sibling discount None/Percentage/FixedAmount set by admin, 2–3 part instalment plans per term or session); scholarships and cancel pending.* Generate invoices for a term (all students of a level), with discounts/scholarships (sibling discount rule). AC: idempotent per student-term; numbered `INV-{session}-{seq}`.
 - **E10.3** Record manual payments (cash, transfer, POS) with receipt numbers. AC: cannot exceed balance; cannot pay a cancelled invoice; receipts immutable (reversal = new entry).
 - **E10.4** Statements, debtors list, collections report by class/term; CSV export.
 - **E10.5** Online payment via Paystack: initialise → redirect → **webhook verified by signature** → payment recorded idempotently by gateway reference. AC: amount re-verified server-side via Paystack verify API; replayed webhooks ignored.

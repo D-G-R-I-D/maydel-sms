@@ -43,6 +43,8 @@ public interface IAppDbContext
     DbSet<AttendanceRecord> Attendance { get; }
 
     DbSet<FeeItem> FeeItems { get; }
+    DbSet<FeeSettings> FeeSettings { get; }
+    DbSet<InstalmentPlan> InstalmentPlans { get; }
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }
 
