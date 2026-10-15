@@ -980,6 +980,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetRegister"];
+        put: operations["SaveRegister"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAttendanceSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -994,6 +1026,8 @@ export interface components {
             /** Format: int32 */
             daysPresent: number;
         };
+        /** @enum {unknown} */
+        AttendanceStatus: "Present" | "Absent" | "Late" | "Excused";
         /** @enum {unknown} */
         AuditAction: "Added" | "Modified" | "Deleted";
         AuditFilters: {
@@ -1046,6 +1080,17 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        ClassAttendanceSummary: {
+            /** Format: uuid */
+            classRoomId: string;
+            classRoom: string;
+            /** Format: uuid */
+            termId: string;
+            term: string;
+            /** Format: int32 */
+            daysOpened: number;
+            rows: components["schemas"]["StudentAttendance"][];
+        };
         ClassLevelDto: {
             /** Format: uuid */
             id: string;
@@ -1053,6 +1098,28 @@ export interface components {
             section: components["schemas"]["SchoolSection"];
             /** Format: int32 */
             order: number;
+        };
+        ClassRegister: {
+            /** Format: uuid */
+            classRoomId: string;
+            classRoom: string;
+            /** Format: date */
+            date: string;
+            /** Format: uuid */
+            termId: null | string;
+            term: null | string;
+            problem: null | string;
+            taken: boolean;
+            canEdit: boolean;
+            /** Format: int32 */
+            present: number;
+            /** Format: int32 */
+            absent: number;
+            /** Format: int32 */
+            late: number;
+            /** Format: int32 */
+            excused: number;
+            entries: components["schemas"]["RegisterEntry"][];
         };
         ClassReportRow: {
             /** Format: uuid */
@@ -1511,6 +1578,22 @@ export interface components {
         RefreshSessionCommand: {
             refreshToken: string;
         };
+        RegisterEntry: {
+            /** Format: uuid */
+            studentId: string;
+            admissionNumber: string;
+            name: string;
+            status: components["schemas"]["AttendanceStatus"];
+            note: null | string;
+            recorded: boolean;
+            locked: boolean;
+        };
+        RegisterEntryInput: {
+            /** Format: uuid */
+            studentId: string;
+            status: components["schemas"]["AttendanceStatus"];
+            note: null | string;
+        };
         ReportCard: {
             /** Format: uuid */
             studentId: string;
@@ -1634,6 +1717,13 @@ export interface components {
             termId: string;
             entries: components["schemas"]["GradeSheetEntry"][];
         };
+        SaveRegisterCommand: {
+            /** Format: uuid */
+            classRoomId: string;
+            /** Format: date */
+            date: string;
+            entries: components["schemas"]["RegisterEntryInput"][];
+        };
         SchoolProfileDto: {
             name: string;
             motto: null | string;
@@ -1731,6 +1821,24 @@ export interface components {
             jobTitle: null | string;
             roles: components["schemas"]["Role"][];
             isActive: boolean;
+        };
+        StudentAttendance: {
+            /** Format: uuid */
+            studentId: string;
+            admissionNumber: string;
+            name: string;
+            /** Format: int32 */
+            daysOpened: number;
+            /** Format: int32 */
+            present: number;
+            /** Format: int32 */
+            absent: number;
+            /** Format: int32 */
+            late: number;
+            /** Format: int32 */
+            excused: number;
+            /** Format: double */
+            percentage: null | number;
         };
         StudentDetail: {
             /** Format: uuid */
@@ -6256,6 +6364,193 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetRegister: {
+        parameters: {
+            query: {
+                classRoomId: string;
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassRegister"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveRegister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveRegisterCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassRegister"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAttendanceSummary: {
+        parameters: {
+            query: {
+                classRoomId: string;
+                termId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassAttendanceSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
