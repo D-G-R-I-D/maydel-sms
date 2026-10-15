@@ -66,6 +66,22 @@ public static class DependencyInjection
         services.AddOptions<SchoolProfileOptions>().BindConfiguration(SchoolProfileOptions.Section);
         services.AddSingleton<IReportCardRenderer, Reports.QuestPdfReportCardRenderer>();
 
+        // E12.3 email outbox. The provider is configuration; secrets come from the environment.
+        services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.Section)
+            .Validate(o => o.Provider is "None" or "Pickup" or "Smtp" or "Resend", "Email:Provider must be None, Pickup, Smtp or Resend.")
+            .Validate(o => o.Provider != "Smtp" || !string.IsNullOrWhiteSpace(o.SmtpHost), "Email:SmtpHost is required for the Smtp provider.")
+            .Validate(o => o.Provider != "Resend" || !string.IsNullOrWhiteSpace(o.ResendApiKey), "Email:ResendApiKey is required for the Resend provider.")
+            .ValidateOnStart();
+        services.AddHttpClient<Notifications.ResendEmailSender>(c => c.BaseAddress = new Uri("https://api.resend.com/"));
+        services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailOptions>>().Value.Provider switch
+        {
+            "Pickup" => ActivatorUtilities.CreateInstance<Notifications.PickupEmailSender>(sp),
+            "Smtp" => ActivatorUtilities.CreateInstance<Notifications.SmtpEmailSender>(sp),
+            "Resend" => sp.GetRequiredService<Notifications.ResendEmailSender>(),
+            _ => new Notifications.DisabledEmailSender(),
+        });
+        services.AddHostedService<Notifications.EmailOutboxWorker>();
+
         return services;
     }
 }

@@ -4581,6 +4581,143 @@
         }
       }
     },
+    "/api/reports/emails": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "ListReportEmails",
+        "parameters": [
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "termId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReportEmailStatus"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/emails/{emailId}/retry": {
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "RetryReportEmail",
+        "parameters": [
+          {
+            "name": "emailId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reports/unpublish": {
       "post": {
         "tags": [
@@ -6112,6 +6249,14 @@
           }
         }
       },
+      "EmailStatus": {
+        "enum": [
+          "Pending",
+          "Sent",
+          "Failed",
+          "Skipped"
+        ]
+      },
       "GoogleLoginCommand": {
         "required": [
           "idToken"
@@ -7184,6 +7329,10 @@
           "termId": {
             "type": "string",
             "format": "uuid"
+          },
+          "notifyParents": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -7191,7 +7340,8 @@
         "required": [
           "published",
           "classAverage",
-          "skipped"
+          "skipped",
+          "emailsQueued"
         ],
         "type": "object",
         "properties": {
@@ -7208,6 +7358,10 @@
             "items": {
               "$ref": "#/components/schemas/SkippedStudent"
             }
+          },
+          "emailsQueued": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -7486,6 +7640,64 @@
             "items": {
               "$ref": "#/components/schemas/RatingKeyEntry"
             }
+          }
+        }
+      },
+      "ReportEmailStatus": {
+        "required": [
+          "id",
+          "studentId",
+          "student",
+          "guardian",
+          "toAddress",
+          "status",
+          "attempts",
+          "lastError",
+          "queuedAt",
+          "sentAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "student": {
+            "type": "string"
+          },
+          "guardian": {
+            "type": "string"
+          },
+          "toAddress": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EmailStatus"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastError": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "queuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sentAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

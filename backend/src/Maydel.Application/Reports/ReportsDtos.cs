@@ -53,8 +53,11 @@ public sealed record CommentRequest(string? Comment);
 
 public sealed record AttendanceEntry(Guid StudentId, int DaysPresent);
 
-/// <summary><c>Skipped</c>: active students in the class who weren't published, with the reason (e.g. no scores yet).</summary>
-public sealed record PublishResult(int Published, decimal ClassAverage, IReadOnlyList<SkippedStudent> Skipped);
+/// <summary>
+/// <c>Skipped</c>: active students in the class who weren't published, with the reason (e.g. no scores yet).
+/// <c>EmailsQueued</c>: guardian emails queued with the report attached (0 when <c>notifyParents</c> was false).
+/// </summary>
+public sealed record PublishResult(int Published, decimal ClassAverage, IReadOnlyList<SkippedStudent> Skipped, int EmailsQueued);
 
 public sealed record SkippedStudent(Guid StudentId, string Name, string Reason);
 

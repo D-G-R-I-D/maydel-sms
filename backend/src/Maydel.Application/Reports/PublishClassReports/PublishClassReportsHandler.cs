@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Maydel.Application.Reports.PublishClassReports;
 
-internal sealed class PublishClassReportsHandler(IAppDbContext db, ReportBuilder reports, ICurrentUser me, TimeProvider clock)
+internal sealed class PublishClassReportsHandler(IAppDbContext db, ReportBuilder reports, Notifications.ReportEmails emails, ICurrentUser me, TimeProvider clock)
     : ICommandHandler<PublishClassReportsCommand, PublishResult>
 {
     public async Task<Result<PublishResult>> Handle(PublishClassReportsCommand c, CancellationToken ct)
@@ -32,10 +32,12 @@ internal sealed class PublishClassReportsHandler(IAppDbContext db, ReportBuilder
             report.ClassRoomId = c.ClassRoomId;
             report.Publish(figures.Averages[s.Id], figures.ClassAverage, figures.Positions[s.Id], figures.Averages.Count, now, me.UserId);
         }
+        // Same transaction as the publish: either both happen or neither does.
+        var queued = c.NotifyParents ? await emails.QueueAsync([.. toPublish.Select(s => s.Id)], c.TermId, now, ct) : 0;
         await db.SaveChangesAsync(ct);
 
         var skipped = students.Where(s => !figures.Averages.ContainsKey(s.Id))
             .Select(s => new SkippedStudent(s.Id, s.Name, "No scores entered for this term.")).ToList();
-        return new PublishResult(toPublish.Count, figures.ClassAverage, skipped);
+        return new PublishResult(toPublish.Count, figures.ClassAverage, skipped, queued);
     }
 }

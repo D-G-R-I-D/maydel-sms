@@ -22,3 +22,6 @@ test-results/
 .DS_Store
 Thumbs.db
 .idea/
+
+# Development email pickup folder (E12)
+emails/

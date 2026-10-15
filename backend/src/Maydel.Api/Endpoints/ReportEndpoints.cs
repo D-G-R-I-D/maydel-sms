@@ -6,6 +6,9 @@ using Maydel.Application.Reports.GetClassReportCardsPdf;
 using Maydel.Application.Reports.GetClassReports;
 using Maydel.Application.Reports.GetReportCardPdf;
 using Maydel.Application.Reports.GetReportCard;
+using Maydel.Application.Notifications;
+using Maydel.Application.Notifications.ListReportEmails;
+using Maydel.Application.Notifications.RetryEmail;
 using Maydel.Application.Reports.PublishClassReports;
 using Maydel.Application.Reports.SaveAttendance;
 using Maydel.Application.Reports.SetBehaviour;
@@ -39,6 +42,8 @@ public static class ReportEndpoints
         admin.MapPut("/{studentId:guid}/{termId:guid}/principal-comment", SetPrincipalComment).WithName("SetPrincipalComment").ProducesProblems(400, 401, 403, 404, 422);
         academic.MapPut("/attendance", SaveAttendance).WithName("SaveReportAttendance").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPost("/publish", Publish).WithName("PublishClassReports").ProducesProblems(401, 403, 404, 422);
+        admin.MapGet("/emails", ListEmails).WithName("ListReportEmails").ProducesProblems(400, 401, 403);
+        admin.MapPost("/emails/{emailId:guid}/retry", RetryEmail).WithName("RetryReportEmail").ProducesProblems(401, 403, 404, 422);
         admin.MapPost("/unpublish", Unpublish).WithName("UnpublishClassReports").ProducesProblems(401, 403, 404);
     }
 
@@ -81,6 +86,14 @@ public static class ReportEndpoints
     private static async Task<Results<Ok<PublishResult>, ProblemHttpResult>> Publish(
         PublishClassReportsCommand command, ICommandHandler<PublishClassReportsCommand, PublishResult> handler, CancellationToken ct) =>
         (await handler.Handle(command, ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<IReadOnlyList<ReportEmailStatus>>, ProblemHttpResult>> ListEmails(
+        [AsParameters] ListReportEmailsQuery query, IQueryHandler<ListReportEmailsQuery, IReadOnlyList<ReportEmailStatus>> handler, CancellationToken ct) =>
+        (await handler.Handle(query, ct)).ToHttpResult();
+
+    private static async Task<Results<NoContent, ProblemHttpResult>> RetryEmail(
+        Guid emailId, ICommandHandler<RetryEmailCommand> handler, CancellationToken ct) =>
+        (await handler.Handle(new RetryEmailCommand(emailId), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<UnpublishResult>, ProblemHttpResult>> Unpublish(
         UnpublishClassReportsCommand command, ICommandHandler<UnpublishClassReportsCommand, UnpublishResult> handler, CancellationToken ct) =>
