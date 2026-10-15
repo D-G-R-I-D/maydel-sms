@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { attendanceErrors, attendanceText, formatAverage, neighbours, ordinal, publishPreview } from "./rules";
+import { attendanceErrors, attendanceText, formatAverage, formatPublishedOn, neighbours, ordinal, publishPreview } from "./rules";
 import type { ClassReportSummary } from "@/lib/api/types";
 
-const row = (id: string, scored: number, daysPresent: number | null) => ({
+const row = (id: string, scored: number, daysPresent: number | null, status: "Draft" | "Published" = "Draft") => ({
   studentId: id,
   admissionNumber: id,
   name: id,
   subjectsScored: scored,
   average: null,
   position: null,
-  status: "Draft" as const,
+  status,
   daysPresent,
   hasFormTeacherComment: false,
   hasPrincipalComment: false,
@@ -47,6 +47,22 @@ describe("report helpers", () => {
     expect(p.noScores.map((r) => r.studentId)).toEqual(["b"]);
     expect(p.missingAttendance.map((r) => r.studentId)).toEqual(["c"]);
     expect(publishPreview(summary(null, [row("a", 9, 58)])).missingAttendance).toHaveLength(1);
+  });
+
+  it("only counts reports that aren't published yet", () => {
+    const partial = publishPreview(summary(60, [row("a", 9, 58, "Published"), row("b", 9, null), row("c", 0, null)]));
+    expect(partial).toMatchObject({ willPublish: 1, alreadyPublished: 1, allPublished: false });
+    expect(partial.missingAttendance.map((r) => r.studentId)).toEqual(["b"]);
+    expect(partial.noScores.map((r) => r.studentId)).toEqual(["c"]);
+    const all = publishPreview(summary(60, [row("a", 9, 58, "Published"), row("b", 9, 60, "Published")]));
+    expect(all).toMatchObject({ willPublish: 0, alreadyPublished: 2, allPublished: true });
+    expect(publishPreview(summary(60, [])).allPublished).toBe(false);
+  });
+
+  it("formats the publication date in Lagos time", () => {
+    expect(formatPublishedOn("2026-10-14T23:30:00Z")).toBe("15 Oct 2026");
+    expect(formatPublishedOn(null)).toBeNull();
+    expect(formatPublishedOn("nope")).toBeNull();
   });
 
   it("shows attendance as present/opened", () => {

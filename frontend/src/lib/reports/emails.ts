@@ -31,10 +31,12 @@ export function emailCounts(rows: readonly Pick<ReportEmailStatus, "status">[]):
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-/** Toast after publishing, e.g. "Published 5 reports · 7 emails queued". */
-export function publishToast(r: Pick<PublishResult, "published" | "emailsQueued">, notified: boolean): string {
-  const published = `Published ${plural(r.published, "report", "reports")}`;
-  return notified ? `${published} · ${plural(r.emailsQueued, "email", "emails")} queued` : published;
+/** Toast after publishing, e.g. "Published 1 report · 4 already published · 2 emails queued". */
+export function publishToast(r: Pick<PublishResult, "published" | "emailsQueued" | "alreadyPublished">, notified: boolean): string {
+  const parts = [`Published ${plural(r.published, "report", "reports")}`];
+  if (r.alreadyPublished > 0) parts.push(`${r.alreadyPublished} already published`);
+  if (notified) parts.push(`${plural(r.emailsQueued, "email", "emails")} queued`);
+  return parts.join(" · ");
 }
 
 /** True when parents were to be emailed but nobody had an address on file. */

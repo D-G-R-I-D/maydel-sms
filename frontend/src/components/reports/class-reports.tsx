@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AlertTriangle, CalendarCheck, Check, ChevronRight, LockOpen, Minus, Send } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Check, CheckCircle2, ChevronRight, LockOpen, Minus, Send } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import type { Loaded } from "@/lib/api/server";
 import type { ClassReportSummary, PublishResult, ReportEmailStatus } from "@/lib/api/types";
 import { publishClass, unpublishReports } from "@/lib/reports/actions";
-import { attendanceText, classPdfHref, formatAverage, ordinal, publishPreview } from "@/lib/reports/rules";
+import { attendanceText, classPdfHref, formatAverage, formatPublishedOn, ordinal, publishPreview } from "@/lib/reports/rules";
 import { noGuardianEmails, publishToast } from "@/lib/reports/emails";
 import { runAction } from "@/lib/client/action";
 import { Badge, Button, buttonClasses, cn } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
+import { toast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { PdfDownloadButton } from "./pdf-download";
 import { ReportEmails } from "./report-emails";
@@ -44,7 +46,9 @@ export function ClassReports({
   const [result, setResult] = useState<{ data: PublishResult; notified: boolean } | null>(null);
   const [notify, setNotify] = useState(true);
   const [emailsVersion, setEmailsVersion] = useState(0);
+  const router = useRouter();
   const preview = publishPreview(summary);
+  const reports = (n: number) => `${n} ${n === 1 ? "report" : "reports"}`;
   const href = (studentId: string) => `/admin/reports/${summary.classRoomId}/${studentId}?termId=${summary.termId}`;
   const attendanceHref = `/admin/reports/${summary.classRoomId}/attendance?termId=${summary.termId}`;
   const publishedSelected = summary.rows.filter((r) => selected.has(r.studentId) && r.status === "Published").map((r) => r.studentId);
@@ -102,55 +106,78 @@ export function ClassReports({
           )}
           {isAdmin && (
             <>
-              <ConfirmDialog
-                title={`Publish ${summary.classRoom} reports?`}
-                confirmLabel="Publish"
-                pendingLabel="Publishing…"
-                trigger={
-                  <Button disabled={preview.willPublish === 0}>
-                    <Send className="size-4" aria-hidden />
-                    Publish class
-                  </Button>
-                }
-                onConfirm={async () => {
-                  setProblem(null);
-                  setResult(null);
-                  const notified = notify;
-                  const r = await runAction(() => publishClass(summary.classRoomId, summary.termId, notified), {
-                    success: (x) => publishToast(x, notified),
-                    onProblem: setProblem,
-                  });
-                  if (r) {
-                    setResult({ data: r, notified });
-                    setEmailsVersion((v) => v + 1);
+              {preview.allPublished ? (
+                <span role="status" className="inline-flex min-h-11 items-center gap-1.5 rounded-input bg-success/12 px-3 text-sm font-medium text-success">
+                  <CheckCircle2 className="size-4" aria-hidden />
+                  All {reports(preview.alreadyPublished)} published
+                  {formatPublishedOn(summary.lastPublishedAt) && <span className="font-normal">· {formatPublishedOn(summary.lastPublishedAt)}</span>}
+                </span>
+              ) : (
+                <ConfirmDialog
+                  title={`Publish ${reports(preview.willPublish)}?`}
+                  confirmLabel="Publish"
+                  pendingLabel="Publishing…"
+                  trigger={
+                    <Button disabled={preview.willPublish === 0}>
+                      <Send className="size-4" aria-hidden />
+                      {preview.alreadyPublished > 0 ? `Publish ${preview.willPublish} remaining` : "Publish class"}
+                    </Button>
                   }
-                  return true;
-                }}
-              >
-                <p>
-                  <span className="font-medium text-text">{preview.willPublish}</span> {preview.willPublish === 1 ? "report" : "reports"} will be published
-                  {preview.noScores.length > 0 && (
-                    <>
-                      ; <span className="font-medium text-text">{preview.noScores.length}</span> {preview.noScores.length === 1 ? "has" : "have"} no scores and will be skipped
-                    </>
-                  )}
-                  .
-                </p>
-                <p className="mt-2">Figures are frozen, and scores, comments and attendance lock. Parents will see published reports.</p>
-                <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-input border border-border p-3 text-text">
-                  <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]" />
-                  <span>
-                    Email each parent a copy of the report (PDF)
-                    <span className="block text-xs text-muted">Sent to guardians with an email address on file.</span>
-                  </span>
-                </label>
-                {preview.missingAttendance.length > 0 && (
-                  <p className="mt-2 flex items-start gap-1.5 text-warning">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-                    Attendance is missing for {preview.missingAttendance.length} {preview.missingAttendance.length === 1 ? "student" : "students"}; publishing will be refused until it&apos;s entered.
+                  onConfirm={async () => {
+                    setProblem(null);
+                    setResult(null);
+                    const notified = notify;
+                    const r = await runAction(() => publishClass(summary.classRoomId, summary.termId, notified), {
+                      success: (x) => publishToast(x, notified),
+                      onProblem: (p) => {
+                        // Someone else published them meanwhile: not an error, just stale data.
+                        if (p.code === "report.already_published") {
+                          toast.info(p.detail ?? problemMessage(p));
+                          router.refresh();
+                        } else setProblem(p);
+                      },
+                    });
+                    if (r) {
+                      setResult({ data: r, notified });
+                      setEmailsVersion((v) => v + 1);
+                    }
+                    return true;
+                  }}
+                >
+                  <p>
+                    <span className="font-medium text-text">{preview.willPublish}</span> {preview.willPublish === 1 ? "report" : "reports"} will be published
+                    {preview.alreadyPublished > 0 && (
+                      <>
+                        ; <span className="font-medium text-text">{preview.alreadyPublished}</span> already published {preview.alreadyPublished === 1 ? "stays" : "stay"} as {preview.alreadyPublished === 1 ? "it is" : "they are"}
+                      </>
+                    )}
+                    {preview.noScores.length > 0 && (
+                      <>
+                        ; <span className="font-medium text-text">{preview.noScores.length}</span> {preview.noScores.length === 1 ? "has" : "have"} no scores and will be skipped
+                      </>
+                    )}
+                    .
                   </p>
-                )}
-              </ConfirmDialog>
+                  <p className="mt-2">Figures are frozen, and scores, comments and attendance lock. Parents will see published reports.</p>
+                  <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-input border border-border p-3 text-text">
+                    <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]" />
+                    <span>
+                      Email each parent a copy of the report (PDF)
+                      <span className="block text-xs text-muted">
+                        {notify
+                          ? `Parents of ${preview.willPublish === 1 ? "this student" : `these ${preview.willPublish} students`} will be emailed (guardians with an email address on file).`
+                          : "No emails will be sent."}
+                      </span>
+                    </span>
+                  </label>
+                  {preview.missingAttendance.length > 0 && (
+                    <p className="mt-2 flex items-start gap-1.5 text-warning">
+                      <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                      Attendance is missing for {preview.missingAttendance.length} {preview.missingAttendance.length === 1 ? "student" : "students"}; publishing will be refused until it&apos;s entered.
+                    </p>
+                  )}
+                </ConfirmDialog>
+              )}
               {summary.publishedCount > 0 && (
                 <ConfirmDialog
                   title={publishedSelected.length > 0 ? `Unpublish ${publishedSelected.length} selected?` : `Unpublish all of ${summary.classRoom}?`}

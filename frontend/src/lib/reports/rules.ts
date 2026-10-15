@@ -18,13 +18,31 @@ export function formatAverage(n: number | null | undefined): string {
 }
 
 /** What publishing would do now: who goes out, who is skipped (no scores), who blocks it (no attendance). */
+/**
+ * What Publish would do. Publishing only touches reports that aren't published yet: drafts with
+ * scores are published, drafts without scores are skipped, published ones stay as they are.
+ */
 export function publishPreview(summary: ClassReportSummary) {
-  const scored = summary.rows.filter((r) => r.subjectsScored > 0);
+  const drafts = summary.rows.filter((r) => r.status !== "Published");
+  const toPublish = drafts.filter((r) => r.subjectsScored > 0);
+  const alreadyPublished = summary.rows.length - drafts.length;
   return {
-    willPublish: scored.length,
-    noScores: summary.rows.filter((r) => r.subjectsScored === 0),
-    missingAttendance: summary.daysOpened === null ? scored : scored.filter((r) => r.daysPresent === null),
+    willPublish: toPublish.length,
+    alreadyPublished,
+    /** Every report is published: show a status instead of the Publish button. */
+    allPublished: drafts.length === 0 && alreadyPublished > 0,
+    noScores: drafts.filter((r) => r.subjectsScored === 0),
+    missingAttendance: summary.daysOpened === null ? toPublish : toPublish.filter((r) => r.daysPresent === null),
   };
+}
+
+const publishedFormat = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" });
+
+/** "14 Oct 2026" (Lagos), for "All 5 reports published · 14 Oct 2026". */
+export function formatPublishedOn(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : publishedFormat.format(d);
 }
 
 export function attendanceText(row: Pick<ClassReportRow, "daysPresent">, daysOpened: number | null): string {
