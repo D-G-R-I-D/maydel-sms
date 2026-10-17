@@ -4,7 +4,7 @@ import {
 } from "@/lib/auth/cookies";
 import { forwardingHeaders } from "@/lib/auth/forwarding";
 import { refreshSession, sessionIsDead } from "@/lib/auth/refresh";
-import { canEnter, homeFor } from "@/lib/auth/roles";
+import { canEnter, homeFor, isPublicAdmissionsPath } from "@/lib/auth/roles";
 import { jwtExpiry, needsRefresh } from "@/lib/auth/token";
 import { publicUrl } from "@/lib/http/redirect";
 
@@ -14,6 +14,7 @@ function isProtected(pathname: string): boolean {
   return (
     pathname === "/admin" || pathname.startsWith("/admin/") ||
     pathname === "/portal" || pathname.startsWith("/portal/") ||
+    ((pathname === "/admissions" || pathname.startsWith("/admissions/")) && !isPublicAdmissionsPath(pathname)) ||
     pathname === "/change-password"
   );
 }

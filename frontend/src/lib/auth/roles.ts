@@ -3,7 +3,7 @@ import type { Role } from "@/lib/api/types";
 export type { Role };
 
 /** Every role the API knows. `satisfies` makes the type check fail if the contract adds or renames one. */
-export const Roles = ["Admin", "Teacher", "Bursar", "Parent", "Student"] as const satisfies readonly Role[];
+export const Roles = ["Admin", "Teacher", "Bursar", "Parent", "Student", "Applicant"] as const satisfies readonly Role[];
 
 export function isRole(value: unknown): value is Role {
   return typeof value === "string" && (Roles as readonly string[]).includes(value);
@@ -11,6 +11,8 @@ export function isRole(value: unknown): value is Role {
 
 const staffRoles: readonly Role[] = ["Admin", "Teacher", "Bursar"];
 const portalRoles: readonly Role[] = ["Parent", "Student"];
+/** Families applying for a place (E11): new applicants, and existing parents applying for siblings. */
+const admissionsRoles: readonly Role[] = ["Applicant", "Parent"];
 
 export function hasAnyRole(roles: readonly string[], allowed: readonly Role[]): boolean {
   return roles.some((r) => (allowed as readonly string[]).includes(r));
@@ -18,11 +20,16 @@ export function hasAnyRole(roles: readonly string[], allowed: readonly Role[]): 
 
 export const isStaff = (roles: readonly string[]) => hasAnyRole(roles, staffRoles);
 export const isPortalUser = (roles: readonly string[]) => hasAnyRole(roles, portalRoles);
+export const isAdmissionsUser = (roles: readonly string[]) => hasAnyRole(roles, admissionsRoles);
 
-/** Where a user lands after sign-in: staff (even if also a parent) go to the console. */
+/** The public "Buy admission form" page; the rest of /admissions needs an applicant or parent account. */
+export const isPublicAdmissionsPath = (pathname: string) => pathname === "/admissions/apply" || pathname.startsWith("/admissions/apply/");
+
+/** Where a user lands after sign-in: staff (even if also a parent) go to the console; applicant-only families to admissions. */
 export function homeFor(roles: readonly string[]): string {
   if (isStaff(roles)) return "/admin";
   if (isPortalUser(roles)) return "/portal";
+  if (hasAnyRole(roles, ["Applicant"])) return "/admissions";
   return "/login";
 }
 
@@ -30,6 +37,7 @@ export function homeFor(roles: readonly string[]): string {
 export function canEnter(pathname: string, roles: readonly string[]): boolean {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return isStaff(roles);
   if (pathname === "/portal" || pathname.startsWith("/portal/")) return isPortalUser(roles);
+  if ((pathname === "/admissions" || pathname.startsWith("/admissions/")) && !isPublicAdmissionsPath(pathname)) return isAdmissionsUser(roles);
   return true;
 }
 
