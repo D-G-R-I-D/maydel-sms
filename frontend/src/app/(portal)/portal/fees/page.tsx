@@ -11,6 +11,9 @@ import { PhotoAvatar } from "@/components/media/photo-avatar";
 import { ChildSwitcher } from "@/components/portal/child-switcher";
 import { PdfDownloadButton } from "@/components/reports/pdf-download";
 import { PayOnlineButton } from "@/components/portal/pay-online";
+import { ProofUploadButton } from "@/components/portal/proof-upload";
+import { proofStatusLabel, proofStatusTone } from "@/lib/finance/proofs";
+import type { Proof } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Fees" };
 
@@ -114,10 +117,53 @@ function InvoiceCard({ studentId, inv, today, open }: { studentId: string; inv: 
 
           <div className="flex flex-wrap items-center gap-2">
             {inv.balance > 0 && inv.status !== "Cancelled" && <PayOnlineButton studentId={studentId} invoice={inv} />}
+            {inv.balance > 0 && inv.status !== "Cancelled" && <ProofUploadButton studentId={studentId} invoiceId={inv.id} invoiceNumber={inv.number} balance={inv.balance} today={today} />}
             <PdfDownloadButton href={`/api/media/portal/children/${studentId}/invoices/${inv.id}/pdf`} label="Download invoice" fallbackName={`${inv.number}.pdf`} size="sm" />
           </div>
         </div>
       </details>
+    </Card>
+  );
+}
+
+/** Proofs of bank payment this child's parents sent (E10.8): being checked, confirmed (receipt) or not accepted (reason, send again). */
+function ProofList({ studentId, proofs, balances, today }: { studentId: string; proofs: Proof[]; balances: InvoiceDetail[]; today: string }) {
+  return (
+    <Card className="mt-5 overflow-hidden">
+      <h2 className="border-b border-border px-5 py-3 font-display text-lg font-semibold">Payment proofs</h2>
+      <ul className="divide-y divide-border">
+        {proofs.map((p) => {
+          const inv = balances.find((i) => i.id === p.invoiceId);
+          return (
+            <li key={p.id} className="flex flex-wrap items-start gap-x-4 gap-y-2 px-5 py-3 text-sm">
+              <div className="min-w-0 flex-1 basis-56">
+                <p className="tabular font-medium">
+                  {formatNaira(p.amount)} <span className="font-normal text-muted">paid {day(p.paidOn)}</span>
+                </p>
+                <p className="tabular text-xs text-muted">
+                  {p.invoiceNumber}
+                  {p.bankReference ? ` · ref ${p.bankReference}` : ""} · sent {day(p.submittedAt)}
+                </p>
+                {p.status === "Rejected" && p.rejectReason && <p className="mt-1 text-danger">Reason: {p.rejectReason}</p>}
+              </div>
+              <Badge tone={proofStatusTone[p.status]}>{proofStatusLabel[p.status]}</Badge>
+              {p.status === "Confirmed" && p.paymentId && (
+                <PdfDownloadButton
+                  href={`/api/media/portal/children/${studentId}/receipts/${p.paymentId}/pdf`}
+                  label={p.receiptNumber ? `Receipt ${p.receiptNumber}` : "Receipt"}
+                  fallbackName={`${p.receiptNumber ?? "Receipt"}.pdf`}
+                  variant="ghost"
+                  size="sm"
+                  showView={false}
+                />
+              )}
+              {p.status === "Rejected" && inv && inv.balance > 0 && (
+                <ProofUploadButton studentId={studentId} invoiceId={inv.id} invoiceNumber={inv.number} balance={inv.balance} today={today} label="Send again" />
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </Card>
   );
 }
@@ -153,7 +199,10 @@ export default async function PortalFeesPage({ searchParams }: { searchParams: P
   }
 
   const child = children.data.find((c) => c.studentId === requested) ?? children.data[0];
-  const fees = await load((api) => api.GET("/api/portal/children/{studentId}/fees", { params: { path: { studentId: child.studentId } } }));
+  const [fees, proofs] = await Promise.all([
+    load((api) => api.GET("/api/portal/children/{studentId}/fees", { params: { path: { studentId: child.studentId } } })),
+    load((api) => api.GET("/api/portal/children/{studentId}/proofs", { params: { path: { studentId: child.studentId } } })),
+  ]);
   const today = schoolToday();
   const next = fees.ok ? nextDueDate(fees.data.invoices, today) : null;
 
@@ -208,6 +257,8 @@ export default async function PortalFeesPage({ searchParams }: { searchParams: P
           ))}
         </div>
       )}
+
+      {proofs.ok && proofs.data.length > 0 && <ProofList studentId={child.studentId} proofs={proofs.data} balances={fees.ok ? fees.data.invoices : []} today={today} />}
 
       <Card className="mt-5 flex items-start gap-3 p-4 text-sm">
         <Info className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />

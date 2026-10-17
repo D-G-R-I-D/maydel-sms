@@ -34,6 +34,11 @@ function NavList({ groups, onNavigate }: { groups: NavGroup[]; onNavigate?: () =
                   >
                     <NavIcon name={item.icon} />
                     {item.label}
+                    {item.badge ? (
+                      <span className="tabular ml-auto rounded-full bg-warning px-2 py-0.5 text-[0.6875rem] font-semibold text-white" aria-label={`${item.badge} waiting`}>
+                        {item.badge}
+                      </span>
+                    ) : null}
                   </Link>
                 ) : (
                   <span className="flex min-h-10 cursor-not-allowed items-center gap-3 rounded-input px-3 text-sm text-muted" aria-disabled="true">

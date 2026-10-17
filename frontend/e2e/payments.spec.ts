@@ -20,6 +20,7 @@ test.afterEach(async ({ request }) => {
   }
   if (created.feeId) await api.del(`/api/finance/fee-items/${created.feeId}`);
   if (created.studentId) await api.post(`/api/students/${created.studentId}/status`, { status: "Withdrawn" });
+  created.studentId = created.feeId = created.invoiceId = undefined;
 });
 
 async function signIn(page: Page, userName: string) {
@@ -185,4 +186,112 @@ test("online payments list with status filters (bursar)", async ({ page }) => {
   await page.getByRole("navigation", { name: "Filter by status" }).getByRole("link", { name: /Needs review/ }).click();
   await expect(page).toHaveURL(/status=NeedsReview/);
   await expect(page.getByRole("table").or(page.getByText("Nothing to review"))).toBeVisible();
+});
+
+test("proof of payment: student sends it, bursar rejects, student sends again, bursar confirms", async ({ page, request }) => {
+  const api = await adminApi(request);
+  const levels = await api.get<{ id: string; name: string }[]>("/api/academics/class-levels");
+  const creche = levels.find((l) => l.name === "Creche")!;
+  const rooms = await api.get<{ id: string; arm: string; classLevelId: string; studentCount: number }[]>("/api/academics/classrooms");
+  test.skip(rooms.some((r) => r.classLevelId === creche.id && r.arm !== "E2E Register" && r.studentCount > 0), "real Creche students exist; generating would bill them");
+  let room = rooms.find((r) => r.arm === "E2E Register");
+  if (!room) room = await (await api.post("/api/academics/classrooms", { classLevelId: creche.id, arm: "E2E Register", capacity: 40, formTeacherId: null })).json();
+  const sessions = await api.get<{ terms: { id: string; isCurrent: boolean }[] }[]>("/api/academics/sessions");
+  const termId = sessions.flatMap((x) => x.terms).find((t) => t.isCurrent)!.id;
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos" }).format(new Date());
+  const suffix = `${Date.now() % 100000}`;
+  const student = await (
+    await api.post("/api/students", {
+      firstName: "Proof",
+      middleName: null,
+      lastName: `E2E${suffix}`,
+      dateOfBirth: null,
+      sex: null,
+      stateOfOrigin: null,
+      lga: null,
+      homeAddress: null,
+      house: null,
+      medicalNotes: null,
+      classRoomId: room!.id,
+      admittedOn: today,
+    })
+  ).json();
+  created.studentId = student.id;
+  const fee = await (await api.post("/api/finance/fee-items", { termId, name: `E2E fee proof ${suffix}`, amount: 30000, classLevelId: creche.id, isMandatory: true, siblingDiscount: false })).json();
+  created.feeId = fee.id;
+  expect((await api.post("/api/finance/invoices/generate", { termId, classLevelId: creche.id })).ok()).toBeTruthy();
+  expect((await api.post("/api/finance/invoices/publish", { termId, classLevelId: creche.id, notifyParents: false })).ok()).toBeTruthy();
+  const invoice = (await api.get<{ items: { id: string; number: string }[] }>(`/api/finance/invoices?termId=${termId}&search=${student.admissionNumber}`)).items[0];
+  created.invoiceId = invoice.id;
+  const creds = await (await api.post(`/api/students/${student.id}/login`, {})).json();
+
+  // The student signs in (first time: must change the temporary password).
+  const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP4z8CAFWEXHbQSACj/P8Fu7N9hAAAAAElFTkSuQmCC", "base64");
+  const signInStudent = async (password: string) => {
+    await page.context().clearCookies();
+    await page.goto("/login");
+    await page.getByLabel("Email or admission number").fill(creds.userName);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page.waitForURL(/\/(portal|change-password)/);
+  };
+  const newPassword = `E2e#Proof${suffix}x`;
+  await signInStudent(creds.temporaryPassword);
+  if (page.url().includes("/change-password")) {
+    await page.getByLabel("Current password").fill(creds.temporaryPassword);
+    await page.getByLabel("New password", { exact: true }).fill(newPassword);
+    await page.getByLabel("Confirm new password").fill(newPassword);
+    await page.getByRole("button", { name: /Change password/ }).click();
+    await page.waitForURL(/\/portal/);
+  }
+
+  const sendProof = async (buttonName: RegExp) => {
+    await page.goto("/portal/fees");
+    await expect(async () => {
+      await page.getByRole("button", { name: buttonName }).first().click();
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 60_000 });
+    const dialog = page.getByRole("dialog");
+    await dialog.locator('input[type="file"][accept*="pdf"]').setInputFiles({ name: "transfer.png", mimeType: "image/png", buffer: PNG });
+    await dialog.getByLabel("Amount paid (₦)").fill("30,000");
+    await dialog.getByLabel("Bank reference (optional)").fill(`E2E-${suffix}`);
+    await dialog.getByRole("button", { name: "Send proof" }).click();
+    await expect(page.getByText("Proof sent").first()).toBeVisible({ timeout: 30_000 });
+  };
+
+  await sendProof(/I've paid by bank transfer/);
+  await expect(page.getByText("Being checked").first()).toBeVisible({ timeout: 30_000 });
+
+  // Bursar rejects it with a reason.
+  await signIn(page, "bursar@maydel.test");
+  await page.goto("/admin/proofs");
+  let row = page.getByRole("row").filter({ hasText: `E2E${suffix}` });
+  await expect(row).toHaveCount(1, { timeout: 30_000 });
+  await expect(async () => {
+    await row.getByRole("button", { name: "Reject" }).click();
+    await expect(page.getByRole("alertdialog")).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  await page.getByLabel("Reason").fill("E2E: no matching credit");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Reject proof" }).click();
+  await expect(page.getByText(/Proof rejected/).first()).toBeVisible({ timeout: 30_000 });
+
+  // The student sees why and sends it again.
+  await signInStudent(newPassword);
+  await page.goto("/portal/fees");
+  await expect(page.getByText("Reason: E2E: no matching credit")).toBeVisible({ timeout: 30_000 });
+  await sendProof(/^Send again$/);
+
+  // Bursar confirms: payment recorded with a receipt.
+  await signIn(page, "bursar@maydel.test");
+  await page.goto("/admin/proofs");
+  row = page.getByRole("row").filter({ hasText: `E2E${suffix}` });
+  await expect(row).toHaveCount(1, { timeout: 30_000 });
+  await expect(async () => {
+    await row.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  const confirm = page.getByRole("dialog");
+  await expect(confirm.getByLabel("Amount received (₦)")).toHaveValue("30000.00");
+  await confirm.getByRole("button", { name: "Confirm and record" }).click();
+  await expect(confirm.getByText(/^Receipt RCT-/)).toBeVisible({ timeout: 30_000 });
 });

@@ -12,6 +12,8 @@ export type NavItem = {
   roles: readonly Role[];
   /** false until the page ships; rendered as a disabled "Soon" item. */
   ready?: boolean;
+  /** A count shown beside the label (e.g. proofs waiting to be checked); filled in by the layout. */
+  badge?: number;
 };
 export type NavGroup = { label: string; items: NavItem[] };
 
@@ -47,6 +49,7 @@ export const consoleNav: NavGroup[] = [
     items: [
       { label: "Fee items", href: "/admin/fees", icon: "fees", roles: AB, ready: true },
       { label: "Invoices", href: "/admin/invoices", icon: "invoices", roles: AB, ready: true },
+      { label: "To verify", href: "/admin/proofs", icon: "payments", roles: AB, ready: true },
       { label: "Payments", href: "/admin/payments", icon: "payments", roles: AB, ready: true },
       { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB, ready: true },
     ],
@@ -88,6 +91,11 @@ export function filterNav(groups: NavGroup[], roles: readonly string[]): NavGrou
   return groups
     .map((g) => ({ ...g, items: g.items.filter((i) => i.roles.some((r) => roles.includes(r))) }))
     .filter((g) => g.items.length > 0);
+}
+
+/** Puts counts on nav items by href (e.g. { "/admin/proofs": 3 }); zero shows nothing. */
+export function withBadges(groups: NavGroup[], badges: Record<string, number>): NavGroup[] {
+  return groups.map((g) => ({ ...g, items: g.items.map((i) => (badges[i.href] ? { ...i, badge: badges[i.href] } : i)) }));
 }
 
 /** Longest matching href wins, so /admin doesn't light up on /admin/audit. */
