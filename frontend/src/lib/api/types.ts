@@ -97,3 +97,7 @@ export type StatementEntry = Schemas["StatementEntry"];
 export type DebtorsReport = Schemas["DebtorsReport"];
 export type DebtorRow = Schemas["DebtorRow"];
 export type PortalFees = Schemas["PortalFees"];
+export type OnlineCheckout = Schemas["OnlineCheckout"];
+export type OnlinePaymentResult = Schemas["OnlinePaymentResult"];
+export type OnlinePaymentRow = Schemas["OnlinePaymentRow"];
+export type OnlinePaymentStatus = Schemas["OnlinePaymentStatus"];

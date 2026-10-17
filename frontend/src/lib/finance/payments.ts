@@ -9,7 +9,7 @@ export const PAYMENT_METHODS: { value: Exclude<PaymentMethod, "Online">; label: 
   { value: "Pos", label: "POS" },
 ];
 
-export const methodLabel: Record<PaymentMethod, string> = { Cash: "Cash", BankTransfer: "Bank transfer", Pos: "POS", Online: "Online" };
+export const methodLabel: Record<PaymentMethod, string> = { Cash: "Cash", BankTransfer: "Bank transfer", Pos: "POS", Online: "Online (Paystack)" };
 
 /** −₦5,000.00 for negatives; callers format the absolute value. */
 export function signed(amount: number, format: (n: number) => string): string {
@@ -71,4 +71,16 @@ export function nextDueDate(invoices: readonly Pick<InvoiceDetail, "balance" | "
     if (i >= 0) dates.push(inv.schedule[i].dueOn);
   }
   return dates.sort()[0] ?? null;
+}
+
+export const onlineStatusLabel = { Pending: "Waiting", Succeeded: "Paid", Failed: "Failed", NeedsReview: "Needs review" } as const;
+export const onlineStatusTone = { Pending: "neutral", Succeeded: "success", Failed: "danger", NeedsReview: "warning" } as const;
+
+/** Online (Paystack) amount: the full balance, or at least the next instalment's minimum. */
+export function onlineAmountError(amount: string, invoice: Pick<InvoiceDetail, "balance" | "minimumPayment">): string | null {
+  const n = parseAmount(amount);
+  if (n === null || n <= 0) return "Enter an amount above ₦0 with at most 2 decimal places.";
+  if (n > invoice.balance) return `That's more than the balance of ${formatNaira(invoice.balance)}.`;
+  if (n < invoice.minimumPayment && n !== invoice.balance) return `Pay at least ${formatNaira(invoice.minimumPayment)} to complete the next instalment.`;
+  return null;
 }

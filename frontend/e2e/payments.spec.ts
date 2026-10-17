@@ -161,3 +161,12 @@ test("record a payment, reverse it, adjust and cancel the invoice", async ({ pag
     // afterEach does the clean-up (it also runs after a timeout).
   }
 });
+
+test("online payments list with status filters (bursar)", async ({ page }) => {
+  await signIn(page, "bursar@maydel.test");
+  await page.goto("/admin/payments");
+  await expect(page.getByRole("heading", { name: "Online payments", level: 1 })).toBeVisible();
+  await page.getByRole("navigation", { name: "Filter by status" }).getByRole("link", { name: /Needs review/ }).click();
+  await expect(page).toHaveURL(/status=NeedsReview/);
+  await expect(page.getByRole("table").or(page.getByText("Nothing to review"))).toBeVisible();
+});

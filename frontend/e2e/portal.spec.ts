@@ -69,3 +69,27 @@ test("fee PDFs are refused for strangers and signed-out users", async ({ request
   expect((await request.get(`/api/media/portal/children/${id}/invoices/${id}/pdf`)).status()).toBe(401);
   expect((await request.get("/api/media/finance/invoices/not-a-guid/pdf")).status()).toBe(404);
 });
+
+test("pay online: without Paystack keys parents are told to pay another way", async ({ page }) => {
+  // Never open a real checkout from a test: block Paystack if keys are ever configured here.
+  await page.route(/paystack\.(co|com)/, (route) => route.abort());
+  await signIn(page, "parent@maydel.test");
+  await page.goto("/portal/fees");
+  const pay = page.getByRole("button", { name: "Pay online" }).first();
+  test.skip((await pay.count()) === 0, "no invoice with a balance");
+  await expect(async () => {
+    await pay.click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000 });
+  await expect(page.getByRole("radio", { name: /^Full balance ₦/ })).toBeChecked();
+  await page.getByRole("button", { name: "Continue to Paystack" }).click();
+  await expect(page.getByText("Online payment isn't available yet. Pay at the bursary or by bank transfer for now.").first()).toBeVisible({ timeout: 30_000 });
+});
+
+test("payment return page handles a missing or unknown reference", async ({ page }) => {
+  await signIn(page, "parent@maydel.test");
+  await page.goto("/portal/fees/paid");
+  await expect(page.getByText("No payment to show")).toBeVisible();
+  await page.goto("/portal/fees/paid?reference=MSS-not-a-real-ref");
+  await expect(page.getByText("Payment not found")).toBeVisible();
+});
