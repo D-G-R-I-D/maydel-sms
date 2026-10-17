@@ -42,3 +42,62 @@ public sealed class AdmissionTests
     [InlineData(5000, 31, "admission.window")]
     public void Settings_are_checked(decimal fee, int days, string? code) => Assert.Equal(code, AdmissionSettings.Check(fee, days)?.Code);
 }
+
+public sealed class ApplicationFormTests
+{
+    private static AdmissionApplication Paid()
+    {
+        var a = new AdmissionApplication
+        {
+            ReferenceNumber = "APP-2026-0002", ParentName = "Mr. Obi", Phone = "080", Email = "o@example.com", ChildFirstName = "Ike", ChildLastName = "Obi",
+        };
+        a.MarkFormPaid(FormPaymentMethod.Online, null, DateTimeOffset.UtcNow, new DateOnly(2026, 10, 15), 5);
+        return a;
+    }
+
+    private static ApplicationForm Complete() => new()
+    {
+        ChildSex = Maydel.Domain.People.Sex.Male, HomeAddress = "1 Crescent, Abuja", FatherName = "Mr. Obi", FatherPhone = "0803", Declaration = true,
+    };
+
+    [Fact]
+    public void The_form_is_editable_only_after_paying_and_before_submitting()
+    {
+        var unpaid = new AdmissionApplication { ReferenceNumber = "x", ParentName = "p", Phone = "1", Email = "e", ChildFirstName = "a", ChildLastName = "b" };
+        Assert.Equal("admission.form_locked", unpaid.SaveForm(Complete(), "a", "b", null)?.Code);
+
+        var app = Paid();
+        Assert.Null(app.SaveForm(new ApplicationForm { HomeAddress = "  draft  " }, " Ike ", "Obi", null));
+        Assert.Equal(("draft", "Ike"), (app.Form.HomeAddress, app.ChildFirstName));
+    }
+
+    [Fact]
+    public void Submitting_needs_the_essentials_a_parent_and_a_passport_photo()
+    {
+        var app = Paid();
+        app.SaveForm(Complete(), "Ike", "Obi", null);
+        Assert.Equal("childDateOfBirth", app.Submit(DateTimeOffset.UtcNow)?.Field);
+
+        app.SaveForm(Complete(), "Ike", "Obi", new DateOnly(2020, 1, 1));
+        Assert.Equal("documents", app.Submit(DateTimeOffset.UtcNow)?.Field);
+
+        app.Documents.Add(new ApplicationDocument { Kind = DocumentKind.PassportPhoto, FilePath = "a", ContentType = "image/jpeg" });
+        Assert.Null(app.Submit(DateTimeOffset.UtcNow));
+        Assert.Equal(ApplicationStatus.Submitted, app.Status);
+        Assert.Equal("admission.form_locked", app.SaveForm(Complete(), "Ike", "Obi", null)?.Code);
+    }
+
+    [Theory]
+    [InlineData(false, true, true, "fatherName")]
+    [InlineData(true, false, true, "homeAddress")]
+    [InlineData(true, true, false, "declaration")]
+    public void Missing_pieces_are_reported_by_field(bool parent, bool address, bool declaration, string field)
+    {
+        var form = new ApplicationForm
+        {
+            ChildSex = Maydel.Domain.People.Sex.Female, HomeAddress = address ? "x" : null, MotherName = parent ? "Mrs. A" : null,
+            MotherPhone = parent ? "0802" : null, Declaration = declaration,
+        };
+        Assert.Equal(field, form.Missing()?.Field);
+    }
+}

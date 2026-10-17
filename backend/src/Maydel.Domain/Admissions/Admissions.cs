@@ -1,4 +1,5 @@
 using Maydel.Domain.Common;
+using Maydel.Domain.People;
 
 namespace Maydel.Domain.Admissions;
 
@@ -59,7 +60,25 @@ public class AdmissionApplication : Entity
     /// <summary>Set when the application is converted into an enrolled student.</summary>
     public Guid? StudentId { get; set; }
 
+    /// <summary>The application form the family fills after paying (E11.5).</summary>
+    public ApplicationForm Form { get; set; } = new();
+    public DateTimeOffset? SubmittedAt { get; set; }
+    public List<ApplicationDocument> Documents { get; set; } = [];
+
     public string ChildName => $"{ChildFirstName} {ChildLastName}";
+
+    private static readonly DomainError FormLocked = new("admission.form_locked",
+        "The form can only be changed after paying for it and before submitting it.");
+
+    /// <summary>Saves the form as a draft (any fields may be blank until submission).</summary>
+    public DomainError? SaveForm(ApplicationForm form, string childFirstName, string childLastName, DateOnly? dateOfBirth)
+    {
+        if (Status != ApplicationStatus.FormPaid) return FormLocked;
+        if (string.IsNullOrWhiteSpace(childFirstName) || string.IsNullOrWhiteSpace(childLastName))
+            return new("admission.child_name", "Enter the child's first and last name.", "childFirstName");
+        (Form, ChildFirstName, ChildLastName, ChildDateOfBirth) = (form.Cleaned(), childFirstName.Trim(), childLastName.Trim(), dateOfBirth);
+        return null;
+    }
 
     /// <summary>Unlocks the form and opens the exam window (<paramref name="windowDays"/> days from <paramref name="today"/>).</summary>
     public DomainError? MarkFormPaid(FormPaymentMethod method, string? code, DateTimeOffset at, DateOnly today, int windowDays)
@@ -68,6 +87,95 @@ public class AdmissionApplication : Entity
         (Status, FormPaymentMethod, FormCode, FormPaidAt, ExamWindowEndsOn) = (ApplicationStatus.FormPaid, method, code, at, today.AddDays(windowDays));
         return null;
     }
+
+    public DomainError? CanChangeDocuments() => Status == ApplicationStatus.FormPaid ? null : FormLocked;
+
+    /// <summary>Submits the form: everything the school needs must be there (see <see cref="ApplicationForm.Missing"/>).</summary>
+    public DomainError? Submit(DateTimeOffset at)
+    {
+        if (Status != ApplicationStatus.FormPaid) return FormLocked;
+        if (ChildDateOfBirth is null) return new("admission.incomplete", "Enter the child's date of birth.", "childDateOfBirth");
+        if (Form.Missing() is { } missing) return missing;
+        if (Documents.All(d => d.Kind != DocumentKind.PassportPhoto))
+            return new("admission.incomplete", "Upload a recent passport photograph of the child.", "documents");
+        (Status, SubmittedAt) = (ApplicationStatus.Submitted, at);
+        return null;
+    }
+}
+
+/// <summary>The fields of the admission form (E11.5). Stored with the application; nullable until submission.</summary>
+public class ApplicationForm
+{
+    public string? ChildMiddleName { get; set; }
+    public Sex? ChildSex { get; set; }
+    public string? StateOfOrigin { get; set; }
+    public string? Lga { get; set; }
+    public string? Religion { get; set; }
+    public string? HomeAddress { get; set; }
+    public string? PreviousSchool { get; set; }
+    public string? PreviousClass { get; set; }
+    public string? MedicalNotes { get; set; }
+    public string? SpecialNeeds { get; set; }
+    public string? FatherName { get; set; }
+    public string? FatherPhone { get; set; }
+    public string? FatherEmail { get; set; }
+    public string? FatherOccupation { get; set; }
+    public string? MotherName { get; set; }
+    public string? MotherPhone { get; set; }
+    public string? MotherEmail { get; set; }
+    public string? MotherOccupation { get; set; }
+    public string? EmergencyContactName { get; set; }
+    public string? EmergencyContactPhone { get; set; }
+
+    /// <summary>"The information given is true…": required to submit.</summary>
+    public bool Declaration { get; set; }
+
+    /// <summary>The first thing still needed before the form can be submitted, as a field error; null when complete.</summary>
+    public DomainError? Missing()
+    {
+        if (ChildSex is null) return new("admission.incomplete", "Choose the child's sex.", "childSex");
+        if (string.IsNullOrWhiteSpace(HomeAddress)) return new("admission.incomplete", "Enter the home address.", "homeAddress");
+        var father = !string.IsNullOrWhiteSpace(FatherName) && !string.IsNullOrWhiteSpace(FatherPhone);
+        var mother = !string.IsNullOrWhiteSpace(MotherName) && !string.IsNullOrWhiteSpace(MotherPhone);
+        if (!father && !mother) return new("admission.incomplete", "Give at least one parent's name and phone number.", "fatherName");
+        if (!Declaration) return new("admission.incomplete", "Tick the declaration to confirm the information is correct.", "declaration");
+        return null;
+    }
+
+    public ApplicationForm Cleaned()
+    {
+        static string? C(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
+        return new ApplicationForm
+        {
+            ChildMiddleName = C(ChildMiddleName), ChildSex = ChildSex, StateOfOrigin = C(StateOfOrigin), Lga = C(Lga), Religion = C(Religion),
+            HomeAddress = C(HomeAddress), PreviousSchool = C(PreviousSchool), PreviousClass = C(PreviousClass), MedicalNotes = C(MedicalNotes),
+            SpecialNeeds = C(SpecialNeeds), FatherName = C(FatherName), FatherPhone = C(FatherPhone), FatherEmail = C(FatherEmail),
+            FatherOccupation = C(FatherOccupation), MotherName = C(MotherName), MotherPhone = C(MotherPhone), MotherEmail = C(MotherEmail),
+            MotherOccupation = C(MotherOccupation), EmergencyContactName = C(EmergencyContactName), EmergencyContactPhone = C(EmergencyContactPhone),
+            Declaration = Declaration,
+        };
+    }
+}
+
+public enum DocumentKind
+{
+    PassportPhoto,
+    BirthCertificate,
+    LastReportCard,
+    Other,
+}
+
+/// <summary>A private upload attached to an application (photo re-encoded; PDF signature-checked).</summary>
+public class ApplicationDocument
+{
+    public const int MaxPerApplication = 6;
+
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid ApplicationId { get; set; }
+    public DocumentKind Kind { get; set; }
+    public required string FilePath { get; set; }
+    public required string ContentType { get; set; }
+    public DateTimeOffset UploadedAt { get; set; }
 }
 
 /// <summary>Admissions for one session (E11.4): open or closed, the form fee and the exam window.</summary>

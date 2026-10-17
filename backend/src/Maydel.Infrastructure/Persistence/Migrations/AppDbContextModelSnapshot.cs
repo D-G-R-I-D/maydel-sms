@@ -473,6 +473,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("StudentId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2045,6 +2048,143 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Maydel.Domain.Admissions.ApplicationForm", "Form", b1 =>
+                        {
+                            b1.Property<Guid>("AdmissionApplicationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ChildMiddleName")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("ChildSex")
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)");
+
+                            b1.Property<bool>("Declaration")
+                                .HasColumnType("boolean");
+
+                            b1.Property<string>("EmergencyContactName")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("EmergencyContactPhone")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
+
+                            b1.Property<string>("FatherEmail")
+                                .HasMaxLength(254)
+                                .HasColumnType("character varying(254)");
+
+                            b1.Property<string>("FatherName")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("FatherOccupation")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("FatherPhone")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
+
+                            b1.Property<string>("HomeAddress")
+                                .HasMaxLength(300)
+                                .HasColumnType("character varying(300)");
+
+                            b1.Property<string>("Lga")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("MedicalNotes")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)");
+
+                            b1.Property<string>("MotherEmail")
+                                .HasMaxLength(254)
+                                .HasColumnType("character varying(254)");
+
+                            b1.Property<string>("MotherName")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("MotherOccupation")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("MotherPhone")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
+
+                            b1.Property<string>("PreviousClass")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("PreviousSchool")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("Religion")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<string>("SpecialNeeds")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)");
+
+                            b1.Property<string>("StateOfOrigin")
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.HasKey("AdmissionApplicationId");
+
+                            b1.ToTable("Applications");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AdmissionApplicationId");
+                        });
+
+                    b.OwnsMany("Maydel.Domain.Admissions.ApplicationDocument", "Documents", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("ApplicationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ContentType")
+                                .IsRequired()
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)");
+
+                            b1.Property<string>("FilePath")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<DateTimeOffset>("UploadedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("ApplicationId");
+
+                            b1.ToTable("ApplicationDocuments", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("ApplicationId");
+                        });
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("Form")
                         .IsRequired();
                 });
 

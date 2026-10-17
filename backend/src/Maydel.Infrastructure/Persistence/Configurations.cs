@@ -418,6 +418,33 @@ internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionAppl
         b.Ignore(x => x.ChildName);
         b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsOne(x => x.Form, f =>
+        {
+            f.Property(x => x.ChildSex).HasConversion<string>().HasMaxLength(8);
+            foreach (var name in new[] { nameof(ApplicationForm.ChildMiddleName), nameof(ApplicationForm.StateOfOrigin), nameof(ApplicationForm.Lga),
+                nameof(ApplicationForm.Religion), nameof(ApplicationForm.PreviousSchool), nameof(ApplicationForm.PreviousClass),
+                nameof(ApplicationForm.FatherName), nameof(ApplicationForm.FatherOccupation), nameof(ApplicationForm.MotherName),
+                nameof(ApplicationForm.MotherOccupation), nameof(ApplicationForm.EmergencyContactName) })
+                f.Property(name).HasMaxLength(120);
+            foreach (var name in new[] { nameof(ApplicationForm.FatherPhone), nameof(ApplicationForm.MotherPhone), nameof(ApplicationForm.EmergencyContactPhone) })
+                f.Property(name).HasMaxLength(30);
+            f.Property(x => x.FatherEmail).HasMaxLength(254);
+            f.Property(x => x.MotherEmail).HasMaxLength(254);
+            f.Property(x => x.HomeAddress).HasMaxLength(300);
+            f.Property(x => x.MedicalNotes).HasMaxLength(1000);
+            f.Property(x => x.SpecialNeeds).HasMaxLength(1000);
+        });
+        b.Navigation(x => x.Form).IsRequired();
+        b.OwnsMany(x => x.Documents, d =>
+        {
+            d.ToTable("ApplicationDocuments");
+            d.WithOwner().HasForeignKey(x => x.ApplicationId);
+            d.HasKey(x => x.Id);
+            d.Property(x => x.Id).ValueGeneratedNever();
+            d.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
+            d.Property(x => x.FilePath).HasMaxLength(200);
+            d.Property(x => x.ContentType).HasMaxLength(60);
+        });
     }
 }
 
