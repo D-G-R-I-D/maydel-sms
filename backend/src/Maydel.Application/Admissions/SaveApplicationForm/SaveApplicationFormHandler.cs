@@ -19,6 +19,6 @@ internal sealed class SaveApplicationFormHandler(IAppDbContext db, ICurrentUser 
             : application.SaveForm(b.Form ?? new(), b.ChildFirstName ?? "", b.ChildLastName ?? "", b.ChildDateOfBirth);
         if (invalid is not null) return invalid.ToError();
         await db.SaveChangesAsync(ct);
-        return (await db.DetailAsync(application.Id, ct))!;
+        return (await db.DetailAsync(application.Id, ct, c.AsAdmin))!;
     }
 }

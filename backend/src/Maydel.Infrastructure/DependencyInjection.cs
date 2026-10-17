@@ -84,6 +84,7 @@ public static class DependencyInjection
             _ => new Notifications.DisabledEmailSender(),
         });
         services.AddHostedService<Notifications.EmailOutboxWorker>();
+        services.AddHostedService<Admissions.AdmissionsWorker>();
 
         // E10.5 Paystack. Secret key from the environment only (Paystack__SecretKey).
         services.AddOptions<PaystackOptions>().BindConfiguration(PaystackOptions.Section);

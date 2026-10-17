@@ -10,14 +10,34 @@ public sealed record ClassLevelOption(Guid Id, string Name);
 public sealed record AdmissionsInfo(Guid SessionId, string Session, bool IsOpen, decimal FormFee, int ExamWindowDays, string? Instructions,
     IReadOnlyList<ClassLevelOption> ClassLevels);
 
-public sealed record AdmissionSettingsDto(Guid SessionId, string Session, bool IsOpen, decimal FormFee, int ExamWindowDays, string? Instructions);
+public sealed record AdmissionSettingsDto(Guid SessionId, string Session, bool IsOpen, decimal FormFee, int ExamWindowDays, string? Instructions, decimal? CutOffMark);
 
 /// <summary>An application as the family and staff see it. <c>ExamWindowEndsOn</c> is set once the form is paid for.</summary>
 public sealed record ApplicationDto(
     Guid Id, string ReferenceNumber, Guid SessionId, string Session, Guid ClassLevelId, string ClassLevel,
     string ParentName, string Phone, string Email, string ChildFirstName, string ChildLastName, DateOnly? ChildDateOfBirth,
     ApplicationStatus Status, decimal FormFee, FormPaymentMethod? FormPaymentMethod, DateTimeOffset? FormPaidAt, DateOnly? ExamWindowEndsOn,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt, ExamBooking? Exam);
+
+/// <summary>The family's booked exam sitting (null until booked).</summary>
+public sealed record ExamBooking(Guid SlotId, DateTimeOffset StartsAt, DateTimeOffset EndsAt, string Venue, ExamMode Mode);
+
+/// <summary>An exam sitting as staff manage it. Times are UTC instants; show them in Abuja time.</summary>
+public sealed record ExamSlotDto(Guid Id, Guid SessionId, DateTimeOffset StartsAt, int DurationMinutes, string Venue, ExamMode Mode, int Capacity, int Booked, string? Notes);
+
+/// <summary>A sitting a family can book: in their window, in the future, with seats left (their current one is flagged).</summary>
+public sealed record ExamSlotOption(Guid Id, DateTimeOffset StartsAt, DateTimeOffset EndsAt, string Venue, ExamMode Mode, int SeatsLeft, bool Booked);
+
+/// <summary>One applicant in a sitting (attendance sheet / score entry) or on the results lists.</summary>
+public sealed record ExamCandidate(Guid ApplicationId, string ReferenceNumber, string ChildName, string ClassLevel, ApplicationStatus Status,
+    decimal? Score, DateTimeOffset? StageOneNotifiedAt);
+
+/// <summary>
+/// The entrance exam results for a session (E11.7). <c>Passed</c>/<c>Failed</c> are worked out from the current cut-off on every read,
+/// so changing it changes the lists before anything is sent. Both are empty until a cut-off is set.
+/// </summary>
+public sealed record ExamResults(Guid SessionId, decimal? CutOffMark, IReadOnlyList<ExamCandidate> Taken, IReadOnlyList<ExamCandidate> Passed,
+    IReadOnlyList<ExamCandidate> Failed, int AwaitingScore, int Missed);
 
 /// <summary><c>Code</c> is shown once to the bursar to hand to the family; <c>Used</c> once redeemed.</summary>
 public sealed record FormCodeDto(Guid Id, string Code, Guid SessionId, decimal AmountPaid, string? IssuedTo, bool Used, string? UsedByReference, DateTimeOffset IssuedAt);
@@ -26,7 +46,7 @@ public sealed record ApplicationDocumentDto(Guid Id, Domain.Admissions.DocumentK
 
 /// <summary>An application with its form and documents (family's own, or staff).</summary>
 public sealed record ApplicationDetail(ApplicationDto Application, ApplicationForm Form, IReadOnlyList<ApplicationDocumentDto> Documents,
-    DateTimeOffset? SubmittedAt, bool CanEdit, IReadOnlyList<string> MissingToSubmit);
+    DateTimeOffset? SubmittedAt, bool CanEdit, IReadOnlyList<string> MissingToSubmit, decimal? ExamScore);
 
 /// <summary>The draft form: child's names and date of birth plus every form field.</summary>
 public sealed record SaveFormRequest(string ChildFirstName, string ChildLastName, DateOnly? ChildDateOfBirth, ApplicationForm Form);
@@ -45,6 +65,11 @@ public static class AdmissionErrors
     public static readonly Common.Error DocumentNotFound = Common.Error.NotFound("admission.document_not_found", "That document doesn't exist.");
     public static readonly Common.Error TooManyDocuments = Common.Error.Rule("admission.too_many_documents",
         $"Upload at most {ApplicationDocument.MaxPerApplication} documents. Remove one to add another.");
+    public static readonly Common.Error SlotNotFound = Common.Error.NotFound("exam_slot.not_found", "That exam time doesn't exist.");
+    public static readonly Common.Error SlotTaken = Common.Error.Conflict("exam_slot.busy", "Someone booked that exam time at the same moment. Please try again.");
+    public static readonly Common.Error SlotHasBookings = Common.Error.Rule("exam_slot.has_bookings",
+        "Applicants are booked for this exam time, so it can't be moved or deleted. Add another time instead.");
+    public static readonly Common.Error NoCutOff = Common.Error.Rule("admission.no_cut_off", "Set the cut-off mark first.");
     public static readonly Common.Error NotAwaitingPayment = Common.Error.Rule("admission.already_paid", "The admission form for this application is already paid for.");
 }
 
@@ -54,7 +79,7 @@ internal static class AdmissionQueries
     public static Task<AdmissionApplication?> MineAsync(this IAppDbContext db, Guid id, Guid? userId, CancellationToken ct) =>
         db.Applications.FirstOrDefaultAsync(a => a.Id == id && a.ApplicantUserId == userId, ct);
 
-    public static async Task<ApplicationDetail?> DetailAsync(this IAppDbContext db, Guid id, CancellationToken ct)
+    public static async Task<ApplicationDetail?> DetailAsync(this IAppDbContext db, Guid id, CancellationToken ct, bool asStaff = false)
     {
         var app = await db.Applications.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id, ct);
         if (app is null) return null;
@@ -64,7 +89,7 @@ internal static class AdmissionQueries
         if (app.Form.Missing() is { Field: { } field }) missing.Add(field);
         if (app.Documents.All(d => d.Kind != DocumentKind.PassportPhoto)) missing.Add("documents");
         return new ApplicationDetail(dto, app.Form, [.. app.Documents.OrderBy(d => d.UploadedAt).Select(d => new ApplicationDocumentDto(d.Id, d.Kind, d.ContentType, d.UploadedAt))],
-            app.SubmittedAt, app.Status == ApplicationStatus.FormPaid, missing);
+            app.SubmittedAt, app.Status == ApplicationStatus.FormPaid, missing, asStaff ? app.ExamScore : null);
     }
 
     public static IQueryable<ApplicationDto> Dtos(this IAppDbContext db, IQueryable<AdmissionApplication> applications) =>
@@ -73,7 +98,16 @@ internal static class AdmissionQueries
             .OrderByDescending(x => x.a.CreatedAt)
             .Select(x => new ApplicationDto(x.a.Id, x.a.ReferenceNumber, x.a.SessionId, x.s.Name, x.a.ClassLevelId, x.l.Name,
                 x.a.ParentName, x.a.Phone, x.a.Email, x.a.ChildFirstName, x.a.ChildLastName, x.a.ChildDateOfBirth,
-                x.a.Status, x.a.FormFee, x.a.FormPaymentMethod, x.a.FormPaidAt, x.a.ExamWindowEndsOn, x.a.CreatedAt));
+                x.a.Status, x.a.FormFee, x.a.FormPaymentMethod, x.a.FormPaidAt, x.a.ExamWindowEndsOn, x.a.CreatedAt,
+                db.ExamSlots.Where(s => s.Id == x.a.ExamSlotId)
+                    .Select(s => new ExamBooking(s.Id, s.StartsAt, s.StartsAt.AddMinutes(s.DurationMinutes), s.Venue, s.Mode)).FirstOrDefault()));
+
+    /// <summary>Applicants in a sitting or session, for staff lists.</summary>
+    public static IQueryable<ExamCandidate> Candidates(this IAppDbContext db, IQueryable<AdmissionApplication> applications) =>
+        applications.Join(db.ClassLevels, a => a.ClassLevelId, l => l.Id, (a, l) => new { a, l })
+            .OrderBy(x => x.a.ChildLastName).ThenBy(x => x.a.ChildFirstName)
+            .Select(x => new ExamCandidate(x.a.Id, x.a.ReferenceNumber, x.a.ChildFirstName + " " + x.a.ChildLastName, x.l.Name, x.a.Status,
+                x.a.ExamScore, x.a.StageOneNotifiedAt));
 
     /// <summary>"APP-2026-0007": numbered per session by its start year.</summary>
     public static async Task<string> NextReferenceAsync(this IAppDbContext db, Guid sessionId, CancellationToken ct)

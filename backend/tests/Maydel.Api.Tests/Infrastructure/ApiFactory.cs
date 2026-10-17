@@ -75,7 +75,7 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             services.AddSingleton<ISchoolClock>(Clock);
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Email);
-            foreach (var worker in services.Where(d => d.ImplementationType?.Name == "EmailOutboxWorker").ToList()) services.Remove(worker);
+            foreach (var worker in services.Where(d => d.ImplementationType?.Name is "EmailOutboxWorker" or "AdmissionsWorker").ToList()) services.Remove(worker);
         });
     }
 

@@ -142,3 +142,74 @@ public sealed class CorrectFormTests
         Assert.Equal("admission.closed_application", enrolled.CorrectForm(Complete(), "a", "b", new DateOnly(2020, 1, 1))?.Code);
     }
 }
+
+public sealed class EntranceExamTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 10, 15, 7, 0, 0, TimeSpan.Zero);
+
+    private static AdmissionApplication Submitted()
+    {
+        var a = new AdmissionApplication { ReferenceNumber = "APP-2026-0009", ParentName = "p", Phone = "1", Email = "e", ChildFirstName = "Tobi", ChildLastName = "Ade" };
+        a.MarkFormPaid(FormPaymentMethod.Online, null, Now, new DateOnly(2026, 10, 15), 5);
+        a.SaveForm(new ApplicationForm { ChildSex = Maydel.Domain.People.Sex.Male, HomeAddress = "x", FatherName = "f", FatherPhone = "1", Declaration = true }, "Tobi", "Ade", new DateOnly(2019, 1, 1));
+        a.Documents.Add(new ApplicationDocument { Kind = DocumentKind.PassportPhoto, FilePath = "a", ContentType = "image/jpeg" });
+        a.Submit(Now);
+        return a;
+    }
+
+    private static ExamSlot Slot(AdmissionApplication a, int day, int capacity = 2) => new()
+    {
+        SessionId = a.SessionId, Venue = "Hall A", Capacity = capacity, StartsAt = new DateTimeOffset(2026, 10, day, 9, 0, 0, TimeSpan.Zero),
+    };
+
+    [Fact]
+    public void Booking_needs_a_submitted_form_a_future_slot_inside_the_window_and_a_free_seat()
+    {
+        var paidOnly = new AdmissionApplication { ReferenceNumber = "x", ParentName = "p", Phone = "1", Email = "e", ChildFirstName = "a", ChildLastName = "b" };
+        paidOnly.MarkFormPaid(FormPaymentMethod.Online, null, Now, new DateOnly(2026, 10, 15), 5);
+        Assert.Equal("admission.submit_first", paidOnly.BookExam(Slot(paidOnly, 18), 0, null, Now)?.Code);
+
+        var app = Submitted();
+        Assert.Equal("admission.slot_past", app.BookExam(Slot(app, 14), 0, null, Now)?.Code);
+        Assert.Equal("admission.slot_outside_window", app.BookExam(Slot(app, 21), 0, null, Now)?.Code);
+        Assert.Equal("admission.slot_full", app.BookExam(Slot(app, 18), 2, null, Now)?.Code);
+        var slot = Slot(app, 20);
+        Assert.Null(app.BookExam(slot, 1, null, Now));
+        Assert.Equal((ApplicationStatus.ExamBooked, slot.Id), (app.Status, app.ExamSlotId));
+
+        // Moving is fine before the booked slot starts, not after.
+        Assert.Null(app.BookExam(Slot(app, 19), 0, slot.StartsAt, Now));
+        Assert.Equal("admission.exam_started", app.BookExam(Slot(app, 19), 0, Now.AddHours(-1), Now)?.Code);
+    }
+
+    [Fact]
+    public void Scores_absence_expiry_and_reopening()
+    {
+        var app = Submitted();
+        Assert.Equal("admission.not_booked", app.RecordScore(50, Now)?.Code);
+        Assert.False(app.ExpireIfOverdue(new DateTimeOffset(2026, 10, 20, 22, 0, 0, TimeSpan.Zero))); // 23:00 on the 20th in Abuja: still the last day
+        Assert.True(app.ExpireIfOverdue(new DateTimeOffset(2026, 10, 20, 23, 30, 0, TimeSpan.Zero)));
+        Assert.Equal(ApplicationStatus.Missed, app.Status);
+
+        Assert.Null(app.Reopen(new DateOnly(2026, 11, 2), 5));
+        Assert.Equal((ApplicationStatus.Submitted, new DateOnly(2026, 11, 7)), (app.Status, app.ExamWindowEndsOn));
+
+        var later = Now.AddDays(18);
+        Assert.Null(app.BookExam(new ExamSlot { SessionId = app.SessionId, Venue = "v", Capacity = 1, StartsAt = later.AddDays(1) }, 0, null, later));
+        Assert.Equal("score", app.RecordScore(100.5m, later)?.Field);
+        Assert.Null(app.RecordScore(72.5m, later));
+        Assert.Null(app.RecordScore(74, later));
+        Assert.Equal((ApplicationStatus.Assessed, 74m), (app.Status, app.ExamScore));
+        Assert.Equal("admission.not_booked", app.MarkAbsent(later)?.Code);
+    }
+
+    [Fact]
+    public void Exam_slots_must_be_in_the_future_with_sane_length_and_seats()
+    {
+        Assert.Equal("startsAt", ExamSlot.Check(Now, 60, 10, Now)?.Field);
+        Assert.Equal("durationMinutes", ExamSlot.Check(Now.AddDays(1), 5, 10, Now)?.Field);
+        Assert.Equal("capacity", ExamSlot.Check(Now.AddDays(1), 60, 0, Now)?.Field);
+        Assert.Null(ExamSlot.Check(Now.AddDays(1), 60, 10, Now));
+        Assert.Equal(new DateOnly(2026, 10, 16), new ExamSlot { Venue = "v", StartsAt = new DateTimeOffset(2026, 10, 15, 23, 30, 0, TimeSpan.Zero) }.Day);
+    }
+}
