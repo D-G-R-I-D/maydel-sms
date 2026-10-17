@@ -97,6 +97,17 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E7.5** Accessibility WCAG 2.2 AA: keyboard nav, focus states, contrast, alt text, reduced-motion. AC: axe has zero serious violations.
 - **E7.6** Light/dark theme respecting system preference.
 - **E7.7** Performance: images via `next/image` (AVIF/WebP, responsive), fonts self-hosted via `next/font`. AC: Lighthouse mobile ≥ 90.
+- **E7.8** *(added 2026-10-17)* **Main site + portal on one domain.** Public website on `www.<domain>`, the portal (staff console + parents/students) on `portal.<domain>`. One Next.js app, routing by host in middleware, so there's one deploy, shared design and one BFF. Auth cookies are scoped to the portal host only, and the public site never sees them. AC: `www` serves only public pages; `portal` serves sign-in and the app; canonical URLs and sitemaps per host; a "Portal" button on the website.
+- **E7.9** *(added 2026-10-17)* **Homepage highlights.**
+  - An auto-advancing carousel of featured news and gallery photos chosen in admin (right-to-left slide, about 6 s).
+  - Pauses on hover, focus or touch; swipe and arrow keys; visible dots; **no autoplay when the user prefers reduced motion**.
+  - Plus a slim scrolling news ticker for short notices.
+  - AC: keyboard-operable; doesn't shift layout; images optimised.
+- **E7.10** *(added 2026-10-17)* **Public notices envelope.**
+  - An envelope icon in the website header with a badge counting **unread** notices. Unread is stored per browser, so no account is needed.
+  - Notices marked *featured* pop up once as a dismissible message, with an optional call-to-action link (e.g. "Admission forms now on sale → Buy form").
+  - Admin sets title, body, link, start/end dates and audience *Public* (E12.1).
+  - AC: never blocks the page; Esc / ✕ closes it; it's shown at most once per visitor until edited.
 
 ## E8 — Legacy data migration
 - **E8.1** Export Firestore `students` + `adminActivity` (admin SDK script run by the school).
@@ -114,11 +125,49 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E10.3** 🟡 *API ✅ 2026-10-15 (cash/transfer/POS, RCT-{session}-{seq}, full payment unless instalments enabled, admin reversals as new entries, cancel, adjustments); invoice and receipt PDFs ✅ 2026-10-15.* Record manual payments (cash, transfer, POS) with receipt numbers. AC: cannot exceed balance; cannot pay a cancelled invoice; receipts immutable (reversal = new entry).
 - **E10.4** 🟡 *API ✅ 2026-10-15 (student statement with running balance, debtors with overdue-by-plan, CSV export); collections report pending.* Statements, debtors list, collections report by class/term; CSV export.
 - **E10.5** 🟡 *API ✅ 2026-10-17 (portal checkout, signed webhook + return-page confirmation recorded once, server-side re-verify of status/NGN/amount, excess and mismatch flagged for review); UI and live keys pending.* Online payment via Paystack: initialise → redirect → **webhook verified by signature** → payment recorded idempotently by gateway reference. AC: amount re-verified server-side via Paystack verify API; replayed webhooks ignored.
+- **E10.6** *(added 2026-10-17)* **New vs returning students.** A fee item applies to *All*, *New intake only* (e.g. acceptance fee, uniform pack, development levy) or *Returning only*. A student is "new" in the term they were admitted. Invoices show a "New intake" tag, and lists can filter by it. AC: generation bills each student only the items for their group; tested for both groups.
+- **E10.7** *(added 2026-10-17)* **Publish invoices and notify parents.**
+  - Generated invoices start as *Draft*: staff-only, editable, and they can be regenerated.
+  - **Publish** (per class level or all) makes them visible in the portal and queues an email to each guardian with the invoice PDF, a portal link, and "quote admission number MSS/…".
+  - AC: drafts are never visible to parents (tested); publishing again doesn't re-email.
+- **E10.8** *(added 2026-10-17)* **Proof of payment upload.**
+  - A parent who paid by bank transfer or at the bank uploads the teller or screenshot (image or PDF, private, re-encoded) against an invoice in the portal, with amount, date and bank reference. This replaces "reply to the email with the receipt".
+  - The bursar works a *To verify* queue: **Confirm** records the payment and issues an RCT receipt linked to the proof; **Reject** sends a reason to the parent.
+  - AC: the parent sees the status; nothing is recorded until confirmed; the proof stays attached to the receipt.
+- **E10.9** *(added 2026-10-17)* **Korapay as an alternative gateway.**
+  - Same `IPaymentGateway` abstraction as Paystack. Whichever provider has keys configured is offered; if both do, the admin picks the primary in Settings → Fees.
+  - Webhooks are verified per provider, and the same re-verify / record-once / NeedsReview rules apply.
+  - AC: switching provider needs no code change; references can't collide between providers.
 
 ## E11 — Admissions pipeline
 - **E11.1** Kanban/list of applications: New → Contacted → Assessment scheduled → Offered → Enrolled / Declined, notes, assigned staff.
 - **E11.2** Convert to student (pre-fills student + guardian). AC: application links to created student.
 - **E11.3 (S)** Email/SMS acknowledgement with reference number.
+- **E11.4** *(added 2026-10-17)* **Buy the admission form.**
+  - Online through the gateway (E10.5/E10.9), or at the school (the bursar issues a form code).
+  - Gives an application reference and an email with the receipt and a link to fill the form.
+  - AC: the form fee is configurable per session; one purchase = one application.
+- **E11.5** *(added 2026-10-17)* **Online application form** in the portal.
+  - Child and guardian details, previous school, documents (private uploads).
+  - Save as draft, submit, and **download/print as PDF** (blank before, completed after).
+  - AC: required fields validated; it can't be edited after submission except by admin.
+- **E11.6** *(added 2026-10-17)* **Entrance exam booking.**
+  - After buying the form, the applicant books a slot inside a window (admin-configurable, default **3–5 days** after purchase), from times the school opens.
+  - Reminder emails go out before the slot.
+  - When the window closes unbooked or unattended, the application is marked *Missed* and the school can reopen it.
+  - The exam runs as CBT (E16) or on paper, with scores entered by staff.
+  - AC: server time is the source of truth; slot capacity is respected.
+- **E11.7** *(added 2026-10-17)* **Results and cut-off.**
+  - Admin sets a **cut-off mark**, then sees lists of *took the exam*, *passed* and *failed*, with scores, plus CSV export.
+  - Passed applicants get a "you passed the first stage; the school will contact you about the next step" email.
+  - AC: changing the cut-off recomputes the lists before anything is sent.
+- **E11.8** *(added 2026-10-17)* **Offers and letters.**
+  - From the passed list, admin ticks who gets admission, then **publishes** the decisions.
+  - Offered applicants: an email with an **admission letter PDF** carrying the admission number and the **principal's uploaded signature** (E2.6), plus a short welcome guide: what's next, creating the parent account, paying fees online, seeing results.
+  - Not offered: a kind "better luck next time" email with no letter.
+  - Accepting the offer → **Enrol** (E11.2) creates the student, guardians and parent login, and bills new-intake fees (E10.6).
+  - AC: decisions are audited; letters are regenerated identically on reprint; no email is sent before publish.
+- **E11.9** *(added 2026-10-17)* **Stage emails** through the E12 outbox: form bought, form submitted, exam booked / reminder, result, offer or regret, enrolled. Sent from `admissions@<domain>`.
 
 ## E12 — Communication & notifications
 - **E12.1** Announcements with audience (public/parents/students/staff), pinning, scheduling.
@@ -127,6 +176,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E12.5** **Audience targeting** for announcements & emails: everyone, all parents, all staff, all teachers, a section (e.g. Primary), a class/arm, guardians of specific students, or debtors. AC: preview recipient count before sending; only recipients in the target receive it (tested); staff can only target their own class unless Admin.
 - **E12.6** **Newsletters**: compose (rich text + images) → choose audience (parents, staff, public subscribers from the website) → schedule or send → per-recipient tracking. Templates with school branding; unsubscribe link (required for public subscribers). AC: public subscribers confirm by email (double opt-in); unsubscribes honoured immediately.
 - **E12.4** Contact-form messages inbox in admin.
+- **E12.7** *(added 2026-10-17)* **Sender addresses on the school domain, per purpose:** `admissions@`, `accounts@` (invoices, receipts), `results@` (report cards), and `no-reply@` for the rest. Replies go to a monitored inbox. SPF/DKIM/DMARC are set up on the domain so mail isn't flagged as spam.
 
 ## E13 — Dashboards & analytics
 - **E13.1** Admin dashboard: enrolment by class/section, today's attendance %, fees billed vs collected (term), applications pipeline, recent activity.
@@ -147,6 +197,17 @@ Computer-based tests for students, with results flowing into the gradebook.
 - **E16.5** Push marks into the grade sheet (scaled to the component's max) with teacher confirmation. AC: never overwrites a published report.
 - **E16.6** Integrity: one active session per attempt, tab-switch/blur events logged, randomised order per student, results hidden until released. (Proctoring by camera is out of scope.)
 - **E16.7** Analytics: item difficulty, score distribution per class.
+- **E16.8** *(added 2026-10-17)* **AI-assisted question writing for teachers.**
+  - The teacher picks subject, class, term and assessment type (test / CAT / exam), then uploads the scheme of work, notes (PDF) or a photo of notes. Files are stored privately.
+  - They choose question kinds (objective, multi-select, true/false, short answer, theory), how many, and the difficulty mix.
+  - The AI (Claude, server-side) generates questions **only from the uploaded material and the chosen subject/class scope**, each with an answer key and, for theory, a marking guide.
+  - The teacher can **regenerate up to 5 times** per request, then accept any version, edit questions and options freely, or write their own.
+  - Saved questions go to the question bank (E16.1) and are published as a test/CAT/exam with an availability window (E16.2/E16.3).
+  - AC: no student data is ever sent to the AI; output is always reviewable and editable before students see it.
+- **E16.9** *(added 2026-10-17)* **Per-teacher AI quota.**
+  - Each teacher has their own monthly allowance (generations / tokens), set by admin, with a default that's equal for all. One teacher using theirs never reduces anyone else's.
+  - There's a school-wide cap and usage dashboard for admin.
+  - AC: a request over quota is refused with a clear message, and the remaining allowance is shown before generating.
 
 ## E15 — Later (phase 3, Could)
 Timetable builder; parent ↔ teacher messaging; homework/assignments; library; transport routes & GPS; staff payroll; multi-campus.
