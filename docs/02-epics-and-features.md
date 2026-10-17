@@ -125,8 +125,8 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E10.3** 🟡 *API ✅ 2026-10-15 (cash/transfer/POS, RCT-{session}-{seq}, full payment unless instalments enabled, admin reversals as new entries, cancel, adjustments); invoice and receipt PDFs ✅ 2026-10-15.* Record manual payments (cash, transfer, POS) with receipt numbers. AC: cannot exceed balance; cannot pay a cancelled invoice; receipts immutable (reversal = new entry).
 - **E10.4** 🟡 *API ✅ 2026-10-15 (student statement with running balance, debtors with overdue-by-plan, CSV export); collections report pending.* Statements, debtors list, collections report by class/term; CSV export.
 - **E10.5** 🟡 *API ✅ 2026-10-17 (portal checkout, signed webhook + return-page confirmation recorded once, server-side re-verify of status/NGN/amount, excess and mismatch flagged for review); UI and live keys pending.* Online payment via Paystack: initialise → redirect → **webhook verified by signature** → payment recorded idempotently by gateway reference. AC: amount re-verified server-side via Paystack verify API; replayed webhooks ignored.
-- **E10.6** *(added 2026-10-17)* **New vs returning students.** A fee item applies to *All*, *New intake only* (e.g. acceptance fee, uniform pack, development levy) or *Returning only*. A student is "new" in the term they were admitted. Invoices show a "New intake" tag, and lists can filter by it. AC: generation bills each student only the items for their group; tested for both groups.
-- **E10.7** *(added 2026-10-17)* **Publish invoices and notify parents.**
+- **E10.6** ✅ *API 2026-10-17.* **New vs returning students.** A fee item applies to *All*, *New intake only* (e.g. acceptance fee, uniform pack, books, development levy) or *Returning only*. Optional items are either **off by default** (only ticked students pay, e.g. bus) or **on by default** (everyone pays unless unticked, e.g. books, lunch); the admin or bursar picks per item. A student is "new" in the term they were admitted. Invoices show a "New intake" tag, and lists can filter by it. AC: generation bills each student only the items for their group; tested for both groups.
+- **E10.7** ✅ *API 2026-10-17.* **Publish invoices and notify parents.**
   - Generated invoices start as *Draft*: staff-only, editable, and they can be regenerated.
   - **Publish** (per class level or all) makes them visible in the portal and queues an email to each guardian with the invoice PDF, a portal link, and "quote admission number MSS/…".
   - AC: drafts are never visible to parents (tested); publishing again doesn't re-email.
@@ -190,7 +190,12 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 
 ## E16 — Online tests & exams (CBT)
 Computer-based tests for students, with results flowing into the gradebook.
-- **E16.1** Question bank per subject & class level: multiple choice, multi-select, true/false, short answer, essay (manual marking); images in questions; tags by topic & difficulty.
+- **E16.1** Question bank per subject & class level: multiple choice, multi-select, true/false, fill-in-the-gap, short answer, essay (manual marking); images in questions; tags by topic & difficulty.
+- **E16.2a** *(added 2026-10-17)* **Mixed sections and automatic mapping.**
+  - A test/exam is built from sections, e.g. 40 objective + 10 true/false + 10 fill-in-the-gap + 3 theory, each with its own marks per question and its own instructions.
+  - Objective, true/false and fill-in-the-gap are auto-marked; theory is teacher-marked against the marking guide.
+  - The total is **scaled automatically** to the assessment component it feeds (e.g. a 100-mark exam becomes /40 for "Exams" or /30 for "CAT") and goes into the grade sheet after the teacher confirms.
+  - AC: section totals and scaling are shown before publishing; rounding follows the report rules.
 - **E16.2** Create a test/exam: questions (fixed or random from bank), duration, open/close window, attempts, shuffle questions & options, linked to an assessment component (e.g. CAT or Exams) and term.
 - **E16.3** *As a student, I take the test in the portal* with a countdown timer; answers autosaved; resumes after a dropped connection within the window; auto-submits at time-out. AC: server is the source of truth for time; answers rejected after deadline.
 - **E16.4** Auto-marking for objective questions; teacher marking screen for essays; moderation before release.

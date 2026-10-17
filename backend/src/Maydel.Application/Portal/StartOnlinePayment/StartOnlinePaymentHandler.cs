@@ -16,7 +16,7 @@ internal sealed class StartOnlinePaymentHandler(
     public async Task<Result<OnlineCheckout>> Handle(StartOnlinePaymentCommand c, CancellationToken ct)
     {
         if (!await access.PortalStudents().AnyAsync(s => s.Id == c.StudentId, ct)) return PortalErrors.StudentNotFound;
-        var owned = await db.Invoices.AnyAsync(i => i.Id == c.InvoiceId && i.StudentId == c.StudentId && !i.IsCancelled, ct);
+        var owned = await db.Invoices.AnyAsync(i => i.Id == c.InvoiceId && i.StudentId == c.StudentId && !i.IsCancelled && i.PublishedAt != null, ct);
         if (!owned || await db.DetailAsync(c.InvoiceId, clock.Today, ct) is not { } invoice) return PortalErrors.InvoiceNotFound;
         if (!gateway.IsConfigured) return FinanceErrors.OnlineUnavailable;
         if (invoice.Balance <= 0) return FinanceErrors.NothingOwed;

@@ -119,6 +119,7 @@ public sealed class OnlinePaymentTests(PostgresFixture fixture)
             })).EnsureSuccessStatusCode();
         (await bursar.PostAsJsonAsync("/api/finance/fee-items", new { termId = term, name = "Tuition", amount = 100000, classLevelId = level, isMandatory = true })).EnsureSuccessStatusCode();
         (await bursar.PostAsJsonAsync("/api/finance/invoices/generate", new { termId = term, classLevelId = level })).EnsureSuccessStatusCode();
+        (await bursar.PostAsJsonAsync("/api/finance/invoices/publish", new { termId = term, classLevelId = level, notifyParents = false })).EnsureSuccessStatusCode();
         var invoice = (await bursar.GetFromJsonAsync<PagedResult<InvoiceSummary>>($"/api/finance/invoices?termId={term}&pageSize=200", Json.Options))!
             .Items.Single(i => i.StudentId == s.Students[0]).Id;
 

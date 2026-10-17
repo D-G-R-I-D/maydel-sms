@@ -11,6 +11,7 @@ using Maydel.Application.Finance.GetInvoicePdf;
 using Maydel.Application.Finance.GetReceiptPdf;
 using Maydel.Application.Finance.GetStatement;
 using Maydel.Application.Finance.ListOnlinePayments;
+using Maydel.Application.Finance.PublishInvoices;
 using Maydel.Application.Reports;
 using Maydel.Application.Finance.ListDebtors;
 using Maydel.Application.Finance.RecordPayment;
@@ -57,6 +58,7 @@ public static class FinanceEndpoints
         admin.MapPut("/instalment-plan", SavePlan).WithName("SaveInstalmentPlan").ProducesProblems(400, 401, 403, 404);
 
         finance.MapPost("/invoices/generate", Generate).WithName("GenerateInvoices").ProducesProblems(400, 401, 403, 404);
+        finance.MapPost("/invoices/publish", Publish).WithName("PublishInvoices").ProducesProblems(400, 401, 403, 404);
         finance.MapGet("/invoices", ListInvoices).WithName("ListInvoices").ProducesProblems(400, 401, 403);
         finance.MapGet("/invoices/{id:guid}", GetInvoice).WithName("GetInvoice").ProducesProblems(401, 403, 404);
         finance.MapGet("/invoices/{id:guid}/pdf", InvoicePdf).WithName("GetInvoicePdf")
@@ -138,13 +140,17 @@ public static class FinanceEndpoints
     private static async Task<Results<Ok<IReadOnlyList<FeeItemDto>>, ProblemHttpResult>> ListItems([AsParameters] ListFeeItemsQuery query, IQueryHandler<ListFeeItemsQuery, IReadOnlyList<FeeItemDto>> h, CancellationToken ct) =>
         (await h.Handle(query, ct)).ToHttpResult();
 
-    public sealed record CreateFeeItemRequest(Guid TermId, string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount);
+    public sealed record CreateFeeItemRequest(Guid TermId, string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount,
+        Domain.Finance.FeeAudience Audience = Domain.Finance.FeeAudience.All, bool ChargedByDefault = false);
+
+    private static async Task<Results<Ok<PublishInvoicesResult>, ProblemHttpResult>> Publish(PublishInvoicesCommand command, ICommandHandler<PublishInvoicesCommand, PublishInvoicesResult> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
 
     private static async Task<Results<Ok<FeeItemDto>, ProblemHttpResult>> CreateItem(CreateFeeItemRequest body, ICommandHandler<SaveFeeItemCommand, FeeItemDto> h, CancellationToken ct) =>
-        (await h.Handle(new SaveFeeItemCommand(null, body.TermId, new FeeItemInput(body.Name, body.Amount, body.ClassLevelId, body.IsMandatory, body.SiblingDiscount)), ct)).ToHttpResult();
+        (await h.Handle(new SaveFeeItemCommand(null, body.TermId, new FeeItemInput(body.Name, body.Amount, body.ClassLevelId, body.IsMandatory, body.SiblingDiscount, body.Audience, body.ChargedByDefault)), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<FeeItemDto>, ProblemHttpResult>> UpdateItem(Guid id, CreateFeeItemRequest body, ICommandHandler<SaveFeeItemCommand, FeeItemDto> h, CancellationToken ct) =>
-        (await h.Handle(new SaveFeeItemCommand(id, body.TermId, new FeeItemInput(body.Name, body.Amount, body.ClassLevelId, body.IsMandatory, body.SiblingDiscount)), ct)).ToHttpResult();
+        (await h.Handle(new SaveFeeItemCommand(id, body.TermId, new FeeItemInput(body.Name, body.Amount, body.ClassLevelId, body.IsMandatory, body.SiblingDiscount, body.Audience, body.ChargedByDefault)), ct)).ToHttpResult();
 
     private static async Task<Results<NoContent, ProblemHttpResult>> DeleteItem(Guid id, ICommandHandler<DeleteFeeItemCommand> h, CancellationToken ct) =>
         (await h.Handle(new DeleteFeeItemCommand(id), ct)).ToHttpResult();

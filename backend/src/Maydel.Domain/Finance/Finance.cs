@@ -38,7 +38,27 @@ public class FeeItem : Entity
     /// <summary>The sibling discount is calculated on these items (typically tuition).</summary>
     public bool SiblingDiscount { get; set; }
 
+    /// <summary>Who is billed: everyone, only students new this term (acceptance fee, uniform pack), or only returning ones.</summary>
+    public FeeAudience Audience { get; set; } = FeeAudience.All;
+
+    /// <summary>
+    /// For optional items: false = only students ticked pay it (bus); true = everyone pays it unless unticked (books, lunch).
+    /// <see cref="OptIns"/> then lists the exceptions: takers when off by default, non-takers when on by default.
+    /// </summary>
+    public bool ChargedByDefault { get; set; }
+
     public List<FeeOptIn> OptIns { get; set; } = [];
+
+    /// <summary>Whether this item is billed to the student (class level and new/returning are checked by the caller).</summary>
+    public bool Charges(Guid studentId) =>
+        IsMandatory || (ChargedByDefault ? OptIns.All(o => o.StudentId != studentId) : OptIns.Any(o => o.StudentId == studentId));
+}
+
+public enum FeeAudience
+{
+    All,
+    NewIntake,
+    Returning,
 }
 
 /// <summary>A student who takes an optional fee item (E10.1, per-student opt-in).</summary>
@@ -146,6 +166,20 @@ public static class FeeRules
         return amounts;
     }
 
+    /// <summary>
+    /// A student is "new intake" for a term when they were admitted during it or in the run-up to it (up to 120 days before
+    /// it starts, covering the summer admissions before September); otherwise they're returning (E10.6).
+    /// </summary>
+    public static bool IsNewIntake(DateOnly admittedOn, DateOnly termStarts, DateOnly termEnds) =>
+        admittedOn <= termEnds && admittedOn >= termStarts.AddDays(-120);
+
+    public static bool Applies(FeeAudience audience, bool newIntake) => audience switch
+    {
+        FeeAudience.NewIntake => newIntake,
+        FeeAudience.Returning => !newIntake,
+        _ => true,
+    };
+
     /// <summary>"2026/2027" and 7 → "INV-2026-2027-0007".</summary>
     public static string InvoiceNumber(string sessionName, int sequence) => $"INV-{sessionName.Replace('/', '-')}-{sequence:0000}";
 
@@ -189,6 +223,21 @@ public class Invoice : Entity
     public bool IsCancelled { get; set; }
     public DateTimeOffset? CancelledAt { get; set; }
     public string? CancelReason { get; set; }
+
+    /// <summary>Billed as a new-intake student this term (E10.6).</summary>
+    public bool NewIntake { get; set; }
+
+    /// <summary>Null while a draft: staff can check and fix it; parents only see published invoices (E10.7).</summary>
+    public DateTimeOffset? PublishedAt { get; set; }
+    public bool IsPublished => PublishedAt is not null;
+
+    /// <summary>Makes a draft visible to parents. False when it was already published or is cancelled, so nobody is notified twice.</summary>
+    public bool Publish(DateTimeOffset at)
+    {
+        if (IsCancelled || IsPublished) return false;
+        PublishedAt = at;
+        return true;
+    }
     public List<InvoiceLine> Lines { get; set; } = [];
     public List<Payment> Payments { get; set; } = [];
 

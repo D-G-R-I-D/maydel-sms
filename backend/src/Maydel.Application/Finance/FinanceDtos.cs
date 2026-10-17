@@ -8,11 +8,17 @@ namespace Maydel.Application.Finance;
 /// <summary>Sibling discount rule. Percentage: values are %; FixedAmount: values are naira. Child 1 (eldest) pays in full.</summary>
 public sealed record FeeSettingsDto(SiblingDiscountMode SiblingMode, decimal SecondChild, decimal ThirdAndLater);
 
-/// <summary><c>OptedIn</c>: students taking an optional item (always 0 for mandatory items).</summary>
+/// <summary>
+/// <c>ChargedByDefault</c> (optional items): everyone pays unless excluded. <c>OptedIn</c>: students ticked to take an
+/// off-by-default item; <c>OptedOut</c>: students excluded from an on-by-default item. Both 0 for mandatory items.
+/// </summary>
 public sealed record FeeItemDto(
-    Guid Id, Guid TermId, string Name, decimal Amount, Guid? ClassLevelId, string? ClassLevel, bool IsMandatory, bool SiblingDiscount, int OptedIn);
+    Guid Id, Guid TermId, string Name, decimal Amount, Guid? ClassLevelId, string? ClassLevel, bool IsMandatory, bool SiblingDiscount, int OptedIn,
+    FeeAudience Audience, bool ChargedByDefault, int OptedOut);
 
-public sealed record FeeItemInput(string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount);
+/// <summary><c>Audience</c> (default All): NewIntake for acceptance fee / uniform pack, Returning for re-registration.</summary>
+public sealed record FeeItemInput(
+    string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount, FeeAudience Audience = FeeAudience.All, bool ChargedByDefault = false);
 
 public sealed record OptInStudent(Guid StudentId, string AdmissionNumber, string Name, string? ClassRoom, bool OptedIn);
 
@@ -33,9 +39,13 @@ public sealed record InstalmentInput(decimal Percent, DateOnly DueOn);
 /// <summary><c>NoFees</c>: active students with nothing to bill (no fee items for their level).</summary>
 public sealed record GenerateInvoicesResult(int Created, int AlreadyInvoiced, int NoFees, decimal TotalBilled);
 
+/// <summary><c>IsPublished</c>: visible to parents (drafts are staff-only). <c>NewIntake</c>: billed as a new student this term.</summary>
 public sealed record InvoiceSummary(
     Guid Id, string Number, Guid StudentId, string AdmissionNumber, string StudentName, string? ClassRoom, Guid TermId, string Term,
-    decimal Total, decimal Paid, decimal Balance, InvoiceStatus Status, DateOnly? DueOn, DateTimeOffset IssuedAt);
+    decimal Total, decimal Paid, decimal Balance, InvoiceStatus Status, DateOnly? DueOn, DateTimeOffset IssuedAt, bool IsPublished, bool NewIntake);
+
+/// <summary><c>AlreadyPublished</c>: skipped because parents already have them (no second email).</summary>
+public sealed record PublishInvoicesResult(int Published, int AlreadyPublished, int EmailsQueued);
 
 public sealed record InvoiceLineDto(string Description, decimal Amount);
 
@@ -46,7 +56,8 @@ public sealed record InvoiceDetail(
     Guid Id, string Number, Guid StudentId, string AdmissionNumber, string StudentName, string? ClassRoom, Guid TermId, string Term, string Session,
     IReadOnlyList<InvoiceLineDto> Lines, decimal Total, decimal Paid, decimal Balance, InvoiceStatus Status, DateOnly? DueOn,
     IReadOnlyList<ScheduleItem> Schedule, DateTimeOffset IssuedAt,
-    IReadOnlyList<PaymentDto> Payments, bool InstalmentsAllowed, decimal DueNow, decimal Overdue, string? CancelReason, decimal MinimumPayment);
+    IReadOnlyList<PaymentDto> Payments, bool InstalmentsAllowed, decimal DueNow, decimal Overdue, string? CancelReason, decimal MinimumPayment,
+    bool IsPublished, DateTimeOffset? PublishedAt, bool NewIntake);
 
 /// <summary>
 /// A receipt or a reversal (negative amount, <c>ReversesReceipt</c> set). <c>ReversedBy</c>: the receipt number of the
@@ -119,5 +130,6 @@ internal static class FinanceQueries
     public static IQueryable<FeeItemDto> FeeItemDtos(this IQueryable<FeeItem> items) =>
         items.OrderBy(f => f.ClassLevelId == null ? 0 : 1).ThenBy(f => f.ClassLevel!.Order).ThenBy(f => !f.IsMandatory).ThenBy(f => f.Name)
             .Select(f => new FeeItemDto(f.Id, f.TermId, f.Name, f.Amount, f.ClassLevelId, f.ClassLevel != null ? f.ClassLevel.Name : null,
-                f.IsMandatory, f.SiblingDiscount, f.IsMandatory ? 0 : f.OptIns.Count));
+                f.IsMandatory, f.SiblingDiscount, f.IsMandatory || f.ChargedByDefault ? 0 : f.OptIns.Count, f.Audience, f.ChargedByDefault,
+                !f.IsMandatory && f.ChargedByDefault ? f.OptIns.Count : 0));
 }

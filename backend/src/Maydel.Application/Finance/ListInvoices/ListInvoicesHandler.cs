@@ -13,6 +13,8 @@ internal sealed class ListInvoicesHandler(IAppDbContext db) : IQueryHandler<List
         var invoices = db.Invoices.AsNoTracking();
         if (q.TermId is { } term) invoices = invoices.Where(i => i.TermId == term);
         if (q.ClassRoomId is { } room) invoices = invoices.Where(i => i.ClassRoomId == room);
+        if (q.Published is { } published) invoices = invoices.Where(i => (i.PublishedAt != null) == published);
+        if (q.NewIntake is { } intake) invoices = invoices.Where(i => i.NewIntake == intake);
         if (!string.IsNullOrWhiteSpace(q.Search))
         {
             var s = q.Search.Trim().ToLower();
@@ -26,6 +28,7 @@ internal sealed class ListInvoicesHandler(IAppDbContext db) : IQueryHandler<List
             Room = db.ClassRooms.Where(r => r.Id == i.ClassRoomId).Select(r => r.ClassLevel.Name + " " + r.Arm).FirstOrDefault(),
             i.TermId, Term = i.Term.Number.ToString() + " Term " + i.Term.Session.Name,
             Total = i.Lines.Sum(l => l.Amount), Paid = i.Payments.Sum(p => (decimal?)p.Amount) ?? 0, i.IsCancelled, i.DueOn, i.CreatedAt,
+            Published = i.PublishedAt != null, i.NewIntake,
         });
         rows = q.Status switch
         {
@@ -38,6 +41,6 @@ internal sealed class ListInvoicesHandler(IAppDbContext db) : IQueryHandler<List
         var page = await rows.OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.Number).ToPagedAsync(q.Page, q.PageSize, ct);
         return new PagedResult<InvoiceSummary>([.. page.Items.Select(r => new InvoiceSummary(
             r.Id, r.Number, r.StudentId, r.AdmissionNumber, r.Name, r.Room, r.TermId, r.Term, r.Total, r.Paid, r.Total - r.Paid,
-            Invoices.StatusOf(r.IsCancelled, r.Total, r.Paid), r.DueOn, r.CreatedAt))], page.Page, page.PageSize, page.TotalCount);
+            Invoices.StatusOf(r.IsCancelled, r.Total, r.Paid), r.DueOn, r.CreatedAt, r.Published, r.NewIntake))], page.Page, page.PageSize, page.TotalCount);
     }
 }

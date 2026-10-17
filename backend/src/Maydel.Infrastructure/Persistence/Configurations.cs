@@ -249,6 +249,7 @@ internal sealed class FeeItemConfig : IEntityTypeConfiguration<FeeItem>
     {
         b.Property(x => x.Name).HasMaxLength(80);
         b.Property(x => x.Amount).HasPrecision(14, 2);
+        b.Property(x => x.Audience).HasConversion<string>().HasMaxLength(16);
         b.HasIndex(x => x.TermId);
         b.HasOne(x => x.Term).WithMany().HasForeignKey(x => x.TermId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.ClassLevel).WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Cascade);
@@ -317,6 +318,7 @@ internal sealed class InvoiceConfig : IEntityTypeConfiguration<Invoice>
         b.HasIndex(x => new { x.TermId, x.ClassRoomId });
         b.Property(x => x.Number).HasMaxLength(40);
         b.Property(x => x.CancelReason).HasMaxLength(300);
+        b.Ignore(x => x.IsPublished);
         b.Ignore(x => x.Total);
         b.Ignore(x => x.AmountPaid);
         b.Ignore(x => x.Balance);

@@ -19,7 +19,7 @@ internal sealed class CopyFeeItemsHandler(IAppDbContext db) : ICommandHandler<Co
         db.FeeItems.AddRange(source.Select(f => new FeeItem
         {
             Name = f.Name, Amount = f.Amount, TermId = c.ToTermId, ClassLevelId = f.ClassLevelId, IsMandatory = f.IsMandatory,
-            SiblingDiscount = f.SiblingDiscount, OptIns = [.. f.OptIns.Select(o => new FeeOptIn { StudentId = o.StudentId })],
+            SiblingDiscount = f.SiblingDiscount, Audience = f.Audience, ChargedByDefault = f.ChargedByDefault, OptIns = [.. f.OptIns.Select(o => new FeeOptIn { StudentId = o.StudentId })],
         }));
         await db.SaveChangesAsync(ct);
         return await db.FeeItems.AsNoTracking().Where(f => f.TermId == c.ToTermId).FeeItemDtos().ToListAsync(ct);

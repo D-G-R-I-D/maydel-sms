@@ -12,7 +12,7 @@ namespace Maydel.Application.Notifications;
 /// is still published, so an unpublished draft can never be mailed. One email failing never stops the rest.
 /// </summary>
 public sealed class EmailDispatcher(
-    IAppDbContext db, IEmailSender sender, ReportBuilder reports, ReportPdfs pdfs, TimeProvider clock, ILogger<EmailDispatcher> logger)
+    IAppDbContext db, IEmailSender sender, ReportBuilder reports, ReportPdfs pdfs, Finance.FinanceDocuments finance, TimeProvider clock, ILogger<EmailDispatcher> logger)
 {
     public const int BatchSize = 10;
 
@@ -40,6 +40,19 @@ public sealed class EmailDispatcher(
                         continue;
                     }
                     attachments.Add(new EmailAttachment(ReportPdfs.FileName(card), "application/pdf", await pdfs.RenderAsync([card], ct)));
+                }
+                else if (email.Kind == EmailKind.InvoicePublished)
+                {
+                    // Only while the invoice is still live and published: a cancelled invoice is never mailed.
+                    var live = email.InvoiceId is { } invoiceId
+                        && await db.Invoices.AnyAsync(i => i.Id == invoiceId && !i.IsCancelled && i.PublishedAt != null, ct);
+                    if (!live || await finance.InvoiceAsync(email.InvoiceId!.Value, ct) is not { } pdf)
+                    {
+                        email.MarkSkipped("The invoice is no longer published.");
+                        await db.SaveChangesAsync(ct);
+                        continue;
+                    }
+                    attachments.Add(new EmailAttachment(pdf.FileName, "application/pdf", pdf.Content));
                 }
 
                 await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, email.Body, attachments), ct);

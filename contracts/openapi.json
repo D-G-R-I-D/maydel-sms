@@ -6856,6 +6856,76 @@
         }
       }
     },
+    "/api/finance/invoices/publish": {
+      "post": {
+        "tags": [
+          "Finance"
+        ],
+        "operationId": "PublishInvoices",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishInvoicesCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishInvoicesResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/finance/invoices": {
       "get": {
         "tags": [
@@ -6907,6 +6977,20 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "published",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "newIntake",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -8726,6 +8810,13 @@
           },
           "siblingDiscount": {
             "type": "boolean"
+          },
+          "audience": {
+            "$ref": "#/components/schemas/FeeAudience"
+          },
+          "chargedByDefault": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -8934,6 +9025,13 @@
           "Skipped"
         ]
       },
+      "FeeAudience": {
+        "enum": [
+          "All",
+          "NewIntake",
+          "Returning"
+        ]
+      },
       "FeeItemDto": {
         "required": [
           "id",
@@ -8944,7 +9042,10 @@
           "classLevel",
           "isMandatory",
           "siblingDiscount",
-          "optedIn"
+          "optedIn",
+          "audience",
+          "chargedByDefault",
+          "optedOut"
         ],
         "type": "object",
         "properties": {
@@ -8983,6 +9084,16 @@
             "type": "boolean"
           },
           "optedIn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audience": {
+            "$ref": "#/components/schemas/FeeAudience"
+          },
+          "chargedByDefault": {
+            "type": "boolean"
+          },
+          "optedOut": {
             "type": "integer",
             "format": "int32"
           }
@@ -9776,7 +9887,10 @@
           "dueNow",
           "overdue",
           "cancelReason",
-          "minimumPayment"
+          "minimumPayment",
+          "isPublished",
+          "publishedAt",
+          "newIntake"
         ],
         "type": "object",
         "properties": {
@@ -9877,6 +9991,19 @@
           "minimumPayment": {
             "type": "number",
             "format": "double"
+          },
+          "isPublished": {
+            "type": "boolean"
+          },
+          "publishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "newIntake": {
+            "type": "boolean"
           }
         }
       },
@@ -9919,7 +10046,9 @@
           "balance",
           "status",
           "dueOn",
-          "issuedAt"
+          "issuedAt",
+          "isPublished",
+          "newIntake"
         ],
         "type": "object",
         "properties": {
@@ -9978,6 +10107,12 @@
           "issuedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "isPublished": {
+            "type": "boolean"
+          },
+          "newIntake": {
+            "type": "boolean"
           }
         }
       },
@@ -10849,6 +10984,53 @@
               "null",
               "boolean"
             ]
+          }
+        }
+      },
+      "PublishInvoicesCommand": {
+        "required": [
+          "termId"
+        ],
+        "type": "object",
+        "properties": {
+          "termId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classLevelId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notifyParents": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "PublishInvoicesResult": {
+        "required": [
+          "published",
+          "alreadyPublished",
+          "emailsQueued"
+        ],
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyPublished": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "emailsQueued": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
