@@ -52,6 +52,30 @@ public sealed class ApplicationFormTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Only_an_admin_can_correct_a_submitted_form()
+    {
+        var (_, family, application) = await PaidApplicationAsync();
+        var admin = await Api.ClientAsync(Roles.Admin);
+        var corrected = new
+        {
+            childFirstName = "Chidiebere", childLastName = "Okonkwo", childDateOfBirth = "2019-04-05",
+            form = new { childSex = "Male", homeAddress = "7 New Road, Abuja", fatherName = "Mr. Okonkwo", fatherPhone = "08030001111", declaration = true },
+        };
+        await (await admin.PutAsJsonAsync($"/api/admissions/applications/{application}/correction", corrected)).AssertProblemAsync(HttpStatusCode.UnprocessableEntity, "admission.not_submitted");
+
+        await ReadAsync<ApplicationDetail>(await family.PutAsJsonAsync($"/api/admissions/applications/{application}/form", Body(declaration: true)));
+        await ReadAsync<ApplicationDetail>(await UploadAsync(family, application, "PassportPhoto", Jpeg()));
+        await ReadAsync<ApplicationDetail>(await family.PostAsync($"/api/admissions/applications/{application}/submit", null));
+
+        var detail = await ReadAsync<ApplicationDetail>(await admin.PutAsJsonAsync($"/api/admissions/applications/{application}/correction", corrected));
+        Assert.Equal(("7 New Road, Abuja", "Chidiebere", ApplicationStatus.Submitted), (detail.Form.HomeAddress, detail.Application.ChildFirstName, detail.Application.Status));
+
+        var bursar = await Api.ClientAsync(Roles.Bursar);
+        await (await bursar.PutAsJsonAsync($"/api/admissions/applications/{application}/correction", corrected)).AssertProblemAsync(HttpStatusCode.Forbidden);
+        await (await family.PutAsJsonAsync($"/api/admissions/applications/{application}/correction", corrected)).AssertProblemAsync(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task The_form_is_locked_before_payment_and_private_to_the_family()
     {
         var (session, level) = await OpenAsync();

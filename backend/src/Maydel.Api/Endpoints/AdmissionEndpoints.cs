@@ -70,6 +70,7 @@ public static class AdmissionEndpoints
         family.MapGet("/payments/{reference}", Payment).WithName("GetFormPayment").ProducesProblems(401, 403, 404);
 
         finance.MapGet("/settings", GetSettings).WithName("GetAdmissionSettings").ProducesProblems(400, 401, 403, 404);
+        admin.MapPut("/applications/{id:guid}/correction", CorrectForm).WithName("CorrectApplicationForm").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPut("/settings", SaveSettings).WithName("SaveAdmissionSettings").ProducesProblems(400, 401, 403, 404);
         finance.MapPost("/form-codes", IssueCodes).WithName("IssueFormCodes").ProducesProblems(400, 401, 403, 404);
         finance.MapGet("/form-codes", Codes).WithName("ListFormCodes").ProducesProblems(400, 401, 403);
@@ -98,6 +99,9 @@ public static class AdmissionEndpoints
 
     private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> StaffGet(Guid id, IQueryHandler<GetApplicationQuery, ApplicationDetail> h, CancellationToken ct) =>
         (await h.Handle(new GetApplicationQuery(id, AsStaff: true), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> CorrectForm(Guid id, SaveFormRequest body, ICommandHandler<SaveApplicationFormCommand, ApplicationDetail> h, CancellationToken ct) =>
+        (await h.Handle(new SaveApplicationFormCommand(id, body, AsAdmin: true), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> SaveForm(Guid id, SaveFormRequest body, ICommandHandler<SaveApplicationFormCommand, ApplicationDetail> h, CancellationToken ct) =>
         (await h.Handle(new SaveApplicationFormCommand(id, body), ct)).ToHttpResult();
