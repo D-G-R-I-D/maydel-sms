@@ -144,18 +144,13 @@ public static class FinanceEndpoints
     {
         var result = await h.Handle(query, ct);
         if (result.IsFailure) return result.Error!.ToProblem();
-        static string Cell(string? v)
-        {
-            v ??= "";
-            if (v.Length > 0 && "=+-@\t\r".Contains(v[0])) v = "'" + v;
-            return v.IndexOfAny([',', '"', '\n', '\r']) >= 0 ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
-        }
+        static string Cell(string? v) => Csv.Cell(v);
         static string Money(decimal d) => d.ToString("0.00", CultureInfo.InvariantCulture);
         var csv = new StringBuilder("Admission number,Student,Class,Invoice,Total,Paid,Balance,Due now,Overdue,Next due,Guardian,Guardian phone\r\n");
         foreach (var r in result.Value.Rows)
             csv.Append(string.Join(',', Cell(r.AdmissionNumber), Cell(r.Name), Cell(r.ClassRoom), Cell(r.InvoiceNumber), Money(r.Total), Money(r.Paid),
                 Money(r.Balance), Money(r.DueNow), Money(r.Overdue), r.NextDueOn?.ToString("yyyy-MM-dd") ?? "", Cell(r.Guardian), Cell(r.GuardianPhone))).Append("\r\n");
-        var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+        var bytes = Csv.Bytes(csv);
         return TypedResults.File(bytes, "text/csv", $"Debtors - {result.Value.Term.Replace('/', '-')}.csv");
     }
 

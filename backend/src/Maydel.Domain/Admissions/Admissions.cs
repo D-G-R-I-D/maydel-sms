@@ -1,3 +1,4 @@
+using Maydel.Domain.Attendance;
 using Maydel.Domain.Common;
 using Maydel.Domain.People;
 
@@ -65,7 +66,85 @@ public class AdmissionApplication : Entity
     public DateTimeOffset? SubmittedAt { get; set; }
     public List<ApplicationDocument> Documents { get; set; } = [];
 
+    // ---- Entrance exam (E11.6–7) ----
+    public Guid? ExamSlotId { get; set; }
+    public DateTimeOffset? ExamBookedAt { get; set; }
+    public DateTimeOffset? ExamReminderSentAt { get; set; }
+    public DateTimeOffset? MissedAt { get; set; }
+
+    /// <summary>The entrance exam score as a percentage (0–100).</summary>
+    public decimal? ExamScore { get; set; }
+    public DateTimeOffset? ScoredAt { get; set; }
+
+    /// <summary>When the "you passed the first stage" email was queued; each family is told once.</summary>
+    public DateTimeOffset? StageOneNotifiedAt { get; set; }
+
     public string ChildName => $"{ChildFirstName} {ChildLastName}";
+
+    /// <summary>
+    /// Books (or moves) the entrance exam into <paramref name="slot"/>: after submitting the form, inside the exam window, before
+    /// the slot starts and while it has seats. A booking can be moved until its own slot starts.
+    /// </summary>
+    public DomainError? BookExam(ExamSlot slot, int seatsTaken, DateTimeOffset? currentSlotStartsAt, DateTimeOffset now)
+    {
+        switch (Status)
+        {
+            case ApplicationStatus.FormPaid:
+                return new("admission.submit_first", "Submit the admission form first, then book the exam.");
+            case ApplicationStatus.Missed:
+                return new("admission.missed", "The exam window has closed. Contact the school to reopen it.");
+            case ApplicationStatus.ExamBooked when currentSlotStartsAt <= now:
+                return new("admission.exam_started", "Your exam has already started or taken place, so the booking can't be changed.");
+            case ApplicationStatus.Submitted or ApplicationStatus.ExamBooked:
+                break;
+            default:
+                return new("admission.exam_closed", "The entrance exam can't be booked at this stage.");
+        }
+        if (slot.SessionId != SessionId) return new("admission.slot_not_found", "That exam time isn't available.", "slotId");
+        if (slot.StartsAt <= now) return new("admission.slot_past", "That exam time has already passed. Choose another.", "slotId");
+        if (ExamWindowEndsOn is { } last && slot.Day > last)
+            return new("admission.slot_outside_window", $"Choose an exam time on or before {last:d MMMM yyyy}.", "slotId");
+        if (ExamSlotId != slot.Id && seatsTaken >= slot.Capacity) return new("admission.slot_full", "That exam time is full. Choose another.", "slotId");
+        (ExamSlotId, ExamBookedAt, ExamReminderSentAt, Status) = (slot.Id, now, null, ApplicationStatus.ExamBooked);
+        return null;
+    }
+
+    /// <summary>Staff enter the score (paper exam or CBT total) as a percentage; it can be corrected until offers are made.</summary>
+    public DomainError? RecordScore(decimal score, DateTimeOffset at)
+    {
+        if (Status is not (ApplicationStatus.ExamBooked or ApplicationStatus.Assessed))
+            return new("admission.not_booked", "Scores can only be entered for applicants booked for the exam.");
+        if (score is < 0 or > 100 || decimal.Round(score, 2) != score)
+            return new("admission.score", "Enter a score from 0 to 100 (at most 2 decimal places).", "score");
+        (ExamScore, ScoredAt, Status) = (score, at, ApplicationStatus.Assessed);
+        return null;
+    }
+
+    /// <summary>The applicant didn't turn up: Missed (the school can reopen it).</summary>
+    public DomainError? MarkAbsent(DateTimeOffset at)
+    {
+        if (Status != ApplicationStatus.ExamBooked) return new("admission.not_booked", "Only applicants booked for the exam can be marked absent.");
+        (Status, MissedAt) = (ApplicationStatus.Missed, at);
+        return null;
+    }
+
+    /// <summary>The window closed without a booking (form paid or submitted): Missed. Returns whether it changed.</summary>
+    public bool ExpireIfOverdue(DateTimeOffset now)
+    {
+        if (Status is not (ApplicationStatus.FormPaid or ApplicationStatus.Submitted) || ExamWindowEndsOn is not { } last) return false;
+        if (RegisterRules.TodayAt(now) <= last) return false;
+        (Status, MissedAt) = (ApplicationStatus.Missed, now);
+        return true;
+    }
+
+    /// <summary>The school gives a missed applicant a new window from today; the old booking and score are cleared.</summary>
+    public DomainError? Reopen(DateOnly today, int windowDays)
+    {
+        if (Status != ApplicationStatus.Missed) return new("admission.not_missed", "Only applications that missed the exam can be reopened.");
+        Status = SubmittedAt is null ? ApplicationStatus.FormPaid : ApplicationStatus.Submitted;
+        (ExamWindowEndsOn, ExamSlotId, ExamBookedAt, ExamReminderSentAt, MissedAt) = (today.AddDays(windowDays), null, null, null, null);
+        return null;
+    }
 
     private static readonly DomainError FormLocked = new("admission.form_locked",
         "The form can only be changed after paying for it and before submitting it.");
@@ -197,9 +276,49 @@ public class ApplicationDocument
     public DateTimeOffset UploadedAt { get; set; }
 }
 
+public enum ExamMode
+{
+    Paper,
+    /// <summary>Computer-based, at the school (E16).</summary>
+    Cbt,
+}
+
+/// <summary>A sitting of the entrance exam the school opens for booking (E11.6).</summary>
+public class ExamSlot : Entity
+{
+    public Guid SessionId { get; set; }
+
+    /// <summary>Stored in UTC; shown in Abuja time.</summary>
+    public DateTimeOffset StartsAt { get; set; }
+    public int DurationMinutes { get; set; } = 60;
+    public required string Venue { get; set; }
+    public ExamMode Mode { get; set; } = ExamMode.Paper;
+    public int Capacity { get; set; }
+    public string? Notes { get; set; }
+
+    /// <summary>Bumped on every booking so two families can't take the last seat at once (optimistic concurrency).</summary>
+    public int Version { get; set; }
+
+    public DateTimeOffset EndsAt => StartsAt.AddMinutes(DurationMinutes);
+
+    /// <summary>The calendar day of the sitting in Abuja.</summary>
+    public DateOnly Day => RegisterRules.TodayAt(StartsAt);
+
+    public static DomainError? Check(DateTimeOffset startsAt, int durationMinutes, int capacity, DateTimeOffset now)
+    {
+        if (startsAt <= now) return new("exam_slot.past", "Choose a time in the future.", "startsAt");
+        if (durationMinutes is < 15 or > 480) return new("exam_slot.duration", "The exam must last between 15 minutes and 8 hours.", "durationMinutes");
+        if (capacity is < 1 or > 1000) return new("exam_slot.capacity", "Seats must be between 1 and 1000.", "capacity");
+        return null;
+    }
+}
+
 /// <summary>Admissions for one session (E11.4): open or closed, the form fee and the exam window.</summary>
 public class AdmissionSettings : Entity
 {
+    /// <summary>The pass mark for the entrance exam (percentage); null until the admin sets it (E11.7).</summary>
+    public decimal? CutOffMark { get; set; }
+
     public Guid SessionId { get; set; }
     public bool IsOpen { get; set; }
     public decimal FormFee { get; set; }

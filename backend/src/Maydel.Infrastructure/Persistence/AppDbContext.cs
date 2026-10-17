@@ -54,6 +54,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<AdmissionApplication> Applications => Set<AdmissionApplication>();
     public DbSet<AdmissionSettings> AdmissionSettings => Set<AdmissionSettings>();
+    public DbSet<ExamSlot> ExamSlots => Set<ExamSlot>();
     public DbSet<FormCode> FormCodes => Set<FormCode>();
     public DbSet<FormPayment> FormPayments => Set<FormPayment>();
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();

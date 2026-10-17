@@ -151,13 +151,13 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
   - Child and guardian details, previous school, documents (private uploads).
   - Save as draft, submit, and **download/print as PDF** (blank before, completed after).
   - AC: required fields validated; it can't be edited after submission except by admin.
-- **E11.6** *(added 2026-10-17)* **Entrance exam booking.**
+- **E11.6** ✅ *API 2026-10-17 (sittings with seats, booking in the window, reminders, Missed sweep, absent, reopen, scores; CBT delivery waits for E16).* *(added 2026-10-17)* **Entrance exam booking.**
   - After buying the form, the applicant books a slot inside a window (admin-configurable, default **3–5 days** after purchase), from times the school opens.
   - Reminder emails go out before the slot.
   - When the window closes unbooked or unattended, the application is marked *Missed* and the school can reopen it.
   - The exam runs as CBT (E16) or on paper, with scores entered by staff.
   - AC: server time is the source of truth; slot capacity is respected.
-- **E11.7** *(added 2026-10-17)* **Results and cut-off.**
+- **E11.7** ✅ *API 2026-10-17 (cut-off, took/passed/failed lists, CSV, first-stage emails once each).* *(added 2026-10-17)* **Results and cut-off.**
   - Admin sets a **cut-off mark**, then sees lists of *took the exam*, *passed* and *failed*, with scores, plus CSV export.
   - Passed applicants get a "you passed the first stage; the school will contact you about the next step" email.
   - AC: changing the cut-off recomputes the lists before anything is sent.

@@ -56,6 +56,7 @@ public interface IAppDbContext
 
     DbSet<AdmissionApplication> Applications { get; }
     DbSet<AdmissionSettings> AdmissionSettings { get; }
+    DbSet<ExamSlot> ExamSlots { get; }
     DbSet<FormCode> FormCodes { get; }
     DbSet<FormPayment> FormPayments { get; }
     DbSet<ContactMessage> ContactMessages { get; }
@@ -72,6 +73,9 @@ public interface IAppDbContext
 public interface ISchoolClock
 {
     DateOnly Today { get; }
+
+    /// <summary>The current instant (UTC). Server time is the source of truth for exam bookings (E11.6).</summary>
+    DateTimeOffset Now { get; }
 }
 
 public interface ICurrentUser

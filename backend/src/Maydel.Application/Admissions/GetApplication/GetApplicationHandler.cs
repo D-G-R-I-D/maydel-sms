@@ -10,6 +10,6 @@ internal sealed class GetApplicationHandler(IAppDbContext db, ICurrentUser me) :
     public async Task<Result<ApplicationDetail>> Handle(GetApplicationQuery q, CancellationToken ct)
     {
         if (!q.AsStaff && !await db.Applications.AnyAsync(a => a.Id == q.Id && a.ApplicantUserId == me.UserId, ct)) return AdmissionErrors.ApplicationNotFound;
-        return await db.DetailAsync(q.Id, ct) is { } detail ? detail : AdmissionErrors.ApplicationNotFound;
+        return await db.DetailAsync(q.Id, ct, q.AsStaff) is { } detail ? detail : AdmissionErrors.ApplicationNotFound;
     }
 }

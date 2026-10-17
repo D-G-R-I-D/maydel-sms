@@ -416,6 +416,8 @@ internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionAppl
         b.Property(x => x.FormCode).HasMaxLength(9);
         b.Property(x => x.StaffNotes).HasMaxLength(4000);
         b.Ignore(x => x.ChildName);
+        b.Property(x => x.ExamScore).HasPrecision(5, 2);
+        b.HasOne<ExamSlot>().WithMany().HasForeignKey(x => x.ExamSlotId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);
         b.OwnsOne(x => x.Form, f =>
@@ -448,12 +450,28 @@ internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionAppl
     }
 }
 
+internal sealed class ExamSlotConfig : IEntityTypeConfiguration<ExamSlot>
+{
+    public void Configure(EntityTypeBuilder<ExamSlot> b)
+    {
+        b.HasIndex(x => new { x.SessionId, x.StartsAt });
+        b.Property(x => x.Venue).HasMaxLength(120);
+        b.Property(x => x.Notes).HasMaxLength(500);
+        b.Property(x => x.Mode).HasConversion<string>().HasMaxLength(10);
+        b.Property(x => x.Version).IsConcurrencyToken();
+        b.Ignore(x => x.EndsAt);
+        b.Ignore(x => x.Day);
+        b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal sealed class AdmissionSettingsConfig : IEntityTypeConfiguration<AdmissionSettings>
 {
     public void Configure(EntityTypeBuilder<AdmissionSettings> b)
     {
         b.HasIndex(x => x.SessionId).IsUnique();
         b.Property(x => x.FormFee).HasPrecision(14, 2);
+        b.Property(x => x.CutOffMark).HasPrecision(5, 2);
         b.Property(x => x.Instructions).HasMaxLength(2000);
         b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Cascade);
     }

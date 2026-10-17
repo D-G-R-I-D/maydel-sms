@@ -1,5 +1,19 @@
 using Maydel.Api.Common;
 using Maydel.Application.Admissions;
+using System.Globalization;
+using System.Text;
+using Maydel.Application.Admissions.BookExam;
+using Maydel.Application.Admissions.DeleteExamSlot;
+using Maydel.Application.Admissions.GetExamResults;
+using Maydel.Application.Admissions.ListBookableSlots;
+using Maydel.Application.Admissions.ListExamCandidates;
+using Maydel.Application.Admissions.ListExamSlots;
+using Maydel.Application.Admissions.MarkExamAbsent;
+using Maydel.Application.Admissions.NotifyStageOnePasses;
+using Maydel.Application.Admissions.RecordExamScore;
+using Maydel.Application.Admissions.ReopenApplication;
+using Maydel.Application.Admissions.SaveExamSlot;
+using Maydel.Application.Admissions.SetCutOff;
 using Maydel.Application.Admissions.GetAdmissionSettings;
 using Maydel.Application.Admissions.GetApplication;
 using Maydel.Application.Admissions.GetApplicationDocument;
@@ -42,6 +56,25 @@ public static class AdmissionEndpoints
         var family = app.MapGroup("/api/admissions").WithTags("Admissions").RequireAuthorization(Policies.Applicants);
         var finance = app.MapGroup("/api/admissions").WithTags("Admissions").RequireAuthorization(Policies.Finance);
         var admin = app.MapGroup("/api/admissions").WithTags("Admissions").RequireAuthorization(Policies.Admin);
+        var staff = app.MapGroup("/api/admissions").WithTags("Admissions").RequireAuthorization(Policies.Staff);
+        var academic = app.MapGroup("/api/admissions").WithTags("Admissions").RequireAuthorization(Policies.Academic);
+
+        // Entrance exam (E11.6–7)
+        family.MapGet("/applications/{id:guid}/exam-slots", BookableSlots).WithName("ListBookableExamSlots").ProducesProblems(401, 403, 404);
+        family.MapPost("/applications/{id:guid}/book-exam", Book).WithName("BookExam").ProducesProblems(400, 401, 403, 404, 409, 422);
+        staff.MapGet("/exam-slots", Slots).WithName("ListExamSlots").ProducesProblems(401, 403);
+        staff.MapGet("/exam-slots/{id:guid}/candidates", Candidates).WithName("ListExamCandidates").ProducesProblems(401, 403, 404);
+        admin.MapPost("/exam-slots", CreateSlot).WithName("CreateExamSlot").ProducesProblems(400, 401, 403, 404);
+        admin.MapPut("/exam-slots/{id:guid}", UpdateSlot).WithName("UpdateExamSlot").ProducesProblems(400, 401, 403, 404, 422);
+        admin.MapDelete("/exam-slots/{id:guid}", DeleteSlot).WithName("DeleteExamSlot").ProducesProblems(401, 403, 404, 422);
+        academic.MapPut("/applications/{id:guid}/exam-score", Score).WithName("RecordExamScore").ProducesProblems(400, 401, 403, 404, 422);
+        academic.MapPost("/applications/{id:guid}/absent", Absent).WithName("MarkExamAbsent").ProducesProblems(401, 403, 404, 422);
+        admin.MapPost("/applications/{id:guid}/reopen", Reopen).WithName("ReopenApplication").ProducesProblems(401, 403, 404, 422);
+        admin.MapGet("/results", Results).WithName("GetExamResults").ProducesProblems(401, 403, 404);
+        admin.MapGet("/results.csv", ResultsCsv).WithName("ExportExamResultsCsv")
+            .Produces(StatusCodes.Status200OK, contentType: "text/csv").ProducesProblems(401, 403, 404);
+        admin.MapPut("/results/cut-off", CutOff).WithName("SetExamCutOff").ProducesProblems(400, 401, 403, 404);
+        admin.MapPost("/results/notify-passed", NotifyPassed).WithName("NotifyStageOnePasses").ProducesProblems(401, 403, 404, 422);
 
         open.MapGet("", Info).WithName("GetAdmissionsInfo");
         // Sign-ups create accounts: rate-limited per IP like the other public forms.
@@ -90,6 +123,61 @@ public static class AdmissionEndpoints
         (await h.Handle(new StartApplicationCommand(body), ct)).ToHttpResult();
 
     public sealed record CodeRequest(string Code);
+    public sealed record BookRequest(Guid SlotId);
+    public sealed record SlotRequest(Guid SessionId, DateTimeOffset StartsAt, int DurationMinutes, string Venue, ExamMode Mode, int Capacity, string? Notes);
+    public sealed record ScoreRequest(decimal Score);
+
+    private static async Task<Results<Ok<IReadOnlyList<ExamSlotOption>>, ProblemHttpResult>> BookableSlots(Guid id, IQueryHandler<ListBookableSlotsQuery, IReadOnlyList<ExamSlotOption>> h, CancellationToken ct) =>
+        (await h.Handle(new ListBookableSlotsQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> Book(Guid id, BookRequest body, ICommandHandler<BookExamCommand, ApplicationDetail> h, CancellationToken ct) =>
+        (await h.Handle(new BookExamCommand(id, body.SlotId), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<IReadOnlyList<ExamSlotDto>>, ProblemHttpResult>> Slots(Guid sessionId, IQueryHandler<ListExamSlotsQuery, IReadOnlyList<ExamSlotDto>> h, CancellationToken ct) =>
+        (await h.Handle(new ListExamSlotsQuery(sessionId), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<IReadOnlyList<ExamCandidate>>, ProblemHttpResult>> Candidates(Guid id, IQueryHandler<ListExamCandidatesQuery, IReadOnlyList<ExamCandidate>> h, CancellationToken ct) =>
+        (await h.Handle(new ListExamCandidatesQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ExamSlotDto>, ProblemHttpResult>> CreateSlot(SlotRequest b, ICommandHandler<SaveExamSlotCommand, ExamSlotDto> h, CancellationToken ct) =>
+        (await h.Handle(new SaveExamSlotCommand(null, b.SessionId, b.StartsAt, b.DurationMinutes, b.Venue, b.Mode, b.Capacity, b.Notes), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ExamSlotDto>, ProblemHttpResult>> UpdateSlot(Guid id, SlotRequest b, ICommandHandler<SaveExamSlotCommand, ExamSlotDto> h, CancellationToken ct) =>
+        (await h.Handle(new SaveExamSlotCommand(id, b.SessionId, b.StartsAt, b.DurationMinutes, b.Venue, b.Mode, b.Capacity, b.Notes), ct)).ToHttpResult();
+
+    private static async Task<Results<NoContent, ProblemHttpResult>> DeleteSlot(Guid id, ICommandHandler<DeleteExamSlotCommand> h, CancellationToken ct) =>
+        (await h.Handle(new DeleteExamSlotCommand(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ExamCandidate>, ProblemHttpResult>> Score(Guid id, ScoreRequest body, ICommandHandler<RecordExamScoreCommand, ExamCandidate> h, CancellationToken ct) =>
+        (await h.Handle(new RecordExamScoreCommand(id, body.Score), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ExamCandidate>, ProblemHttpResult>> Absent(Guid id, ICommandHandler<MarkExamAbsentCommand, ExamCandidate> h, CancellationToken ct) =>
+        (await h.Handle(new MarkExamAbsentCommand(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> Reopen(Guid id, ICommandHandler<ReopenApplicationCommand, ApplicationDetail> h, CancellationToken ct) =>
+        (await h.Handle(new ReopenApplicationCommand(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ExamResults>, ProblemHttpResult>> Results([AsParameters] GetExamResultsQuery query, IQueryHandler<GetExamResultsQuery, ExamResults> h, CancellationToken ct) =>
+        (await h.Handle(query, ct)).ToHttpResult();
+
+    /// <summary>Everyone who took the exam, best first, with Passed/Failed from the current cut-off.</summary>
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> ResultsCsv([AsParameters] GetExamResultsQuery query, IQueryHandler<GetExamResultsQuery, ExamResults> h, CancellationToken ct)
+    {
+        var result = await h.Handle(query, ct);
+        if (result.IsFailure) return result.Error!.ToProblem();
+        var r = result.Value;
+        var csv = new StringBuilder("Reference,Child,Class,Score,Result,Status,First-stage email\r\n");
+        foreach (var c in r.Taken)
+            csv.Append(string.Join(',', Csv.Cell(c.ReferenceNumber), Csv.Cell(c.ChildName), Csv.Cell(c.ClassLevel), c.Score?.ToString("0.##", CultureInfo.InvariantCulture) ?? "",
+                r.CutOffMark is { } mark ? (c.Score >= mark ? "Passed" : "Failed") : "", c.Status.ToString(), c.StageOneNotifiedAt?.ToString("yyyy-MM-dd") ?? "")).Append("\r\n");
+        return TypedResults.File(Csv.Bytes(csv), "text/csv", "Entrance exam results.csv");
+    }
+
+    private static async Task<Results<Ok<ExamResults>, ProblemHttpResult>> CutOff(SetCutOffCommand command, ICommandHandler<SetCutOffCommand, ExamResults> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<NotifyResult>, ProblemHttpResult>> NotifyPassed(NotifyStageOnePassesCommand command, ICommandHandler<NotifyStageOnePassesCommand, NotifyResult> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
 
     private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> BlankForm(Guid sessionId, IQueryHandler<GetApplicationFormPdfQuery, PdfFile> h, CancellationToken ct) =>
         FinanceEndpoints.Pdf(await h.Handle(new GetApplicationFormPdfQuery(null, sessionId), ct));

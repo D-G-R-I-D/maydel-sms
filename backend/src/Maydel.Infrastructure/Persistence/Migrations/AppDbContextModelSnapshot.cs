@@ -425,6 +425,19 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
 
+                    b.Property<DateTimeOffset?>("ExamBookedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExamReminderSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("ExamScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<Guid?>("ExamSlotId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateOnly?>("ExamWindowEndsOn")
                         .HasColumnType("date");
 
@@ -443,6 +456,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<DateTimeOffset?>("MissedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ParentName")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -458,12 +474,18 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<DateTimeOffset?>("ScoredAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("StaffNotes")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTimeOffset?>("StageOneNotifiedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -485,6 +507,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ClassLevelId");
 
+                    b.HasIndex("ExamSlotId");
+
                     b.HasIndex("ReferenceNumber")
                         .IsUnique();
 
@@ -500,6 +524,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("CutOffMark")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<int>("ExamWindowDays")
                         .HasColumnType("integer");
@@ -567,6 +595,54 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ContactMessages");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Admissions.ExamSlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Venue")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId", "StartsAt");
+
+                    b.ToTable("ExamSlots");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Admissions.FormCode", b =>
@@ -2044,6 +2120,11 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Maydel.Domain.Admissions.ExamSlot", null)
+                        .WithMany()
+                        .HasForeignKey("ExamSlotId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Maydel.Domain.Academics.AcademicSession", null)
                         .WithMany()
                         .HasForeignKey("SessionId")
@@ -2194,6 +2275,15 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Admissions.ExamSlot", b =>
+                {
+                    b.HasOne("Maydel.Domain.Academics.AcademicSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
