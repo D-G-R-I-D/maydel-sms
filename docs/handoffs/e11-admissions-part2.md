@@ -33,6 +33,7 @@
 | `GET /api/admissions/applications/{id}/detail` | Admin, Bursar | `ApplicationDetail` | 404 |
 | `GET /api/admissions/applications/{id}/documents/{documentId}/download` | Admin, Bursar | file download | 404 |
 | `GET /api/admissions/applications/{id}/form-pdf` | Admin, Bursar | PDF | 404 |
+| `PUT /api/admissions/applications/{id}/correction` | **Admin** | `SaveFormRequest` → `ApplicationDetail` | 400 (first missing field: the form must stay complete); 404; 422 `admission.not_submitted` (family can still edit it) / `admission.closed_application` (enrolled or withdrawn) |
 
 ```ts
 type ApplicationForm = { childMiddleName; childSex: "Female" | "Male" | null; stateOfOrigin; lga; religion; homeAddress; previousSchool;
@@ -54,4 +55,5 @@ type ApplicationDetail = { application: ApplicationDto; form: ApplicationForm;
    - **Preview PDF** is available any time.
 2. **Public apply page:** a "Download blank form (PDF)" link per open session.
 3. **Staff Admissions → Applications → detail:** read-only form, documents (download), and **Form PDF**.
-4. **Not yet:** an admin edit after submission (E11.5 AC). Exam booking and scores come in part 3.
+   - **Admin only:** an **Edit** button once the application is submitted (hidden for `AwaitingPayment`, `FormPaid`, `Enrolled` and `Withdrawn`). It opens the same form, prefilled, and saves to `PUT …/correction`. Changes are audited automatically. Documents can't be changed here.
+4. Exam booking and scores come in part 3.

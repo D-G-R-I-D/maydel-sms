@@ -101,3 +101,44 @@ public sealed class ApplicationFormTests
         Assert.Equal(field, form.Missing()?.Field);
     }
 }
+
+public sealed class CorrectFormTests
+{
+    private static AdmissionApplication Submitted()
+    {
+        var a = new AdmissionApplication { ReferenceNumber = "APP-2026-0003", ParentName = "p", Phone = "1", Email = "e", ChildFirstName = "Ada", ChildLastName = "Eze" };
+        a.MarkFormPaid(FormPaymentMethod.Online, null, DateTimeOffset.UtcNow, new DateOnly(2026, 10, 15), 5);
+        a.SaveForm(Complete(), "Ada", "Eze", new DateOnly(2020, 2, 2));
+        a.Documents.Add(new ApplicationDocument { Kind = DocumentKind.PassportPhoto, FilePath = "a", ContentType = "image/jpeg" });
+        Assert.Null(a.Submit(DateTimeOffset.UtcNow));
+        return a;
+    }
+
+    private static ApplicationForm Complete() => new()
+    {
+        ChildSex = Maydel.Domain.People.Sex.Female, HomeAddress = "2 Close, Abuja", MotherName = "Mrs. Eze", MotherPhone = "0802", Declaration = true,
+    };
+
+    [Fact]
+    public void An_admin_can_correct_a_submitted_form_but_it_must_stay_complete()
+    {
+        var app = Submitted();
+        var fixedForm = Complete();
+        fixedForm.HomeAddress = "5 New Road, Abuja";
+        Assert.Null(app.CorrectForm(fixedForm, "Adaeze", "Eze", new DateOnly(2020, 2, 3)));
+        Assert.Equal(("5 New Road, Abuja", "Adaeze", ApplicationStatus.Submitted), (app.Form.HomeAddress, app.ChildFirstName, app.Status));
+
+        Assert.Equal("homeAddress", app.CorrectForm(new ApplicationForm { ChildSex = Maydel.Domain.People.Sex.Female, Declaration = true }, "A", "E", new DateOnly(2020, 1, 1))?.Field);
+        Assert.Equal("childDateOfBirth", app.CorrectForm(Complete(), "A", "E", null)?.Field);
+    }
+
+    [Fact]
+    public void Drafts_and_closed_applications_cannot_be_corrected()
+    {
+        var draft = new AdmissionApplication { ReferenceNumber = "x", ParentName = "p", Phone = "1", Email = "e", ChildFirstName = "a", ChildLastName = "b" };
+        Assert.Equal("admission.not_submitted", draft.CorrectForm(Complete(), "a", "b", new DateOnly(2020, 1, 1))?.Code);
+        var enrolled = Submitted();
+        enrolled.Status = ApplicationStatus.Enrolled;
+        Assert.Equal("admission.closed_application", enrolled.CorrectForm(Complete(), "a", "b", new DateOnly(2020, 1, 1))?.Code);
+    }
+}

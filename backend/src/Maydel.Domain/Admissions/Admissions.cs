@@ -80,6 +80,25 @@ public class AdmissionApplication : Entity
         return null;
     }
 
+    /// <summary>
+    /// An admin corrects a submitted form (E11.5 AC). Allowed from submission until the child is enrolled; the form must stay complete.
+    /// Changes are audited automatically.
+    /// </summary>
+    public DomainError? CorrectForm(ApplicationForm form, string childFirstName, string childLastName, DateOnly? dateOfBirth)
+    {
+        if (Status is ApplicationStatus.AwaitingPayment or ApplicationStatus.FormPaid)
+            return new("admission.not_submitted", "This form hasn't been submitted yet. The family can still change it themselves.");
+        if (Status is ApplicationStatus.Enrolled or ApplicationStatus.Withdrawn)
+            return new("admission.closed_application", "This application is closed. Change the student's record instead.");
+        if (string.IsNullOrWhiteSpace(childFirstName) || string.IsNullOrWhiteSpace(childLastName))
+            return new("admission.child_name", "Enter the child's first and last name.", "childFirstName");
+        if (dateOfBirth is null) return new("admission.incomplete", "Enter the child's date of birth.", "childDateOfBirth");
+        var cleaned = form.Cleaned();
+        if (cleaned.Missing() is { } missing) return missing;
+        (Form, ChildFirstName, ChildLastName, ChildDateOfBirth) = (cleaned, childFirstName.Trim(), childLastName.Trim(), dateOfBirth);
+        return null;
+    }
+
     /// <summary>Unlocks the form and opens the exam window (<paramref name="windowDays"/> days from <paramref name="today"/>).</summary>
     public DomainError? MarkFormPaid(FormPaymentMethod method, string? code, DateTimeOffset at, DateOnly today, int windowDays)
     {
