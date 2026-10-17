@@ -48,12 +48,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     );
   }
   if (!GUID.test(id)) notFound();
-  const [invoice, allProofs] = await Promise.all([
+  const [invoice, invoiceProofs] = await Promise.all([
     load((api) => api.GET("/api/finance/invoices/{id}", { params: { path: { id } } })),
-    // Proofs of bank payment for this invoice (E10.8). The list can't filter by invoice yet, so take recent ones.
-    load((api) => api.GET("/api/finance/proofs", { params: { query: { all: true, page: 1, pageSize: 100 } } })),
+    // Proofs of bank payment for this invoice, every status (E10.8).
+    load((api) => api.GET("/api/finance/proofs", { params: { query: { invoiceId: id, page: 1, pageSize: 50 } } })),
   ]);
-  const proofs = allProofs.ok ? allProofs.data.items.filter((p) => p.invoiceId === id) : [];
+  const proofs = invoiceProofs.ok ? invoiceProofs.data.items : [];
   if (!invoice.ok) {
     if (invoice.problem.status === 404) notFound();
     return (
