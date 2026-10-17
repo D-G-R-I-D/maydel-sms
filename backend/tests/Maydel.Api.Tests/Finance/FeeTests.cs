@@ -204,8 +204,14 @@ public sealed class FeeTests(PostgresFixture fixture)
 
     private static async Task<InvoiceDetail> InvoiceForAsync(HttpClient client, Guid term, Guid studentId)
     {
-        var page = (await client.GetFromJsonAsync<PagedResult<InvoiceSummary>>($"/api/finance/invoices?termId={term}&pageSize=100", Json.Options))!;
-        var summary = page.Items.Single(i => i.StudentId == studentId);
+        // Generation bills every student in the (shared) class level, so a full suite run can put more than a page in the term.
+        InvoiceSummary? summary = null;
+        for (var number = 1; summary is null; number++)
+        {
+            var page = (await client.GetFromJsonAsync<PagedResult<InvoiceSummary>>($"/api/finance/invoices?termId={term}&pageSize=100&page={number}", Json.Options))!;
+            summary = page.Items.SingleOrDefault(i => i.StudentId == studentId);
+            if (summary is null && page.Items.Count < 100) throw new InvalidOperationException($"No invoice for student {studentId} in term {term}.");
+        }
         return (await client.GetFromJsonAsync<InvoiceDetail>($"/api/finance/invoices/{summary.Id}", Json.Options))!;
     }
 
