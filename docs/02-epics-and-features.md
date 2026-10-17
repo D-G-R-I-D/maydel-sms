@@ -143,7 +143,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E11.1** Kanban/list of applications: New → Contacted → Assessment scheduled → Offered → Enrolled / Declined, notes, assigned staff.
 - **E11.2** Convert to student (pre-fills student + guardian). AC: application links to created student.
 - **E11.3 (S)** Email/SMS acknowledgement with reference number.
-- **E11.4** *(added 2026-10-17)* **Buy the admission form.**
+- **E11.4** ✅ *API 2026-10-17 (applicant account at purchase, online or school form code, exam window opens on payment).* **Buy the admission form.**
   - Online through the gateway (E10.5/E10.9), or at the school (the bursar issues a form code).
   - Gives an application reference and an email with the receipt and a link to fill the form.
   - AC: the form fee is configurable per session; one purchase = one application.

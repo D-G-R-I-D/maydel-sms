@@ -103,6 +103,7 @@ app.MapSchoolEndpoints();
 app.MapAttendanceEndpoints();
 app.MapFinanceEndpoints();
 app.MapWebhookEndpoints();
+app.MapAdmissionEndpoints();
 
 if (!generatingOpenApiDocument && app.Configuration.GetValue("Database:MigrateOnStartup", false))
 {

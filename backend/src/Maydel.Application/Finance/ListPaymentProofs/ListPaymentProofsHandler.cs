@@ -10,8 +10,10 @@ internal sealed class ListPaymentProofsHandler(IAppDbContext db, PaymentProofs p
 {
     public async Task<Result<PagedResult<ProofDto>>> Handle(ListPaymentProofsQuery q, CancellationToken ct)
     {
-        ProofStatus? status = q.All ? null : q.Status ?? ProofStatus.Pending;
-        var rows = proofs.Dtos(db.PaymentProofs.AsNoTracking().Where(p => status == null || p.Status == status), oldestFirst: status == ProofStatus.Pending);
+        ProofStatus? status = q.All || q.InvoiceId is not null ? q.Status : q.Status ?? ProofStatus.Pending;
+        var filtered = db.PaymentProofs.AsNoTracking().Where(p => status == null || p.Status == status);
+        if (q.InvoiceId is { } invoiceId) filtered = filtered.Where(p => p.InvoiceId == invoiceId);
+        var rows = proofs.Dtos(filtered, oldestFirst: status == ProofStatus.Pending);
         return await rows.ToPagedAsync(q.Page, q.PageSize, ct);
     }
 }

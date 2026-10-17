@@ -15,6 +15,9 @@ public enum EmailKind
 
     /// <summary>Proof of payment rejected, with the bursar's reason. No attachment.</summary>
     ProofRejected,
+
+    /// <summary>An admissions stage update for the family (form ready, exam, result, offer). Plain text.</summary>
+    AdmissionStage,
 }
 
 public enum EmailStatus

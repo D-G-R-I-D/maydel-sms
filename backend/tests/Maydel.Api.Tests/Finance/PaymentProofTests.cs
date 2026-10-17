@@ -37,6 +37,8 @@ public sealed class PaymentProofTests(PostgresFixture fixture)
         Assert.Equal("attachment", file.Content.Headers.ContentDisposition?.DispositionType);
 
         var confirmed = await ProofAsync(await bursar.PostAsJsonAsync($"/api/finance/proofs/{sent.Id}/confirm", new { }));
+        var forInvoice = (await bursar.GetFromJsonAsync<PagedResult<ProofDto>>($"/api/finance/proofs?invoiceId={invoice}", Json.Options))!;
+        Assert.Equal(ProofStatus.Confirmed, Assert.Single(forInvoice.Items).Status); // any status when filtering by invoice
         Assert.Equal(ProofStatus.Confirmed, confirmed.Status);
         Assert.StartsWith("RCT-", confirmed.ReceiptNumber);
         var payment = Assert.Single((await DetailAsync(bursar, invoice)).Payments);

@@ -55,6 +55,9 @@ public interface IAppDbContext
     DbSet<GalleryPhoto> GalleryPhotos { get; }
 
     DbSet<AdmissionApplication> Applications { get; }
+    DbSet<AdmissionSettings> AdmissionSettings { get; }
+    DbSet<FormCode> FormCodes { get; }
+    DbSet<FormPayment> FormPayments { get; }
     DbSet<ContactMessage> ContactMessages { get; }
     DbSet<NewsletterSubscriber> NewsletterSubscribers { get; }
 

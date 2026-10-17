@@ -30,4 +30,7 @@ public sealed class PaystackOptions
 
     /// <summary>Where Paystack sends the parent back to (the portal page that confirms the payment).</summary>
     public string CallbackUrl { get; set; } = "http://localhost:3000/portal/fees/paid";
+
+    /// <summary>Where Paystack returns a family after paying for an admission form.</summary>
+    public string AdmissionsCallbackUrl { get; set; } = "http://localhost:3000/admissions/paid";
 }

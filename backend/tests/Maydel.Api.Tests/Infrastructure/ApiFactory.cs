@@ -58,6 +58,7 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             ["Jwt:SigningKey"] = "integration-tests-signing-key-0123456789abcdef",
             ["Database:MigrateOnStartup"] = "true",
             ["RateLimiting:AuthPermitLimit"] = "100000",
+            ["RateLimiting:PublicFormsPermitLimit"] = "100000",
             ["Storage:RootPath"] = StorageRoot,
         };
         foreach (var (key, value) in settings ?? new Dictionary<string, string?>()) all[key] = value;

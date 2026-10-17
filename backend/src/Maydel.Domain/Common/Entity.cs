@@ -24,6 +24,8 @@ public enum Role
     Bursar,
     Parent,
     Student,
+    /// <summary>A family applying for admission (E11). Becomes Parent too once a child is enrolled.</summary>
+    Applicant,
 }
 
 public static class Roles
@@ -33,7 +35,8 @@ public static class Roles
     public const string Bursar = "Bursar";
     public const string Parent = "Parent";
     public const string Student = "Student";
+    public const string Applicant = "Applicant";
 
-    public static readonly IReadOnlyList<string> All = [Admin, Teacher, Bursar, Parent, Student];
+    public static readonly IReadOnlyList<string> All = [Admin, Teacher, Bursar, Parent, Student, Applicant];
     public static readonly IReadOnlyList<string> Staff = [Admin, Teacher, Bursar];
 }
