@@ -96,3 +96,4 @@ export type StudentStatement = Schemas["StudentStatement"];
 export type StatementEntry = Schemas["StatementEntry"];
 export type DebtorsReport = Schemas["DebtorsReport"];
 export type DebtorRow = Schemas["DebtorRow"];
+export type PortalFees = Schemas["PortalFees"];

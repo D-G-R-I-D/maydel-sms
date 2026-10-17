@@ -79,7 +79,7 @@ const PORTAL: Role[] = ["Parent", "Student"];
 export const portalNav: NavItem[] = [
   { label: "Home", href: "/portal", icon: "home", roles: PORTAL, ready: true },
   { label: "Results", href: "/portal/results", icon: "results", roles: PORTAL, ready: true },
-  { label: "Fees", href: "/portal/fees", icon: "fees", roles: PORTAL },
+  { label: "Fees", href: "/portal/fees", icon: "fees", roles: PORTAL, ready: true },
   { label: "Attendance", href: "/portal/attendance", icon: "attendance", roles: PORTAL },
   { label: "More", href: "/portal/more", icon: "more", roles: PORTAL },
 ];

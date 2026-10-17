@@ -12,6 +12,7 @@ import { schoolToday } from "@/lib/validation/students";
 import { Badge, Card, PageHeader, cn } from "@/components/ui/primitives";
 import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
 import { InvoiceAdminActions, PaymentsTable, RecordPaymentButton } from "@/components/finance/invoice-actions";
+import { PdfDownloadButton } from "@/components/reports/pdf-download";
 
 const stateBadge: Record<ScheduleState, { label: string; tone: "success" | "danger" | "warning" | "neutral" }> = {
   paid: { label: "Paid", tone: "success" },
@@ -78,6 +79,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={invoiceStatusTone[inv.status]}>{invoiceStatusLabel[inv.status]}</Badge>
+            <PdfDownloadButton href={`/api/media/finance/invoices/${inv.id}/pdf`} label="Invoice PDF" fallbackName={`${inv.number} - ${inv.studentName}.pdf`} size="sm" />
             {!cancelled && <RecordPaymentButton invoice={inv} today={today} />}
           </div>
         }

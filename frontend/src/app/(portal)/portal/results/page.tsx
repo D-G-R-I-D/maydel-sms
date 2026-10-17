@@ -4,9 +4,10 @@ import { ChevronRight, ClipboardList, Users } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { formatDay } from "@/lib/validation/academics";
 import { formatAverage, ordinal } from "@/lib/reports/rules";
-import { Card, PageHeader, cn } from "@/components/ui/primitives";
+import { Card, PageHeader } from "@/components/ui/primitives";
 import { EmptyState, ProblemState } from "@/components/ui/states";
 import { PhotoAvatar } from "@/components/media/photo-avatar";
+import { ChildSwitcher } from "@/components/portal/child-switcher";
 
 export const metadata: Metadata = { title: "Results" };
 
@@ -48,27 +49,7 @@ export default async function PortalResultsPage({ searchParams }: { searchParams
   return (
     <>
       {header}
-      {children.data.length > 1 && (
-        <nav aria-label="Choose a child" className="-mt-2 mb-5 flex gap-2 overflow-x-auto pb-1">
-          {children.data.map((c) => {
-            const active = c.studentId === child.studentId;
-            return (
-              <Link
-                key={c.studentId}
-                href={`/portal/results?child=${c.studentId}`}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border py-1 pr-4 pl-1 text-sm transition-colors",
-                  active ? "border-brand bg-brand/10 font-medium text-brand" : "border-border bg-surface text-text hover:bg-surface-2",
-                )}
-              >
-                <PhotoAvatar kind="portal" id={c.studentId} name={c.name} photoVersion={c.photoVersion} className="size-8 text-xs" />
-                {c.name.split(" ")[0]}
-              </Link>
-            );
-          })}
-        </nav>
-      )}
+      <ChildSwitcher items={children.data} activeId={child.studentId} basePath="/portal/results" />
 
       <Card className="overflow-hidden">
         <div className="flex items-center gap-3 border-b border-border px-5 py-4">

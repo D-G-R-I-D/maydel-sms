@@ -43,6 +43,10 @@ async function adminApi(request: APIRequestContext) {
 }
 
 test("record a payment, reverse it, adjust and cancel the invoice", async ({ page, request }) => {
+  // Playwright can't drive the native Save As dialog; without it PDF buttons fall back to a download.
+  await page.addInitScript(() => {
+    delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker;
+  });
   const api = await adminApi(request);
   const levels = await api.get<{ id: string; name: string }[]>("/api/academics/class-levels");
   const creche = levels.find((l) => l.name === "Creche")!;
@@ -85,6 +89,9 @@ test("record a payment, reverse it, adjust and cancel the invoice", async ({ pag
     const invoice = list.items[0];
     expect(invoice).toBeTruthy();
     created.invoiceId = invoice.id;
+    // Other Creche fees may exist for the term, so read the total rather than assume it.
+    const { total } = await api.get<{ total: number }>(`/api/finance/invoices/${invoice.id}`);
+    const naira = (n: number) => `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Bursar records the full payment (no instalment plan → full balance only).
     await signIn(page, "bursar@maydel.test");
@@ -100,8 +107,18 @@ test("record a payment, reverse it, adjust and cancel the invoice", async ({ pag
     await dialog.getByRole("button", { name: "Record payment" }).click();
     await expect(dialog.getByText(/^Receipt RCT-/)).toBeVisible({ timeout: 30_000 });
     await expect(dialog).toContainText(student.admissionNumber);
-    await expect(dialog).toContainText("₦50,000.00");
+    await expect(dialog).toContainText(naira(total));
+    const receiptNumber = (await dialog.getByText(/^Receipt RCT-/).innerText()).replace("Receipt ", "");
     await dialog.getByRole("button", { name: "Done" }).click();
+
+    // Invoice PDF (staff) downloads; the receipt PDF is served for the payment.
+    const download = page.waitForEvent("download", { timeout: 60_000 });
+    await page.getByRole("button", { name: "Invoice PDF" }).click();
+    expect((await download).suggestedFilename()).toMatch(/^INV-.*\.pdf$/);
+    const paymentId = (await api.get<{ payments: { id: string; receiptNumber: string }[] }>(`/api/finance/invoices/${invoice.id}`)).payments.find((p) => p.receiptNumber === receiptNumber)!.id;
+    const receiptPdf = await page.request.get(`/api/media/finance/receipts/${paymentId}/pdf`);
+    expect(receiptPdf.status()).toBe(200);
+    expect((await receiptPdf.body()).subarray(0, 4).toString()).toBe("%PDF");
     await expect(page.getByText("Paid", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("button", { name: "Reverse" })).toHaveCount(0); // bursars can't reverse
 
@@ -121,7 +138,7 @@ test("record a payment, reverse it, adjust and cancel the invoice", async ({ pag
     const adj = page.getByRole("dialog");
     await adj.getByLabel("Description").fill("E2E scholarship");
     await adj.getByLabel("Amount (₦)").fill("5,000");
-    await expect(adj).toContainText("New total ₦45,000.00");
+    await expect(adj).toContainText(`New total ${naira(total - 5000)}`);
     await adj.getByRole("button", { name: "Add adjustment" }).click();
     await expect(page.getByRole("cell", { name: "E2E scholarship" })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("−₦5,000.00").first()).toBeVisible();
