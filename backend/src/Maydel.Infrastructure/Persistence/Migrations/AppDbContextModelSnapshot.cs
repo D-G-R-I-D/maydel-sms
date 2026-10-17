@@ -1197,6 +1197,66 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("Invoices");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Finance.OnlinePayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Excess")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)");
+
+                    b.Property<Guid?>("InitiatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("OnlinePayments");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Finance.Payment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1248,6 +1308,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ReceiptNumber")
                         .IsUnique();
+
+                    b.HasIndex("Reference")
+                        .IsUnique()
+                        .HasFilter("\"Method\" = 'Online' AND \"ReversesPaymentId\" IS NULL");
 
                     b.HasIndex("ReversesPaymentId")
                         .IsUnique()
@@ -2013,6 +2077,15 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Navigation("Student");
 
                     b.Navigation("Term");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Finance.OnlinePayment", b =>
+                {
+                    b.HasOne("Maydel.Domain.Finance.Invoice", null)
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Maydel.Domain.Finance.Payment", b =>

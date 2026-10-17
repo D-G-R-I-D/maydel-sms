@@ -916,6 +916,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/children/{studentId}/invoices/{invoiceId}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StartOnlinePayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/payments/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetOnlinePayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/children/{studentId}/results": {
         parameters: {
             query?: never;
@@ -1260,6 +1292,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["GetStudentStatement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/online-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListOnlinePayments"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1977,6 +2025,51 @@ export interface components {
             roles: components["schemas"]["Role"][];
             mustChangePassword: boolean;
         };
+        OnlineCheckout: {
+            reference: string;
+            authorizationUrl: string;
+            /** Format: double */
+            amount: number;
+        };
+        OnlinePaymentResult: {
+            reference: string;
+            status: components["schemas"]["OnlinePaymentStatus"];
+            /** Format: double */
+            amount: number;
+            /** Format: uuid */
+            invoiceId: string;
+            /** Format: uuid */
+            studentId: string;
+            receiptNumber: null | string;
+            /** Format: uuid */
+            paymentId: null | string;
+            /** Format: double */
+            excess: number;
+            message: null | string;
+        };
+        OnlinePaymentRow: {
+            /** Format: uuid */
+            id: string;
+            reference: string;
+            status: components["schemas"]["OnlinePaymentStatus"];
+            /** Format: double */
+            amount: number;
+            /** Format: double */
+            excess: number;
+            /** Format: uuid */
+            invoiceId: string;
+            invoiceNumber: string;
+            admissionNumber: string;
+            studentName: string;
+            receiptNumber: null | string;
+            message: null | string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            completedAt: null | string;
+        };
+        /** @enum {unknown} */
+        OnlinePaymentStatus: "Pending" | "Succeeded" | "Failed" | "NeedsReview";
         OptInsRequest: {
             studentIds: string[];
         };
@@ -2008,6 +2101,15 @@ export interface components {
         };
         PagedResultOfInvoiceSummary: {
             items: components["schemas"]["InvoiceSummary"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResultOfOnlinePaymentRow: {
+            items: components["schemas"]["OnlinePaymentRow"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -2059,6 +2161,10 @@ export interface components {
             reference: null | string;
             /** Format: date */
             paidOn: null | string;
+        };
+        PayRequest: {
+            /** Format: double */
+            amount: null | number;
         };
         PhotoInfo: {
             version: string;
@@ -6686,6 +6792,127 @@ export interface operations {
             };
         };
     };
+    StartOnlinePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+                invoiceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlineCheckout"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetOnlinePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePaymentResult"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     ListChildResults: {
         parameters: {
             query?: never;
@@ -8358,6 +8585,57 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListOnlinePayments: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["OnlinePaymentStatus"];
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResultOfOnlinePaymentRow"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

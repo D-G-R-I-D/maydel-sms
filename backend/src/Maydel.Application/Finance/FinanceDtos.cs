@@ -75,8 +75,22 @@ public sealed record DebtorRow(
 
 public sealed record DebtorsReport(Guid TermId, string Term, int Count, decimal TotalOutstanding, decimal TotalOverdue, IReadOnlyList<DebtorRow> Rows);
 
+/// <summary>Where the parent's browser goes to pay, and our reference to confirm it afterwards.</summary>
+public sealed record OnlineCheckout(string Reference, string AuthorizationUrl, decimal Amount);
+
+/// <summary>An online payment's outcome. <c>ReceiptNumber</c> once recorded; <c>Excess</c> when money needs refunding.</summary>
+public sealed record OnlinePaymentResult(
+    string Reference, OnlinePaymentStatus Status, decimal Amount, Guid InvoiceId, Guid StudentId, string? ReceiptNumber, Guid? PaymentId, decimal Excess, string? Message);
+
+public sealed record OnlinePaymentRow(
+    Guid Id, string Reference, OnlinePaymentStatus Status, decimal Amount, decimal Excess, Guid InvoiceId, string InvoiceNumber,
+    string AdmissionNumber, string StudentName, string? ReceiptNumber, string? Message, DateTimeOffset StartedAt, DateTimeOffset? CompletedAt);
+
 public static class FinanceErrors
 {
+    public static readonly Common.Error OnlineUnavailable = Common.Error.Rule("payment.online_unavailable", "Online payment isn't set up yet. Please pay at the school or by bank transfer.");
+    public static readonly Common.Error NothingOwed = Common.Error.Rule("invoice.nothing_owed", "There's nothing left to pay on this invoice.");
+    public static readonly Common.Error OnlineNotFound = Common.Error.NotFound("payment.online_not_found", "We couldn't find that payment.");
     public static readonly Common.Error TermNotFound = Common.Error.NotFound("term.not_found", "That term doesn't exist.");
     public static readonly Common.Error FeeItemNotFound = Common.Error.NotFound("fee.not_found", "That fee item doesn't exist.");
     public static readonly Common.Error ClassLevelNotFound = Common.Error.Validation("classLevelId", "That class level doesn't exist.");

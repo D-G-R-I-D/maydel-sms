@@ -6,6 +6,9 @@ using Maydel.Application.Photos.GetStudentPhoto;
 using Maydel.Application.Portal;
 using Maydel.Application.Portal.GetChildFeeDocument;
 using Maydel.Application.Portal.GetChildFees;
+using Maydel.Application.Portal.GetOnlinePayment;
+using Maydel.Application.Portal.StartOnlinePayment;
+using Maydel.Application.Finance;
 using Maydel.Application.Portal.GetChildResult;
 using Maydel.Application.Portal.GetChildResultPdf;
 using Maydel.Application.Portal.ListChildResults;
@@ -32,11 +35,23 @@ public static class PortalEndpoints
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/receipts/{paymentId:guid}/pdf", GetReceiptPdf).WithName("GetChildReceiptPdf")
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
+        portal.MapPost("/children/{studentId:guid}/invoices/{invoiceId:guid}/pay", StartPayment).WithName("StartOnlinePayment").ProducesProblems(400, 401, 403, 404, 422);
+        portal.MapGet("/payments/{reference}", GetPayment).WithName("GetOnlinePayment").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results", ListResults).WithName("ListChildResults").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results/{termId:guid}", GetResult).WithName("GetChildResult").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results/{termId:guid}/pdf", GetResultPdf).WithName("GetChildResultPdf")
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
     }
+
+    public sealed record PayRequest(decimal? Amount);
+
+    private static async Task<Results<Ok<OnlineCheckout>, ProblemHttpResult>> StartPayment(
+        Guid studentId, Guid invoiceId, PayRequest body, ICommandHandler<StartOnlinePaymentCommand, OnlineCheckout> handler, CancellationToken ct) =>
+        (await handler.Handle(new StartOnlinePaymentCommand(studentId, invoiceId, body.Amount), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<OnlinePaymentResult>, ProblemHttpResult>> GetPayment(
+        string reference, IQueryHandler<GetOnlinePaymentQuery, OnlinePaymentResult> handler, CancellationToken ct) =>
+        (await handler.Handle(new GetOnlinePaymentQuery(reference), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<PortalFees>, ProblemHttpResult>> GetFees(
         Guid studentId, IQueryHandler<GetChildFeesQuery, PortalFees> handler, CancellationToken ct) =>

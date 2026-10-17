@@ -42,6 +42,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<FeeItem> FeeItems => Set<FeeItem>();
     public DbSet<FeeSettings> FeeSettings => Set<FeeSettings>();
+    public DbSet<OnlinePayment> OnlinePayments => Set<OnlinePayment>();
     public DbSet<InstalmentPlan> InstalmentPlans => Set<InstalmentPlan>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();
