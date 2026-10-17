@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatNaira } from "./rules";
-import { nextDueDate, paymentErrors, scheduleStates, signed } from "./payments";
+import { nextDueDate, onlineAmountError, paymentErrors, scheduleStates, signed } from "./payments";
 
 describe("payments", () => {
   it("shows negatives as −₦", () => {
@@ -47,5 +47,16 @@ describe("nextDueDate", () => {
   it("ignores paid and cancelled invoices", () => {
     expect(nextDueDate([{ balance: 0, paid: 100_000, dueOn: "2026-11-15", schedule: sched, status: "Paid" }], "2026-10-17")).toBeNull();
     expect(nextDueDate([{ balance: 5_000, paid: 0, dueOn: "2026-12-01", schedule: [], status: "Cancelled" }], "2026-10-17")).toBeNull();
+  });
+});
+
+describe("onlineAmountError", () => {
+  const inv = { balance: 100_000, minimumPayment: 60_000 };
+  it("allows the balance or at least the minimum", () => {
+    expect(onlineAmountError("100,000", inv)).toBeNull();
+    expect(onlineAmountError("60000", inv)).toBeNull();
+    expect(onlineAmountError("59,999", inv)).toBe("Pay at least ₦60,000.00 to complete the next instalment.");
+    expect(onlineAmountError("100,000.01", inv)).toBe("That's more than the balance of ₦100,000.00.");
+    expect(onlineAmountError("abc", inv)).toMatch(/above ₦0/);
   });
 });

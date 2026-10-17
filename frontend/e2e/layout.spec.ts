@@ -28,6 +28,7 @@ const pages = [
   "/admin/fees",
   "/admin/invoices",
   "/admin/debtors",
+  "/admin/payments",
   "/admin/settings/school",
   "/admin/settings/assessment",
   "/admin/settings/fees",

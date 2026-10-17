@@ -10,6 +10,7 @@ import { EmptyState, ProblemState } from "@/components/ui/states";
 import { PhotoAvatar } from "@/components/media/photo-avatar";
 import { ChildSwitcher } from "@/components/portal/child-switcher";
 import { PdfDownloadButton } from "@/components/reports/pdf-download";
+import { PayOnlineButton } from "@/components/portal/pay-online";
 
 export const metadata: Metadata = { title: "Fees" };
 
@@ -111,7 +112,10 @@ function InvoiceCard({ studentId, inv, today, open }: { studentId: string; inv: 
             )}
           </section>
 
-          <PdfDownloadButton href={`/api/media/portal/children/${studentId}/invoices/${inv.id}/pdf`} label="Download invoice" fallbackName={`${inv.number}.pdf`} size="sm" />
+          <div className="flex flex-wrap items-center gap-2">
+            {inv.balance > 0 && inv.status !== "Cancelled" && <PayOnlineButton studentId={studentId} invoice={inv} />}
+            <PdfDownloadButton href={`/api/media/portal/children/${studentId}/invoices/${inv.id}/pdf`} label="Download invoice" fallbackName={`${inv.number}.pdf`} size="sm" />
+          </div>
         </div>
       </details>
     </Card>
