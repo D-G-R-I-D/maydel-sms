@@ -73,6 +73,14 @@ public interface IFinanceDocumentRenderer
     byte[] Receipt(ReceiptDocument document, ReportBranding school);
 }
 
+/// <summary>The admission form to print: blank (to fill by hand) when <c>Application</c> is null.</summary>
+public sealed record AdmissionFormDocument(Admissions.ApplicationDetail? Application, string Session, byte[]? Photo, DateOnly PrintedOn);
+
+public interface IAdmissionFormRenderer
+{
+    byte[] Render(AdmissionFormDocument document, ReportBranding school);
+}
+
 public interface IReportCardRenderer
 {
     byte[] Render(IReadOnlyList<ReportCardDocument> cards, ReportBranding school);

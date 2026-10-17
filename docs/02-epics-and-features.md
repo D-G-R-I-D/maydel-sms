@@ -147,7 +147,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
   - Online through the gateway (E10.5/E10.9), or at the school (the bursar issues a form code).
   - Gives an application reference and an email with the receipt and a link to fill the form.
   - AC: the form fee is configurable per session; one purchase = one application.
-- **E11.5** *(added 2026-10-17)* **Online application form** in the portal.
+- **E11.5** ✅ *API 2026-10-17 (draft/submit, private documents, blank and filled PDFs; admin edit after submission still to do).* *(added 2026-10-17)* **Online application form** in the portal.
   - Child and guardian details, previous school, documents (private uploads).
   - Save as draft, submit, and **download/print as PDF** (blank before, completed after).
   - AC: required fields validated; it can't be edited after submission except by admin.

@@ -22,6 +22,15 @@ public sealed record ApplicationDto(
 /// <summary><c>Code</c> is shown once to the bursar to hand to the family; <c>Used</c> once redeemed.</summary>
 public sealed record FormCodeDto(Guid Id, string Code, Guid SessionId, decimal AmountPaid, string? IssuedTo, bool Used, string? UsedByReference, DateTimeOffset IssuedAt);
 
+public sealed record ApplicationDocumentDto(Guid Id, Domain.Admissions.DocumentKind Kind, string ContentType, DateTimeOffset UploadedAt);
+
+/// <summary>An application with its form and documents (family's own, or staff).</summary>
+public sealed record ApplicationDetail(ApplicationDto Application, ApplicationForm Form, IReadOnlyList<ApplicationDocumentDto> Documents,
+    DateTimeOffset? SubmittedAt, bool CanEdit, IReadOnlyList<string> MissingToSubmit);
+
+/// <summary>The draft form: child's names and date of birth plus every form field.</summary>
+public sealed record SaveFormRequest(string ChildFirstName, string ChildLastName, DateOnly? ChildDateOfBirth, ApplicationForm Form);
+
 public sealed record ApplyChild(string ChildFirstName, string ChildLastName, DateOnly? ChildDateOfBirth, Guid ClassLevelId, Guid SessionId);
 
 public static class AdmissionErrors
@@ -33,11 +42,31 @@ public static class AdmissionErrors
     public static readonly Common.Error EmailInUse = Common.Error.Conflict("admission.email_in_use",
         "An account with this email already exists. Sign in with it and apply from your account.");
     public static readonly Common.Error BadCode = Common.Error.Validation("code", "That form code isn't valid for this session, or it has already been used.");
+    public static readonly Common.Error DocumentNotFound = Common.Error.NotFound("admission.document_not_found", "That document doesn't exist.");
+    public static readonly Common.Error TooManyDocuments = Common.Error.Rule("admission.too_many_documents",
+        $"Upload at most {ApplicationDocument.MaxPerApplication} documents. Remove one to add another.");
     public static readonly Common.Error NotAwaitingPayment = Common.Error.Rule("admission.already_paid", "The admission form for this application is already paid for.");
 }
 
 internal static class AdmissionQueries
 {
+    /// <summary>The family's own application (tracked), or null.</summary>
+    public static Task<AdmissionApplication?> MineAsync(this IAppDbContext db, Guid id, Guid? userId, CancellationToken ct) =>
+        db.Applications.FirstOrDefaultAsync(a => a.Id == id && a.ApplicantUserId == userId, ct);
+
+    public static async Task<ApplicationDetail?> DetailAsync(this IAppDbContext db, Guid id, CancellationToken ct)
+    {
+        var app = await db.Applications.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id, ct);
+        if (app is null) return null;
+        var dto = await db.Dtos(db.Applications.Where(a => a.Id == id)).FirstAsync(ct);
+        var missing = new List<string>();
+        if (app.ChildDateOfBirth is null) missing.Add("childDateOfBirth");
+        if (app.Form.Missing() is { Field: { } field }) missing.Add(field);
+        if (app.Documents.All(d => d.Kind != DocumentKind.PassportPhoto)) missing.Add("documents");
+        return new ApplicationDetail(dto, app.Form, [.. app.Documents.OrderBy(d => d.UploadedAt).Select(d => new ApplicationDocumentDto(d.Id, d.Kind, d.ContentType, d.UploadedAt))],
+            app.SubmittedAt, app.Status == ApplicationStatus.FormPaid, missing);
+    }
+
     public static IQueryable<ApplicationDto> Dtos(this IAppDbContext db, IQueryable<AdmissionApplication> applications) =>
         applications.Join(db.Sessions, a => a.SessionId, s => s.Id, (a, s) => new { a, s })
             .Join(db.ClassLevels, x => x.a.ClassLevelId, l => l.Id, (x, l) => new { x.a, x.s, l })
