@@ -3,7 +3,9 @@ import { invoicesHref, parseInvoiceSearch } from "./invoices";
 
 describe("invoice search", () => {
   it("reads only valid filters", () => {
-    expect(parseInvoiceSearch({ status: "Bogus", page: "-2", search: "  eze " })).toEqual({ termId: undefined, classRoomId: undefined, status: undefined, search: "eze", page: 1 });
+    expect(parseInvoiceSearch({ status: "Bogus", page: "-2", search: "  eze " })).toEqual({ termId: undefined, classRoomId: undefined, status: undefined, search: "eze", published: undefined, newIntake: undefined, page: 1 });
+    expect(parseInvoiceSearch({ published: "false", newIntake: "true" })).toMatchObject({ published: false, newIntake: true });
+    expect(invoicesHref({ page: 1, published: false, newIntake: true })).toBe("/admin/invoices?published=false&newIntake=true");
     expect(parseInvoiceSearch({ status: "PartiallyPaid", page: "3", termId: "t" })).toMatchObject({ status: "PartiallyPaid", page: 3, termId: "t" });
   });
 

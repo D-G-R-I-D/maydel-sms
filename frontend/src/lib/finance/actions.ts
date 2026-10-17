@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { load, type Loaded } from "@/lib/api/server";
-import type { FeeItem, FeeSettings, GenerateInvoicesResult, InstalmentPlan, InvoiceDetail, OptInStudent, PaymentMethod, PlanScope, Receipt } from "@/lib/api/types";
+import type { FeeAudience, FeeItem, FeeSettings, GenerateInvoicesResult, PublishInvoicesResult, InstalmentPlan, InvoiceDetail, OptInStudent, PaymentMethod, PlanScope, Receipt } from "@/lib/api/types";
 
 /** Fees (E10 part 1). The API enforces Admin/Bursar (Finance policy) and admin-only settings. */
 
@@ -17,7 +17,16 @@ function done<T>(result: Loaded<T>): Loaded<T> {
   return result;
 }
 
-export type FeeItemBody = { termId: string; name: string; amount: number; classLevelId: string | null; isMandatory: boolean; siblingDiscount: boolean };
+export type FeeItemBody = {
+  termId: string;
+  name: string;
+  amount: number;
+  classLevelId: string | null;
+  isMandatory: boolean;
+  siblingDiscount: boolean;
+  audience: FeeAudience;
+  chargedByDefault: boolean;
+};
 
 export async function createFeeItem(body: FeeItemBody): Promise<Loaded<FeeItem>> {
   return done(await load((api) => api.POST("/api/finance/fee-items", { body })));
@@ -60,6 +69,11 @@ export async function saveInstalmentPlan(body: {
   clearSession: boolean;
 }): Promise<Loaded<InstalmentPlan>> {
   return done(await load((api) => api.PUT("/api/finance/instalment-plan", { body })));
+}
+
+/** E10.7: publish draft invoices (term, optional level) and by default email each guardian the invoice. */
+export async function publishInvoices(termId: string, classLevelId: string | null, notifyParents: boolean): Promise<Loaded<PublishInvoicesResult>> {
+  return done(await load((api) => api.POST("/api/finance/invoices/publish", { body: { termId, classLevelId, notifyParents } })));
 }
 
 export async function generateInvoices(termId: string, classLevelId: string | null): Promise<Loaded<GenerateInvoicesResult>> {

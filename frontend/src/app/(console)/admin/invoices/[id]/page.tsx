@@ -84,6 +84,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           </div>
         }
       />
+      {!cancelled && !inv.isPublished && (
+        <Alert tone="warning" className="mb-5" title="Draft: not visible to parents yet">
+          Publish invoices from the Invoices page when the term&apos;s bills are ready. Parents then see it in the portal and can pay online.
+        </Alert>
+      )}
       {cancelled && (
         <Alert tone="warning" className="mb-5" title="Cancelled">
           {inv.cancelReason ?? "This invoice was cancelled."} Generate invoices again to bill this student for the term.

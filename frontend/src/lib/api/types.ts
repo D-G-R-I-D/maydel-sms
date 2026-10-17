@@ -101,3 +101,5 @@ export type OnlineCheckout = Schemas["OnlineCheckout"];
 export type OnlinePaymentResult = Schemas["OnlinePaymentResult"];
 export type OnlinePaymentRow = Schemas["OnlinePaymentRow"];
 export type OnlinePaymentStatus = Schemas["OnlinePaymentStatus"];
+export type FeeAudience = Schemas["FeeAudience"];
+export type PublishInvoicesResult = Schemas["PublishInvoicesResult"];

@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { FileStack, Search } from "lucide-react";
+import { FileStack, Search, Send } from "lucide-react";
 import { problemMessage } from "@/lib/api/problem";
 import type { ClassRoomDto } from "@/lib/api/types";
-import { generateInvoices } from "@/lib/finance/actions";
+import { generateInvoices, publishInvoices } from "@/lib/finance/actions";
 import { INVOICE_STATUSES, invoicesHref, type InvoiceSearch } from "@/lib/finance/invoices";
-import { generateToast, invoiceStatusLabel } from "@/lib/finance/rules";
+import { generateToast, invoiceStatusLabel, publishInvoicesToast } from "@/lib/finance/rules";
 import { groupBySection } from "@/lib/validation/academics";
 import { runAction } from "@/lib/client/action";
 import { Button, Card, Input, Select, cn } from "@/components/ui/primitives";
@@ -26,7 +26,7 @@ export function InvoiceFilters({ search, classrooms, children }: { search: Invoi
 
   return (
     <>
-      <Card className="grid gap-3 p-3 sm:grid-cols-[1fr_auto] lg:grid-cols-[1fr_14rem_12rem]">
+      <Card className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-[1fr_13rem_11rem_11rem_auto]">
         <form
           role="search"
           className="relative sm:col-span-2 lg:col-span-1"
@@ -70,6 +70,19 @@ export function InvoiceFilters({ search, classrooms, children }: { search: Invoi
             </option>
           ))}
         </Select>
+        <Select
+          aria-label="Draft or published"
+          value={search.published === undefined ? "" : String(search.published)}
+          onChange={(e) => go({ published: e.target.value === "" ? undefined : e.target.value === "true" })}
+        >
+          <option value="">Drafts and published</option>
+          <option value="false">Drafts only</option>
+          <option value="true">Published only</option>
+        </Select>
+        <label htmlFor="inv-new-intake" className="flex min-h-11 cursor-pointer items-center gap-2 text-sm whitespace-nowrap">
+          <input id="inv-new-intake" type="checkbox" className="size-4 accent-[var(--brand)]" checked={Boolean(search.newIntake)} onChange={(e) => go({ newIntake: e.target.checked || undefined })} />
+          New intake
+        </label>
       </Card>
       <Card className="relative mt-4 overflow-hidden" aria-busy={pending}>
         <div className={cn("pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden", !pending && "hidden")} aria-hidden>
@@ -78,6 +91,79 @@ export function InvoiceFilters({ search, classrooms, children }: { search: Invoi
         <div className={cn("transition-opacity duration-200", pending && "opacity-50")}>{children}</div>
       </Card>
     </>
+  );
+}
+
+/**
+ * E10.7: publish draft invoices for the term (optionally one level). Parents then see them in the
+ * portal and, with the box ticked, get the invoice PDF by email. Running it again only publishes new drafts.
+ */
+export function PublishInvoicesButton({ termId, termLabel, levels, drafts }: { termId: string; termLabel: string; levels: { id: string; name: string }[]; drafts: number }) {
+  const [level, setLevel] = useState("");
+  const [notify, setNotify] = useState(true);
+  const [busy, setBusy] = useState(false);
+  return (
+    <FormDialog
+      title="Publish invoices"
+      description={termLabel}
+      trigger={
+        <Button variant={drafts > 0 ? "primary" : "secondary"}>
+          <Send className="size-4" aria-hidden />
+          Publish invoices{drafts > 0 ? ` (${drafts})` : ""}
+        </Button>
+      }
+    >
+      {(close) => (
+        <div className="space-y-4">
+          <p className="text-sm text-muted">
+            {drafts > 0 ? `Publish ${drafts} draft ${drafts === 1 ? "invoice" : "invoices"}?` : "There are no drafts for this term right now."} Published invoices appear in the
+            parents&apos; portal and can be paid online.
+          </p>
+          <div className="space-y-1.5">
+            <label htmlFor="pub-level" className="block text-sm font-medium">
+              Which
+            </label>
+            <Select id="pub-level" value={level} onChange={(e) => setLevel(e.target.value)}>
+              <option value="">Every class level</option>
+              {levels.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name} only
+                </option>
+              ))}
+            </Select>
+          </div>
+          <label htmlFor="pub-notify" className="flex cursor-pointer items-start gap-2.5 rounded-input border border-border p-3 text-sm">
+            <input id="pub-notify" type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[var(--brand)]" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+            <span>
+              Email parents a copy
+              <span className="block text-xs text-muted">
+                {notify ? "Parents of these students will be emailed the invoice (guardians with an email address)." : "No emails will be sent."}
+              </span>
+            </span>
+          </label>
+          <DialogActions>
+            <CancelButton />
+            <Button
+              loading={busy}
+              loadingText="Publishing…"
+              onClick={async () => {
+                setBusy(true);
+                const notified = notify;
+                const r = await runAction(() => publishInvoices(termId, level || null, notified), {
+                  success: (x) => publishInvoicesToast(x, notified),
+                  onProblem: (p) => p.status > 0 && p.status < 500 && p.status !== 429 && toast.error("Couldn't publish invoices", { description: problemMessage(p) }),
+                });
+                setBusy(false);
+                if (r) close();
+              }}
+            >
+              <Send className="size-4" aria-hidden />
+              Publish
+            </Button>
+          </DialogActions>
+        </div>
+      )}
+    </FormDialog>
   );
 }
 
@@ -122,7 +208,7 @@ export function GenerateInvoicesButton({ termId, termLabel, levels }: { termId: 
               onClick={async () => {
                 setBusy(true);
                 const r = await runAction(() => generateInvoices(termId, level || null), {
-                  success: generateToast,
+                  success: (x) => (x.created > 0 ? `${generateToast(x)}. ${x.created} ${x.created === 1 ? "invoice is a draft" : "invoices are drafts"}: review, then Publish.` : generateToast(x)),
                   onProblem: (p) => p.status > 0 && p.status < 500 && p.status !== 429 && toast.error("Couldn't generate invoices", { description: problemMessage(p) }),
                 });
                 setBusy(false);

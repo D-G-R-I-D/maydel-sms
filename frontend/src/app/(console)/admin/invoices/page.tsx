@@ -11,7 +11,7 @@ import { Badge, Card, PageHeader } from "@/components/ui/primitives";
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 import { Pagination } from "@/components/ui/pagination";
 import { TermPicker } from "@/components/assessment/term-picker";
-import { GenerateInvoicesButton, InvoiceFilters } from "@/components/finance/invoice-filters";
+import { GenerateInvoicesButton, InvoiceFilters, PublishInvoicesButton } from "@/components/finance/invoice-filters";
 
 export const metadata: Metadata = { title: "Invoices" };
 
@@ -47,17 +47,31 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   const search = { ...parsed, termId: selected.id };
   const termLabel = `${selected.label} ${selected.session}`;
 
-  const [invoices, classrooms, levels] = await Promise.all([
+  const [invoices, classrooms, levels, drafts] = await Promise.all([
     load((api) =>
       api.GET("/api/finance/invoices", {
-        params: { query: { termId: selected.id, classRoomId: search.classRoomId, status: search.status, search: search.search, page: search.page, pageSize: INVOICE_PAGE_SIZE } },
+        params: {
+          query: {
+            termId: selected.id,
+            classRoomId: search.classRoomId,
+            status: search.status,
+            search: search.search,
+            published: search.published,
+            newIntake: search.newIntake,
+            page: search.page,
+            pageSize: INVOICE_PAGE_SIZE,
+          },
+        },
       }),
     ),
     load((api) => api.GET("/api/academics/classrooms")),
     load((api) => api.GET("/api/academics/class-levels")),
+    load((api) => api.GET("/api/finance/invoices", { params: { query: { termId: selected.id, published: false, page: 1, pageSize: 1 } } })),
   ]);
+  const draftCount = drafts.ok ? drafts.data.totalCount : 0;
+  const levelOptions = levels.ok ? levels.data.map((l) => ({ id: l.id, name: l.name })) : [];
 
-  const filtered = Boolean(search.classRoomId || search.status || search.search);
+  const filtered = Boolean(search.classRoomId || search.status || search.search || search.published !== undefined || search.newIntake);
   let body: React.ReactNode;
   if (!invoices.ok) body = <ProblemState problem={invoices.problem} />;
   else if (invoices.data.items.length === 0)
@@ -94,13 +108,23 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
                     </Link>
                   </td>
                   <td className="tabular px-3 py-2.5">{i.admissionNumber}</td>
-                  <td className="px-3 py-2.5">{i.studentName}</td>
+                  <td className="px-3 py-2.5">
+                    {i.studentName}
+                    {i.newIntake && (
+                      <Badge tone="brand" className="ml-1.5">
+                        New intake
+                      </Badge>
+                    )}
+                  </td>
                   <td className="px-3 py-2.5 text-muted">{i.classRoom ?? "—"}</td>
                   <td className="tabular px-3 py-2.5 text-right">{formatNaira(i.total)}</td>
                   <td className="tabular px-3 py-2.5 text-right">{formatNaira(i.paid)}</td>
                   <td className="tabular px-3 py-2.5 text-right font-medium">{formatNaira(i.balance)}</td>
                   <td className="px-3 py-2.5">
-                    <Badge tone={invoiceStatusTone[i.status]}>{invoiceStatusLabel[i.status]}</Badge>
+                    <span className="flex flex-wrap gap-1">
+                      {!i.isPublished && i.status !== "Cancelled" && <Badge tone="warning">Draft</Badge>}
+                      <Badge tone={invoiceStatusTone[i.status]}>{invoiceStatusLabel[i.status]}</Badge>
+                    </span>
                   </td>
                   <td className="px-3 py-2.5 whitespace-nowrap text-muted">{dueText(i.dueOn)}</td>
                   <td className="px-2 py-2.5">
@@ -127,7 +151,8 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <TermPicker terms={terms} value={selected.id} />
-            <GenerateInvoicesButton termId={selected.id} termLabel={termLabel} levels={levels.ok ? levels.data.map((l) => ({ id: l.id, name: l.name })) : []} />
+            <GenerateInvoicesButton termId={selected.id} termLabel={termLabel} levels={levelOptions} />
+            <PublishInvoicesButton termId={selected.id} termLabel={termLabel} levels={levelOptions} drafts={draftCount} />
           </div>
         }
       />

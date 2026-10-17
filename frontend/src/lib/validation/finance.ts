@@ -19,6 +19,9 @@ export const feeItemSchema = z.object({
   classLevelId: z.string().transform((v) => (v === "" ? null : v)),
   isMandatory: z.boolean(),
   siblingDiscount: z.boolean(),
+  audience: z.enum(["All", "NewIntake", "Returning"]),
+  /** Optional items only: on = everyone pays unless unticked; off = only ticked students pay. */
+  chargedByDefault: z.boolean(),
 });
 export type FeeItemFormValues = z.input<typeof feeItemSchema>;
 export type FeeItemPayload = z.output<typeof feeItemSchema>;

@@ -93,10 +93,26 @@ test("record a payment, reverse it, adjust and cancel the invoice", async ({ pag
     const { total } = await api.get<{ total: number }>(`/api/finance/invoices/${invoice.id}`);
     const naira = (n: number) => `₦${n.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Bursar records the full payment (no instalment plan → full balance only).
+    // Generated invoices are drafts until published (E10.7). The bursar publishes Creche only, no emails.
     await signIn(page, "bursar@maydel.test");
     await page.goto(`/admin/invoices/${invoice.id}`);
     await expect(page.getByRole("heading", { name: invoice.number })).toBeVisible();
+    await expect(page.getByText("Draft: not visible to parents yet")).toBeVisible();
+    await page.goto("/admin/invoices");
+    await expect(async () => {
+      await page.getByRole("button", { name: /^Publish invoices/ }).click();
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 60_000 });
+    const pub = page.getByRole("dialog");
+    await pub.getByLabel("Which").selectOption({ label: "Creche only" });
+    await pub.getByLabel("Email parents a copy").uncheck();
+    await pub.getByRole("button", { name: "Publish", exact: true }).click();
+    await expect(page.getByText(/^Published \d+/).first()).toBeVisible({ timeout: 30_000 });
+    await page.goto(`/admin/invoices/${invoice.id}`);
+    await expect(page.getByRole("heading", { name: invoice.number })).toBeVisible();
+    await expect(page.getByText("Draft: not visible to parents yet")).toHaveCount(0);
+
+    // Bursar records the full payment (no instalment plan → full balance only).
     await expect(async () => {
       await page.getByRole("button", { name: "Record payment" }).click();
       await expect(page.getByRole("dialog")).toBeVisible({ timeout: 2_000 });

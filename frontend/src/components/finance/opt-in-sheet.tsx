@@ -12,8 +12,8 @@ import { CancelButton, DialogActions } from "@/components/ui/dialog";
 import { LoaderStatus } from "@/components/ui/school-loader";
 
 /**
- * "Who takes this?" for an optional fee item: students it could apply to, grouped by class, with
- * search and select-all per class. Only ticked students are billed for the item.
+ * "Who pays this?" for an optional fee item: students it could apply to, grouped by class, with
+ * search and select-all per class. Ticked = pays, in both modes (on/off by default) as the API does.
  */
 export function OptInSheet({ item, close }: { item: FeeItem; close: () => void }) {
   const [state, setState] = useState<Loaded<OptInStudent[]> | null>(null);
@@ -67,7 +67,7 @@ export function OptInSheet({ item, close }: { item: FeeItem; close: () => void }
 
   const save = async () => {
     setSaving(true);
-    const saved = await runAction(() => saveOptIns(item.id, [...chosen]), { success: `${chosen.size} ${chosen.size === 1 ? "student takes" : "students take"} ${item.name}` });
+    const saved = await runAction(() => saveOptIns(item.id, [...chosen]), { success: `${chosen.size} ${chosen.size === 1 ? "student pays" : "students pay"} ${item.name}` });
     setSaving(false);
     if (saved) close();
   };
@@ -82,7 +82,8 @@ export function OptInSheet({ item, close }: { item: FeeItem; close: () => void }
         <Input id="optin-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or admission number" className="pl-9" />
       </div>
       <p className="text-sm text-muted" aria-live="polite">
-        <span className="tabular font-medium text-text">{chosen.size}</span> of {state.data.length} selected
+        <span className="tabular font-medium text-text">{chosen.size}</span> paying
+        {item.chargedByDefault && <> · {state.data.length - chosen.size} excluded</>} · of {state.data.length}
       </p>
       {groups.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">No students match &ldquo;{query}&rdquo;.</p>
