@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatNaira } from "./rules";
-import { paymentErrors, scheduleStates, signed } from "./payments";
+import { nextDueDate, paymentErrors, scheduleStates, signed } from "./payments";
 
 describe("payments", () => {
   it("shows negatives as −₦", () => {
@@ -31,5 +31,21 @@ describe("payments", () => {
     expect(scheduleStates(schedule, 60_000, "2026-10-15")).toEqual(["paid", "due", "upcoming"]);
     expect(scheduleStates(schedule, 70_000, "2026-10-20")).toEqual(["paid", "overdue", "upcoming"]);
     expect(scheduleStates(schedule, 120_000, "2026-12-01")).toEqual(["paid", "paid", "paid"]);
+  });
+});
+
+describe("nextDueDate", () => {
+  const sched = [
+    { order: 1, percent: 60, amount: 60_000, dueOn: "2026-09-15" },
+    { order: 2, percent: 40, amount: 40_000, dueOn: "2026-11-15" },
+  ];
+  it("finds the first part not yet paid, across invoices", () => {
+    expect(nextDueDate([{ balance: 40_000, paid: 60_000, dueOn: "2026-11-15", schedule: sched, status: "PartiallyPaid" }], "2026-10-17")).toBe("2026-11-15");
+    expect(nextDueDate([{ balance: 100_000, paid: 0, dueOn: "2026-11-15", schedule: sched, status: "Unpaid" }], "2026-10-17")).toBe("2026-09-15");
+    expect(nextDueDate([{ balance: 5_000, paid: 0, dueOn: "2026-12-01", schedule: [], status: "Unpaid" }], "2026-10-17")).toBe("2026-12-01");
+  });
+  it("ignores paid and cancelled invoices", () => {
+    expect(nextDueDate([{ balance: 0, paid: 100_000, dueOn: "2026-11-15", schedule: sched, status: "Paid" }], "2026-10-17")).toBeNull();
+    expect(nextDueDate([{ balance: 5_000, paid: 0, dueOn: "2026-12-01", schedule: [], status: "Cancelled" }], "2026-10-17")).toBeNull();
   });
 });

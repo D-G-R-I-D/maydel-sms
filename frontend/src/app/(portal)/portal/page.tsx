@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarCheck, ClipboardList, Users, Wallet, type LucideIcon } from "lucide-react";
+import { formatNaira } from "@/lib/finance/rules";
 import { load } from "@/lib/api/server";
 import { firstName } from "@/lib/flash";
 import { formatAverage, ordinal } from "@/lib/reports/rules";
@@ -10,16 +11,21 @@ import { PhotoAvatar } from "@/components/media/photo-avatar";
 
 export const metadata: Metadata = { title: "Home" };
 
-const later: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: Wallet, title: "Fees", body: "Invoices and receipts will appear here." },
-  { icon: CalendarCheck, title: "Attendance", body: "Daily attendance will appear here." },
-];
+const later: { icon: LucideIcon; title: string; body: string }[] = [{ icon: CalendarCheck, title: "Attendance", body: "Daily attendance will appear here." }];
 
 /** Parent/student home: one card per child with their latest published result (design system §5). */
 export default async function PortalHomePage() {
   const [me, children] = await Promise.all([load((api) => api.GET("/api/auth/me")), load((api) => api.GET("/api/portal/children"))]);
   if (!me.ok) return <ProblemState problem={me.problem} />;
   const name = firstName(me.data.fullName) || me.data.fullName;
+  // Each child's fee totals, for a one-line summary on their card (E6.3).
+  const fees = children.ok
+    ? new Map(
+        await Promise.all(
+          children.data.map(async (c) => [c.studentId, await load((api) => api.GET("/api/portal/children/{studentId}/fees", { params: { path: { studentId: c.studentId } } }))] as const),
+        ),
+      )
+    : new Map();
   const isParent = me.data.roles.includes("Parent");
 
   return (
@@ -67,6 +73,20 @@ export default async function PortalHomePage() {
                   ) : (
                     <p className="mt-4 rounded-input bg-surface-2 p-3 text-sm text-muted">No results published yet. You&apos;ll see them here once the school releases them.</p>
                   )}
+                  {(() => {
+                    const f = fees.get(c.studentId);
+                    if (!f?.ok || f.data.invoices.length === 0) return null;
+                    return (
+                      <Link href={`/portal/fees?child=${c.studentId}`} className="group mt-2 flex items-center gap-3 rounded-input p-3 transition-colors hover:bg-surface-2">
+                        <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
+                        <span className="tabular min-w-0 flex-1 text-sm">
+                          Balance {formatNaira(f.data.balance)}
+                          {f.data.overdue > 0 && <span className="text-danger"> · Overdue {formatNaira(f.data.overdue)}</span>}
+                        </span>
+                        <ArrowRight className="size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
+                      </Link>
+                    );
+                  })()}
                 </Card>
               </li>
             );

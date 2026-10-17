@@ -13,6 +13,7 @@ import { Badge, Button, Field, Input, Select, cn, describedBy } from "@/componen
 import { Alert } from "@/components/ui/states";
 import { CancelButton, ConfirmDialog, DialogActions, FormDialog } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
+import { PdfDownloadButton } from "@/components/reports/pdf-download";
 
 const dateFormat = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const day = (iso: string) => dateFormat.format(new Date(`${iso.slice(0, 10)}T12:00:00Z`));
@@ -104,6 +105,7 @@ export function RecordPaymentButton({ invoice, today }: { invoice: InvoiceDetail
               </dl>
             </div>
             <DialogActions>
+              <PdfDownloadButton href={`/api/media/finance/receipts/${receipt.paymentId}/pdf`} label="Download receipt" fallbackName={`${receipt.receiptNumber}.pdf`} showView={false} />
               <Button onClick={close}>Done</Button>
             </DialogActions>
           </div>
@@ -171,7 +173,7 @@ export function PaymentsTable({ payments, isAdmin }: { payments: Payment[]; isAd
               <th className="px-3 py-2 font-medium">Date</th>
               <th className="px-3 py-2 font-medium">Method</th>
               <th className="px-3 py-2 text-right font-medium">Amount</th>
-              {isAdmin && <th className="w-24 px-3 py-2" aria-label="Actions" />}
+              <th className="px-3 py-2" aria-label="Actions" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -189,9 +191,9 @@ export function PaymentsTable({ payments, isAdmin }: { payments: Payment[]; isAd
                   {p.reference && <span className="block text-xs text-muted">{p.reference}</span>}
                 </td>
                 <td className={cn("tabular px-3 py-2.5 text-right font-medium", p.reversedBy && "line-through opacity-70")}>{signed(p.amount, formatNaira)}</td>
-                {isAdmin && (
-                  <td className="px-3 py-2.5 text-right">
-                    {!p.isReversal && !p.reversedBy && (
+                <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                  <PdfDownloadButton href={`/api/media/finance/receipts/${p.id}/pdf`} label="Receipt" fallbackName={`${p.receiptNumber}.pdf`} variant="ghost" size="sm" showView={false} />
+                  {isAdmin && !p.isReversal && !p.reversedBy && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -203,9 +205,8 @@ export function PaymentsTable({ payments, isAdmin }: { payments: Payment[]; isAd
                         <RotateCcw className="size-3.5" aria-hidden />
                         Reverse
                       </Button>
-                    )}
-                  </td>
-                )}
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

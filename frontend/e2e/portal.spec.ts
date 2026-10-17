@@ -52,3 +52,20 @@ test("portal PDF and photo routes are refused for strangers", async ({ request }
   expect((await request.get(`/api/media/portal/children/${id}/results/${id}/pdf`)).status()).toBe(401);
   expect((await request.put(`/api/media/portal/${id}/photo`, { multipart: { file: { name: "x.png", mimeType: "image/png", buffer: Buffer.from("x") } } })).status()).toBe(404);
 });
+
+test("parents see a child's fees with how to pay", async ({ page }) => {
+  await signIn(page, "parent@maydel.test");
+  await page.goto("/portal/fees");
+  await expect(page.getByRole("heading", { name: "Fees", level: 1 })).toBeVisible();
+  await expect(page.getByText("How to pay")).toBeVisible();
+  await expect(page.getByText(/MSS\/\d{4}\/\d{4}/).first()).toBeVisible(); // the admission number to quote
+  await expect(page.getByText("No fees have been billed yet").or(page.getByText(/^INV-/).first())).toBeVisible();
+});
+
+test("fee PDFs are refused for strangers and signed-out users", async ({ request }) => {
+  const id = "01a131b3-b62a-776b-b7f7-3698f51d8986";
+  expect((await request.get(`/api/media/finance/invoices/${id}/pdf`)).status()).toBe(401);
+  expect((await request.get(`/api/media/finance/receipts/${id}/pdf`)).status()).toBe(401);
+  expect((await request.get(`/api/media/portal/children/${id}/invoices/${id}/pdf`)).status()).toBe(401);
+  expect((await request.get("/api/media/finance/invoices/not-a-guid/pdf")).status()).toBe(404);
+});

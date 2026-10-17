@@ -23,13 +23,16 @@ export function PdfDownloadButton({
   icon = "download",
   variant = "secondary",
   size = "md",
+  showView = true,
 }: {
   href: string;
   label: string;
   fallbackName: string;
   icon?: "download" | "print";
-  variant?: "secondary" | "primary";
+  variant?: "secondary" | "primary" | "ghost";
   size?: "sm" | "md";
+  /** The "View" link (opens inline in a new tab); off for compact places like table rows. */
+  showView?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const Icon = icon === "print" ? Printer : Download;
@@ -83,10 +86,12 @@ export function PdfDownloadButton({
         <Icon className="size-4" aria-hidden />
         {label}
       </Button>
-      <a href={inlineHref(href)} target="_blank" rel="noopener" className={buttonClasses("ghost", size)} aria-label={`View ${fallbackName.replace(/\.pdf$/i, "")} (opens in a new tab)`}>
-        <Eye className="size-4" aria-hidden />
-        View
-      </a>
+      {showView && (
+        <a href={inlineHref(href)} target="_blank" rel="noopener" className={buttonClasses("ghost", size)} aria-label={`View ${fallbackName.replace(/\.pdf$/i, "")} (opens in a new tab)`}>
+          <Eye className="size-4" aria-hidden />
+          View
+        </a>
+      )}
     </span>
   );
 }

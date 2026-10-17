@@ -53,3 +53,22 @@ export function scheduleStates(schedule: readonly { amount: number; dueOn: strin
     return "upcoming";
   });
 }
+
+/**
+ * The earliest date something is still owed across invoices: the first instalment not yet covered
+ * by payments, or the invoice's due date when there's no schedule. Null when nothing is owed.
+ */
+export function nextDueDate(invoices: readonly Pick<InvoiceDetail, "balance" | "paid" | "dueOn" | "schedule" | "status">[], today: string): string | null {
+  const dates: string[] = [];
+  for (const inv of invoices) {
+    if (inv.status === "Cancelled" || inv.balance <= 0) continue;
+    if (inv.schedule.length === 0) {
+      if (inv.dueOn) dates.push(inv.dueOn);
+      continue;
+    }
+    const states = scheduleStates(inv.schedule, inv.paid, today);
+    const i = states.findIndex((s) => s !== "paid");
+    if (i >= 0) dates.push(inv.schedule[i].dueOn);
+  }
+  return dates.sort()[0] ?? null;
+}
