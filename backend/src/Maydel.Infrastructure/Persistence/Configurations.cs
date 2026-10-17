@@ -417,6 +417,9 @@ internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionAppl
         b.Property(x => x.StaffNotes).HasMaxLength(4000);
         b.Ignore(x => x.ChildName);
         b.Property(x => x.ExamScore).HasPrecision(5, 2);
+        b.Property(x => x.Decision).HasConversion<string>().HasMaxLength(10);
+        b.Property(x => x.AdmissionNumber).HasMaxLength(20);
+        b.HasIndex(x => x.AdmissionNumber).IsUnique().HasFilter("\"AdmissionNumber\" IS NOT NULL");
         b.HasOne<ExamSlot>().WithMany().HasForeignKey(x => x.ExamSlotId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);

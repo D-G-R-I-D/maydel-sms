@@ -18,6 +18,9 @@ public enum EmailKind
 
     /// <summary>An admissions stage update for the family (form ready, exam, result, offer). Plain text.</summary>
     AdmissionStage,
+
+    /// <summary>An admission offer: the admission letter PDF is attached at send time, while the offer stands.</summary>
+    AdmissionOffer,
 }
 
 public enum EmailStatus
@@ -49,6 +52,7 @@ public class OutboxEmail : Entity
     public Guid? GuardianId { get; set; }
     public Guid? InvoiceId { get; set; }
     public Guid? PaymentId { get; set; }
+    public Guid? ApplicationId { get; set; }
 
     public EmailStatus Status { get; set; } = EmailStatus.Pending;
     public int Attempts { get; set; }

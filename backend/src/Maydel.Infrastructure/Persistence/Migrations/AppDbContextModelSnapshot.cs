@@ -398,6 +398,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AdmissionNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<Guid>("ApplicantUserId")
                         .HasColumnType("uuid");
 
@@ -420,10 +424,23 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("DataPurgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Decision")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
+
+                    b.Property<DateTimeOffset?>("EnrolledAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("ExamBookedAt")
                         .HasColumnType("timestamp with time zone");
@@ -474,6 +491,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<DateTimeOffset?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("ScoredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -502,6 +522,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdmissionNumber")
+                        .IsUnique()
+                        .HasFilter("\"AdmissionNumber\" IS NOT NULL");
 
                     b.HasIndex("ApplicantUserId");
 
@@ -1165,6 +1189,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maydel.Domain.Communication.OutboxEmail", b =>
                 {
                     b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApplicationId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Attempts")

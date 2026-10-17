@@ -12,7 +12,8 @@ namespace Maydel.Application.Notifications;
 /// is still published, so an unpublished draft can never be mailed. One email failing never stops the rest.
 /// </summary>
 public sealed class EmailDispatcher(
-    IAppDbContext db, IEmailSender sender, ReportBuilder reports, ReportPdfs pdfs, Finance.FinanceDocuments finance, TimeProvider clock, ILogger<EmailDispatcher> logger)
+    IAppDbContext db, IEmailSender sender, ReportBuilder reports, ReportPdfs pdfs, Finance.FinanceDocuments finance, Admissions.AdmissionLetters letters,
+    TimeProvider clock, ILogger<EmailDispatcher> logger)
 {
     public const int BatchSize = 10;
 
@@ -58,6 +59,18 @@ public sealed class EmailDispatcher(
                         continue;
                     }
                     attachments.Add(new EmailAttachment(pdf.FileName, "application/pdf", pdf.Content));
+                }
+
+                else if (email.Kind == EmailKind.AdmissionOffer)
+                {
+                    // Only while the offer stands: a withdrawn offer is never mailed.
+                    if (email.ApplicationId is not { } applicationId || await letters.LetterAsync(applicationId, ct) is not { } letter)
+                    {
+                        email.MarkSkipped("The offer no longer stands.");
+                        await db.SaveChangesAsync(ct);
+                        continue;
+                    }
+                    attachments.Add(new EmailAttachment(letter.FileName, "application/pdf", letter.Content));
                 }
 
                 await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, email.Body, attachments), ct);

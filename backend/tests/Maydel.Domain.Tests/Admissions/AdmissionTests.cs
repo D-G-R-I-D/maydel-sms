@@ -213,3 +213,70 @@ public sealed class EntranceExamTests
         Assert.Equal(new DateOnly(2026, 10, 16), new ExamSlot { Venue = "v", StartsAt = new DateTimeOffset(2026, 10, 15, 23, 30, 0, TimeSpan.Zero) }.Day);
     }
 }
+
+public sealed class OfferTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 11, 2, 9, 0, 0, TimeSpan.Zero);
+
+    private static AdmissionApplication Assessed(decimal score = 70)
+    {
+        var a = new AdmissionApplication { ReferenceNumber = "APP-2026-0010", ParentName = "p", Phone = "1", Email = "e", ChildFirstName = "Zainab", ChildLastName = "Musa" };
+        a.Status = ApplicationStatus.ExamBooked;
+        a.RecordScore(score, Now);
+        return a;
+    }
+
+    [Fact]
+    public void Decisions_are_drafts_until_published_and_unticked_applicants_are_not_offered()
+    {
+        var offered = Assessed();
+        Assert.Null(offered.SetDecision(OfferDecision.Offer));
+        Assert.Equal(ApplicationStatus.Assessed, offered.Status);
+        Assert.Null(offered.PublishDecision(Now, "MSS/2026/0042"));
+        Assert.Equal((ApplicationStatus.Offered, "MSS/2026/0042"), (offered.Status, offered.AdmissionNumber));
+        Assert.Equal("admission.not_assessed", offered.SetDecision(null)?.Code);
+
+        var unticked = Assessed(40);
+        Assert.Null(unticked.PublishDecision(Now, null));
+        Assert.Equal((ApplicationStatus.NotOffered, OfferDecision.Decline, (string?)null), (unticked.Status, unticked.Decision, unticked.AdmissionNumber));
+    }
+
+    [Fact]
+    public void Families_accept_or_decline_and_only_accepted_offers_enrol()
+    {
+        var app = Assessed();
+        app.SetDecision(OfferDecision.Offer);
+        app.PublishDecision(Now, "MSS/2026/0043");
+        Assert.Equal("admission.not_accepted", app.Enrol(Guid.NewGuid(), Now)?.Code);
+        Assert.Null(app.Respond(accept: true, Now));
+        Assert.Equal("admission.no_offer", app.Respond(accept: false, Now)?.Code);
+        var student = Guid.NewGuid();
+        Assert.Null(app.Enrol(student, Now));
+        Assert.Equal((ApplicationStatus.Enrolled, student), (app.Status, app.StudentId));
+
+        var declined = Assessed();
+        declined.SetDecision(OfferDecision.Offer);
+        declined.PublishDecision(Now, "MSS/2026/0044");
+        Assert.Null(declined.Respond(accept: false, Now));
+        Assert.Equal(ApplicationStatus.Withdrawn, declined.Status);
+    }
+
+    [Fact]
+    public void Unsuccessful_applications_are_purged_after_six_months()
+    {
+        var app = Assessed(30);
+        app.PublishDecision(Now, null);
+        app.Form = new ApplicationForm { HomeAddress = "x", FatherName = "f" };
+        app.Documents.Add(new ApplicationDocument { Kind = DocumentKind.PassportPhoto, FilePath = "applications/a.jpg", ContentType = "image/jpeg" });
+        Assert.False(app.IsDueForPurge(Now.AddMonths(6).AddDays(-1)));
+        Assert.True(app.IsDueForPurge(Now.AddMonths(6)));
+
+        Assert.Equal(["applications/a.jpg"], app.Purge(Now.AddMonths(6)));
+        Assert.Equal((null, "Removed", 0, 30m), (app.Form.HomeAddress, app.ChildFirstName, app.Documents.Count, app.ExamScore));
+        Assert.False(app.IsDueForPurge(Now.AddYears(2)));
+
+        var enrolled = Assessed();
+        enrolled.Status = ApplicationStatus.Enrolled;
+        Assert.False(enrolled.IsDueForPurge(Now.AddYears(5)));
+    }
+}

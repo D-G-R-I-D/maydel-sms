@@ -3,11 +3,15 @@ using Maydel.Application.Common;
 using Maydel.Application.Common.Messaging;
 using Maydel.Domain.Admissions;
 using Maydel.Domain.Attendance;
+using Maydel.Application.Identity;
+using Maydel.Domain.Common;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Maydel.Application.Admissions.SweepAdmissions;
 
-internal sealed class SweepAdmissionsHandler(IAppDbContext db, ISchoolClock clock, AdmissionEmails emails) : ICommandHandler<SweepAdmissionsCommand, SweepResult>
+internal sealed class SweepAdmissionsHandler(IAppDbContext db, ISchoolClock clock, AdmissionEmails emails, IFileStorage storage, UserManager<AppUser> users)
+    : ICommandHandler<SweepAdmissionsCommand, SweepResult>
 {
     public async Task<Result<SweepResult>> Handle(SweepAdmissionsCommand c, CancellationToken ct)
     {
@@ -34,7 +38,33 @@ internal sealed class SweepAdmissionsHandler(IAppDbContext db, ISchoolClock cloc
                 $"A reminder that {application.ChildName}'s entrance exam is on {AdmissionEmails.When(slot.StartsAt)} at {slot.Venue}. " +
                 "Please arrive 15 minutes early.", ct);
         }
+        // NDPR: unsuccessful applications keep no child data beyond 6 months.
+        var cutoff = now.AddMonths(-AdmissionApplication.PurgeAfterMonths);
+        var stale = await apps.Where(a => a.DataPurgedAt == null && (
+                (a.Status == ApplicationStatus.NotOffered && a.DecidedAt <= cutoff) ||
+                (a.Status == ApplicationStatus.Missed && a.MissedAt <= cutoff) ||
+                (a.Status == ApplicationStatus.Withdrawn && (a.RespondedAt ?? a.UpdatedAt) <= cutoff)))
+            .ToListAsync(ct);
+        var purge = stale.Where(a => a.IsDueForPurge(now)).ToList();
+        var files = purge.SelectMany(a => a.Purge(now)).ToList();
+
+        // Applicant-only accounts (never became parents) unused for 12 months are switched off.
+        var deactivated = 0;
+        if (c.SessionId is null)
+        {
+            var idle = now.AddMonths(-12);
+            foreach (var user in await users.GetUsersInRoleAsync(Roles.Applicant))
+            {
+                if (!user.IsActive || (user.LastLoginAt ?? user.CreatedAt) > idle || await users.IsInRoleAsync(user, Roles.Parent)) continue;
+                user.IsActive = false;
+                await users.UpdateAsync(user);
+                await users.UpdateSecurityStampAsync(user);
+                deactivated++;
+            }
+        }
+
         await db.SaveChangesAsync(ct);
-        return new SweepResult(overdue.Count, due.Count);
+        foreach (var file in files) await storage.DeleteAsync(file, ct);
+        return new SweepResult(overdue.Count, due.Count, purge.Count, deactivated);
     }
 }

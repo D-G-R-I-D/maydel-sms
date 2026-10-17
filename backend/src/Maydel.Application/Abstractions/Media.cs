@@ -76,6 +76,16 @@ public interface IFinanceDocumentRenderer
 /// <summary>The admission form to print: blank (to fill by hand) when <c>Application</c> is null.</summary>
 public sealed record AdmissionFormDocument(Admissions.ApplicationDetail? Application, string Session, byte[]? Photo, DateOnly PrintedOn);
 
+/// <summary>An admission letter (E11.8). Everything printed comes from stored data, so a reprint is identical.</summary>
+public sealed record AdmissionLetterDocument(
+    string ReferenceNumber, string AdmissionNumber, string ChildName, string ClassLevel, string Session, string ParentName, string? HomeAddress,
+    DateOnly LetterDate, DateOnly? ResumesOn);
+
+public interface IAdmissionLetterRenderer
+{
+    byte[] Render(AdmissionLetterDocument letter, ReportBranding school);
+}
+
 public interface IAdmissionFormRenderer
 {
     byte[] Render(AdmissionFormDocument document, ReportBranding school);

@@ -22,8 +22,6 @@ public sealed class EntranceExamTests(PostgresFixture fixture)
 {
     private ApiFactory Api => fixture.Api;
 
-    // The fake clock: 08:00 in Abuja on Thursday 15 October 2026; a 5-day window ends on the 20th.
-    private static string Wat(int day, int hour) => $"2026-10-{day:00}T{hour:00}:00:00+01:00";
 
     [Fact]
     public async Task Families_book_sittings_within_their_window_and_capacity()
@@ -124,92 +122,16 @@ public sealed class EntranceExamTests(PostgresFixture fixture)
         await (await teacher.GetAsync($"/api/admissions/results?sessionId={session}")).AssertProblemAsync(HttpStatusCode.Forbidden);
     }
 
-    // ---------- helpers ----------
+    // ---------- helpers (see AdmissionsKit) ----------
 
-    private static int _year = 2850 + Random.Shared.Next(0, 100);
-
-    private async Task<Guid> OpenSessionAsync()
-    {
-        var admin = await Api.ClientAsync(Roles.Admin);
-        var year = Interlocked.Increment(ref _year);
-        var session = (await (await admin.PostAsJsonAsync("/api/academics/sessions", new { name = $"{year}/{year + 1}", startsOn = $"{year}-09-14", endsOn = $"{year + 1}-07-23" }))
-            .Content.ReadFromJsonAsync<SessionDto>(Json.Options))!;
-        (await admin.PutAsJsonAsync("/api/admissions/settings", new { sessionId = session.Id, isOpen = true, formFee = 5000, examWindowDays = 5 })).EnsureSuccessStatusCode();
-        return session.Id;
-    }
-
-    private static object SlotBody(Guid session, string startsAt, int capacity, string venue, string mode = "Paper") =>
-        new { sessionId = session, startsAt, durationMinutes = 90, venue, mode, capacity };
-
-    private static async Task<ExamSlotDto> SlotAsync(HttpClient admin, Guid session, string startsAt, int capacity, string venue, string mode = "Paper") =>
-        await ReadAsync<ExamSlotDto>(await admin.PostAsJsonAsync("/api/admissions/exam-slots", SlotBody(session, startsAt, capacity, venue, mode)));
-
-    private async Task<(HttpClient Family, Guid Application)> PaidAsync(Guid session)
-    {
-        var admin = await Api.ClientAsync(Roles.Admin);
-        var level = (await admin.GetFromJsonAsync<List<ClassLevelDto>>("/api/academics/class-levels", Json.Options))!.First().Id;
-        var email = $"exam-{Guid.NewGuid():N}@example.com";
-        var application = await ReadAsync<ApplicationDto>(await Api.CreateClient().PostAsJsonAsync("/api/public/admissions/register", new
-        {
-            parentName = "Mrs. Bello", email, phone = "08031234567", password = "Apply#Pass2026", childFirstName = "Amina", childLastName = "Bello",
-            classLevelId = level, sessionId = session,
-        }));
-        var family = Api.CreateClient((await Api.LoginAsync(email, "Apply#Pass2026")).AccessToken);
-        var code = (await (await (await Api.ClientAsync(Roles.Bursar)).PostAsJsonAsync("/api/admissions/form-codes", new { sessionId = session, count = 1, amountPaid = 5000 }))
-            .Content.ReadFromJsonAsync<List<FormCodeDto>>(Json.Options))!.Single().Code;
-        (await family.PostAsJsonAsync($"/api/admissions/applications/{application.Id}/redeem-code", new { code })).EnsureSuccessStatusCode();
-        return (family, application.Id);
-    }
-
-    private async Task<(HttpClient Family, Guid Application)> SubmittedAsync(Guid session)
-    {
-        var (family, id) = await PaidAsync(session);
-        (await family.PutAsJsonAsync($"/api/admissions/applications/{id}/form", new
-        {
-            childFirstName = "Amina", childLastName = "Bello", childDateOfBirth = "2019-06-06",
-            form = new { childSex = "Female", homeAddress = "3 Close, Wuse, Abuja", motherName = "Mrs. Bello", motherPhone = "08030002222", declaration = true },
-        })).EnsureSuccessStatusCode();
-        var upload = new MultipartFormDataContent { { new StringContent("PassportPhoto"), "kind" } };
-        var photo = new ByteArrayContent(Jpeg());
-        photo.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        upload.Add(photo, "file", "photo");
-        (await family.PostAsync($"/api/admissions/applications/{id}/documents", upload)).EnsureSuccessStatusCode();
-        (await family.PostAsync($"/api/admissions/applications/{id}/submit", null)).EnsureSuccessStatusCode();
-        return (family, id);
-    }
-
-    private async Task<SweepResult> SweepAsync(DateTimeOffset now, Guid session)
-    {
-        SweepResult? result = null;
-        await Api.WithServicesAsync(async sp =>
-            result = (await sp.GetRequiredService<ICommandHandler<SweepAdmissionsCommand, SweepResult>>().Handle(new SweepAdmissionsCommand(now, session), CancellationToken.None)).Value);
-        return result!;
-    }
-
-    private async Task<int> OutboxCountAsync(Guid application, string subjectLike)
-    {
-        var count = 0;
-        await Api.WithServicesAsync(async sp =>
-        {
-            var db = sp.GetRequiredService<AppDbContext>();
-            var reference = await db.Applications.Where(a => a.Id == application).Select(a => a.ReferenceNumber).SingleAsync();
-            count = await db.OutboxEmails.CountAsync(e => e.Subject.Contains(reference) && EF.Functions.ILike(e.Subject, subjectLike));
-        });
-        return count;
-    }
-
-    private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
-    {
-        if (!response.IsSuccessStatusCode) Assert.Fail($"{(int)response.StatusCode}: {await response.Content.ReadAsStringAsync()}");
-        return (await response.Content.ReadFromJsonAsync<T>(Json.Options))!;
-    }
-
-    private static byte[] Jpeg()
-    {
-        using var surface = SKSurface.Create(new SKImageInfo(300, 400));
-        surface.Canvas.Clear(SKColors.SkyBlue);
-        using var image = surface.Snapshot();
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 80);
-        return data.ToArray();
-    }
+    private static string Wat(int day, int hour) => AdmissionsKit.Wat(day, hour);
+    private Task<Guid> OpenSessionAsync() => AdmissionsKit.OpenSessionAsync(Api);
+    private static object SlotBody(Guid session, string startsAt, int capacity, string venue, string mode = "Paper") => AdmissionsKit.SlotBody(session, startsAt, capacity, venue, mode);
+    private static Task<ExamSlotDto> SlotAsync(HttpClient admin, Guid session, string startsAt, int capacity, string venue, string mode = "Paper") =>
+        AdmissionsKit.SlotAsync(admin, session, startsAt, capacity, venue, mode);
+    private Task<(HttpClient Family, Guid Application)> PaidAsync(Guid session) => AdmissionsKit.PaidAsync(Api, session);
+    private Task<(HttpClient Family, Guid Application)> SubmittedAsync(Guid session) => AdmissionsKit.SubmittedAsync(Api, session);
+    private Task<SweepResult> SweepAsync(DateTimeOffset now, Guid session) => AdmissionsKit.SweepAsync(Api, now, session);
+    private Task<int> OutboxCountAsync(Guid application, string subjectLike) => AdmissionsKit.OutboxCountAsync(Api, application, subjectLike);
+    private static Task<T> ReadAsync<T>(HttpResponseMessage response) => AdmissionsKit.ReadAsync<T>(response);
 }
