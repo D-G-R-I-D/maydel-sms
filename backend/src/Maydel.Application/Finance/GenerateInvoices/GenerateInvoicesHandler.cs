@@ -18,7 +18,7 @@ internal sealed class GenerateInvoicesHandler(IAppDbContext db) : ICommandHandle
         var items = await db.FeeItems.AsNoTracking().Include(f => f.OptIns).Where(f => f.TermId == term.Id).ToListAsync(ct);
         var students = await db.Students.AsNoTracking()
             .Where(s => s.Status == StudentStatus.Active && s.ClassRoomId != null && (c.ClassLevelId == null || s.ClassRoom!.ClassLevelId == c.ClassLevelId))
-            .Select(s => new { s.Id, s.ClassRoomId, LevelId = s.ClassRoom!.ClassLevelId }).ToListAsync(ct);
+            .Select(s => new { s.Id, s.ClassRoomId, LevelId = s.ClassRoom!.ClassLevelId, s.AdmittedOn }).ToListAsync(ct);
         var invoiced = (await db.Invoices.Where(i => i.TermId == term.Id && !i.IsCancelled).Select(i => i.StudentId).ToListAsync(ct)).ToHashSet();
 
         var settings = await db.SettingsAsync(ct);
@@ -36,7 +36,9 @@ internal sealed class GenerateInvoicesHandler(IAppDbContext db) : ICommandHandle
         foreach (var s in students)
         {
             if (invoiced.Contains(s.Id)) { already++; continue; }
-            var mine = items.Where(f => (f.ClassLevelId == null || f.ClassLevelId == s.LevelId) && (f.IsMandatory || f.OptIns.Any(o => o.StudentId == s.Id))).ToList();
+            var newIntake = FeeRules.IsNewIntake(s.AdmittedOn, term.StartsOn, term.EndsOn);
+            var mine = items.Where(f => (f.ClassLevelId == null || f.ClassLevelId == s.LevelId) && FeeRules.Applies(f.Audience, newIntake)
+                && f.Charges(s.Id)).ToList();
             if (mine.Count == 0) { noFees++; continue; }
 
             var lines = mine.Select(f => new InvoiceLine { Description = f.Name, Amount = f.Amount }).ToList();
@@ -48,7 +50,7 @@ internal sealed class GenerateInvoicesHandler(IAppDbContext db) : ICommandHandle
             db.Invoices.Add(new Invoice
             {
                 Number = FeeRules.InvoiceNumber(term.Session.Name, next++), StudentId = s.Id, ClassRoomId = s.ClassRoomId, TermId = term.Id,
-                DueOn = dueOn, Lines = lines,
+                DueOn = dueOn, Lines = lines, NewIntake = newIntake,
             });
             created++;
             billed += lines.Sum(l => l.Amount);

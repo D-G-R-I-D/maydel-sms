@@ -12,7 +12,8 @@ internal sealed class GetChildFeesHandler(IAppDbContext db, AccessRules access, 
     public async Task<Result<PortalFees>> Handle(GetChildFeesQuery q, CancellationToken ct)
     {
         if (!await access.PortalStudents().AnyAsync(s => s.Id == q.StudentId, ct)) return PortalErrors.StudentNotFound;
-        var ids = await db.Invoices.AsNoTracking().Where(i => i.StudentId == q.StudentId && !i.IsCancelled)
+        // Drafts are staff-only until published (E10.7).
+        var ids = await db.Invoices.AsNoTracking().Where(i => i.StudentId == q.StudentId && !i.IsCancelled && i.PublishedAt != null)
             .OrderByDescending(i => i.CreatedAt).Select(i => i.Id).ToListAsync(ct);
         var invoices = new List<InvoiceDetail>(ids.Count);
         foreach (var id in ids) invoices.Add((await db.DetailAsync(id, clock.Today, ct))!);

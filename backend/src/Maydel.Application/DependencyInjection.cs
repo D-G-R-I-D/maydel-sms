@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<Finance.FinanceDocuments>();
         services.AddScoped<Finance.OnlinePayments>();
         services.AddScoped<Notifications.EmailDispatcher>();
+        services.AddScoped<Notifications.InvoiceEmails>();
         return services;
     }
 }

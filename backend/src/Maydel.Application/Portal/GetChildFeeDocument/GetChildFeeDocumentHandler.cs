@@ -16,10 +16,10 @@ internal sealed class GetChildFeeDocumentHandler(IAppDbContext db, AccessRules a
         if (!await access.PortalStudents().AnyAsync(s => s.Id == q.StudentId, ct)) return PortalErrors.StudentNotFound;
         if (q.PaymentId is { } paymentId)
         {
-            var mine = await db.Payments.AnyAsync(p => p.Id == paymentId && p.Invoice.StudentId == q.StudentId && !p.Invoice.IsCancelled, ct);
+            var mine = await db.Payments.AnyAsync(p => p.Id == paymentId && p.Invoice.StudentId == q.StudentId && !p.Invoice.IsCancelled && p.Invoice.PublishedAt != null, ct);
             return mine && await documents.ReceiptAsync(paymentId, ct) is { } receipt ? receipt : PortalErrors.InvoiceNotFound;
         }
-        var owned = q.InvoiceId is { } invoiceId && await db.Invoices.AnyAsync(i => i.Id == invoiceId && i.StudentId == q.StudentId && !i.IsCancelled, ct);
+        var owned = q.InvoiceId is { } invoiceId && await db.Invoices.AnyAsync(i => i.Id == invoiceId && i.StudentId == q.StudentId && !i.IsCancelled && i.PublishedAt != null, ct);
         return owned && await documents.InvoiceAsync(q.InvoiceId!.Value, ct) is { } pdf ? pdf : PortalErrors.InvoiceNotFound;
     }
 }

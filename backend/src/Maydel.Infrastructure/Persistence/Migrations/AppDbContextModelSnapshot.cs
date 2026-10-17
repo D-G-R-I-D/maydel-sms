@@ -947,6 +947,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("GuardianId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("InvoiceId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1047,6 +1050,14 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("Amount")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)");
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<bool>("ChargedByDefault")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("ClassLevelId")
                         .HasColumnType("uuid");
@@ -1169,10 +1180,16 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsCancelled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("NewIntake")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");

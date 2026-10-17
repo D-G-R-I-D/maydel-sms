@@ -82,6 +82,7 @@ public sealed class FeeDocumentTests(PostgresFixture fixture)
         var level = (await admin.GetFromJsonAsync<List<ClassRoomDto>>("/api/academics/classrooms", Json.Options))!.Single(r => r.Id == s.ClassRoomId).ClassLevelId;
         (await bursar.PostAsJsonAsync("/api/finance/fee-items", new { termId = _term, name = "Tuition", amount = 100000, classLevelId = level, isMandatory = true })).EnsureSuccessStatusCode();
         (await bursar.PostAsJsonAsync("/api/finance/invoices/generate", new { termId = _term, classLevelId = level })).EnsureSuccessStatusCode();
+        (await bursar.PostAsJsonAsync("/api/finance/invoices/publish", new { termId = _term, classLevelId = level, notifyParents = false })).EnsureSuccessStatusCode();
         return (s, await OtherInvoiceAsync(bursar, s.Students[0]), bursar, _term);
     }
 

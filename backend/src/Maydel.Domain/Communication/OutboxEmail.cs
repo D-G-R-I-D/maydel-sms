@@ -6,6 +6,9 @@ public enum EmailKind
 {
     /// <summary>A guardian's copy of a published report card (PDF attached at send time).</summary>
     ReportPublished,
+
+    /// <summary>A guardian's copy of a newly published fees invoice (PDF attached at send time).</summary>
+    InvoicePublished,
 }
 
 public enum EmailStatus
@@ -35,6 +38,7 @@ public class OutboxEmail : Entity
     public Guid? StudentId { get; set; }
     public Guid? TermId { get; set; }
     public Guid? GuardianId { get; set; }
+    public Guid? InvoiceId { get; set; }
 
     public EmailStatus Status { get; set; } = EmailStatus.Pending;
     public int Attempts { get; set; }

@@ -39,7 +39,8 @@ internal static class Invoices
             // The least the next payment can be: the rest of the next instalment, or the whole balance without a plan.
             i.IsCancelled || i.Balance <= 0 ? 0
                 : schedule.Count == 0 ? i.Balance
-                : Math.Min(i.Balance, FeeRules.NextInstalmentMinimum([.. schedule.Select(s => s.Amount)], i.AmountPaid)));
+                : Math.Min(i.Balance, FeeRules.NextInstalmentMinimum([.. schedule.Select(s => s.Amount)], i.AmountPaid)),
+            i.IsPublished, i.PublishedAt, i.NewIntake);
     }
 
     public static ReceiptDto Receipt(Payment p, Invoice i, string? room) => new(
