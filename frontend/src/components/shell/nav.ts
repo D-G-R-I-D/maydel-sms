@@ -54,7 +54,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB, ready: true },
     ],
   },
-  { label: "Admissions", items: [{ label: "Admissions", href: "/admin/admissions", icon: "admissions", roles: A }] },
+  { label: "Admissions", items: [{ label: "Admissions", href: "/admin/admissions", icon: "admissions", roles: AB, ready: true }] },
   {
     label: "Website",
     items: [
@@ -70,6 +70,7 @@ export const consoleNav: NavGroup[] = [
       { label: "School profile", href: "/admin/settings/school", icon: "school", roles: A, ready: true },
       { label: "Assessment", href: "/admin/settings/assessment", icon: "assessment", roles: AT, ready: true },
       { label: "Fees", href: "/admin/settings/fees", icon: "fees", roles: AB, ready: true },
+      { label: "Admissions", href: "/admin/settings/admissions", icon: "admissions", roles: AB, ready: true },
       { label: "Users", href: "/admin/settings/users", icon: "users", roles: A },
     ],
   },
