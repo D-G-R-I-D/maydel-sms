@@ -7,6 +7,10 @@ using Maydel.Application.Portal;
 using Maydel.Application.Portal.GetChildFeeDocument;
 using Maydel.Application.Portal.GetChildFees;
 using Maydel.Application.Portal.GetOnlinePayment;
+using Maydel.Application.Portal.SubmitPaymentProof;
+using Maydel.Application.Portal.ListChildProofs;
+using Maydel.Application.Portal.GetChildProofFile;
+using Microsoft.AspNetCore.Mvc;
 using Maydel.Application.Portal.StartOnlinePayment;
 using Maydel.Application.Finance;
 using Maydel.Application.Portal.GetChildResult;
@@ -36,6 +40,11 @@ public static class PortalEndpoints
         portal.MapGet("/children/{studentId:guid}/receipts/{paymentId:guid}/pdf", GetReceiptPdf).WithName("GetChildReceiptPdf")
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
         portal.MapPost("/children/{studentId:guid}/invoices/{invoiceId:guid}/pay", StartPayment).WithName("StartOnlinePayment").ProducesProblems(400, 401, 403, 404, 422);
+        portal.MapPost("/children/{studentId:guid}/invoices/{invoiceId:guid}/proofs", SubmitProof).WithName("SubmitPaymentProof")
+            .DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(PhotoStore.MaxUploadBytes + 64 * 1024))
+            .Accepts<IFormFile>("multipart/form-data").ProducesProblems(400, 401, 403, 404, 422);
+        portal.MapGet("/children/{studentId:guid}/proofs", ListProofs).WithName("ListChildProofs").ProducesProblems(401, 403, 404);
+        portal.MapGet("/children/{studentId:guid}/proofs/{proofId:guid}/file", ProofFile).WithName("GetChildProofFile").ProducesProblems(401, 403, 404);
         portal.MapGet("/payments/{reference}", GetPayment).WithName("GetOnlinePayment").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results", ListResults).WithName("ListChildResults").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results/{termId:guid}", GetResult).WithName("GetChildResult").ProducesProblems(401, 403, 404);
@@ -44,6 +53,22 @@ public static class PortalEndpoints
     }
 
     public sealed record PayRequest(decimal? Amount);
+
+    private static async Task<Results<Ok<ProofDto>, ProblemHttpResult>> SubmitProof(
+        Guid studentId, Guid invoiceId, [FromForm] decimal amount, [FromForm] DateOnly paidOn, [FromForm] string? bankReference, [FromForm] string? note,
+        IFormFile? file, ICommandHandler<SubmitPaymentProofCommand, ProofDto> handler, CancellationToken ct)
+    {
+        if (await PhotoEndpoints.ReadAsync(file, ct) is not { } bytes) return FinanceErrors.ProofFile.ToProblem();
+        return (await handler.Handle(new SubmitPaymentProofCommand(studentId, invoiceId, amount, paidOn, bankReference, note, bytes), ct)).ToHttpResult();
+    }
+
+    private static async Task<Results<Ok<IReadOnlyList<ProofDto>>, ProblemHttpResult>> ListProofs(
+        Guid studentId, IQueryHandler<ListChildProofsQuery, IReadOnlyList<ProofDto>> handler, CancellationToken ct) =>
+        (await handler.Handle(new ListChildProofsQuery(studentId), ct)).ToHttpResult();
+
+    private static async Task<Results<FileStreamHttpResult, ProblemHttpResult>> ProofFile(
+        Guid studentId, Guid proofId, IQueryHandler<GetChildProofFileQuery, PhotoContent> handler, CancellationToken ct) =>
+        FinanceEndpoints.ProofDownload(await handler.Handle(new GetChildProofFileQuery(studentId, proofId), ct));
 
     private static async Task<Results<Ok<OnlineCheckout>, ProblemHttpResult>> StartPayment(
         Guid studentId, Guid invoiceId, PayRequest body, ICommandHandler<StartOnlinePaymentCommand, OnlineCheckout> handler, CancellationToken ct) =>

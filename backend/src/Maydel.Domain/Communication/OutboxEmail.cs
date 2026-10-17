@@ -9,6 +9,12 @@ public enum EmailKind
 
     /// <summary>A guardian's copy of a newly published fees invoice (PDF attached at send time).</summary>
     InvoicePublished,
+
+    /// <summary>Proof of payment confirmed: the receipt PDF is attached at send time.</summary>
+    ProofConfirmed,
+
+    /// <summary>Proof of payment rejected, with the bursar's reason. No attachment.</summary>
+    ProofRejected,
 }
 
 public enum EmailStatus
@@ -39,6 +45,7 @@ public class OutboxEmail : Entity
     public Guid? TermId { get; set; }
     public Guid? GuardianId { get; set; }
     public Guid? InvoiceId { get; set; }
+    public Guid? PaymentId { get; set; }
 
     public EmailStatus Status { get; set; } = EmailStatus.Pending;
     public int Attempts { get; set; }
