@@ -402,10 +402,58 @@ internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionAppl
     public void Configure(EntityTypeBuilder<AdmissionApplication> b)
     {
         b.HasIndex(x => x.ReferenceNumber).IsUnique();
-        b.HasIndex(x => x.Status);
+        b.HasIndex(x => new { x.SessionId, x.Status });
+        b.HasIndex(x => x.ApplicantUserId);
+        b.Property(x => x.ReferenceNumber).HasMaxLength(30);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
-        b.Property(x => x.Message).HasMaxLength(4000);
+        b.Property(x => x.FormPaymentMethod).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.ParentName).HasMaxLength(120);
+        b.Property(x => x.Phone).HasMaxLength(30);
+        b.Property(x => x.Email).HasMaxLength(254);
+        b.Property(x => x.ChildFirstName).HasMaxLength(60);
+        b.Property(x => x.ChildLastName).HasMaxLength(60);
+        b.Property(x => x.FormFee).HasPrecision(14, 2);
+        b.Property(x => x.FormCode).HasMaxLength(9);
         b.Property(x => x.StaffNotes).HasMaxLength(4000);
+        b.Ignore(x => x.ChildName);
+        b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class AdmissionSettingsConfig : IEntityTypeConfiguration<AdmissionSettings>
+{
+    public void Configure(EntityTypeBuilder<AdmissionSettings> b)
+    {
+        b.HasIndex(x => x.SessionId).IsUnique();
+        b.Property(x => x.FormFee).HasPrecision(14, 2);
+        b.Property(x => x.Instructions).HasMaxLength(2000);
+        b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class FormCodeConfig : IEntityTypeConfiguration<FormCode>
+{
+    public void Configure(EntityTypeBuilder<FormCode> b)
+    {
+        b.HasIndex(x => x.Code).IsUnique();
+        b.HasIndex(x => x.SessionId);
+        b.Property(x => x.Code).HasMaxLength(9);
+        b.Property(x => x.AmountPaid).HasPrecision(14, 2);
+        b.Property(x => x.IssuedTo).HasMaxLength(120);
+    }
+}
+
+internal sealed class FormPaymentConfig : IEntityTypeConfiguration<FormPayment>
+{
+    public void Configure(EntityTypeBuilder<FormPayment> b)
+    {
+        b.HasIndex(x => x.Reference).IsUnique();
+        b.Property(x => x.Reference).HasMaxLength(100);
+        b.Property(x => x.Amount).HasPrecision(14, 2);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Message).HasMaxLength(300);
+        b.HasOne<AdmissionApplication>().WithMany().HasForeignKey(x => x.ApplicationId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 
