@@ -274,7 +274,53 @@ public class Invoice : Entity
         return null;
     }
 
+    /// <summary>
+    /// Records money confirmed by the payment gateway (E10.5). The parent already passed the minimum check when starting,
+    /// and the money is real, so only what's still owed is applied; the caller flags any excess for a refund.
+    /// </summary>
+    public (Payment? Payment, decimal Applied) ApplyGatewayPayment(decimal amount, string gatewayReference, DateOnly paidOn, string receiptNumber)
+    {
+        var applied = IsCancelled ? 0 : Math.Min(amount, Balance);
+        if (applied <= 0) return (null, 0);
+        var payment = new Payment
+        {
+            InvoiceId = Id, Amount = applied, Method = PaymentMethod.Online, Reference = gatewayReference, PaidOn = paidOn, ReceiptNumber = receiptNumber,
+        };
+        Payments.Add(payment);
+        return (payment, applied);
+    }
+
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}
+
+public enum OnlinePaymentStatus
+{
+    /// <summary>Sent to Paystack; not confirmed yet.</summary>
+    Pending,
+    Succeeded,
+    /// <summary>Paystack reports the charge failed or was abandoned.</summary>
+    Failed,
+    /// <summary>Money arrived but couldn't all be applied (amount mismatch, or the invoice was settled another way): the bursar refunds or reallocates.</summary>
+    NeedsReview,
+}
+
+/// <summary>A parent's online payment attempt through Paystack (E10.5), keyed by our own unique reference.</summary>
+public class OnlinePayment : Entity
+{
+    public required string Reference { get; set; }
+    public Guid InvoiceId { get; set; }
+    public Guid StudentId { get; set; }
+    public decimal Amount { get; set; }
+    public OnlinePaymentStatus Status { get; set; } = OnlinePaymentStatus.Pending;
+    public Guid? PaymentId { get; set; }
+    /// <summary>Money received that wasn't applied to the invoice.</summary>
+    public decimal Excess { get; set; }
+    public string? Message { get; set; }
+    public Guid? InitiatedByUserId { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+
+    /// <summary>Naira to kobo, the unit Paystack amounts are in.</summary>
+    public static long ToKobo(decimal naira) => (long)Math.Round(naira * 100m, MidpointRounding.AwayFromZero);
 }
 
 public class InvoiceLine

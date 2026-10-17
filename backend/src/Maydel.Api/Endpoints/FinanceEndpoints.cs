@@ -10,6 +10,7 @@ using Maydel.Application.Finance.CopyFeeItems;
 using Maydel.Application.Finance.GetInvoicePdf;
 using Maydel.Application.Finance.GetReceiptPdf;
 using Maydel.Application.Finance.GetStatement;
+using Maydel.Application.Finance.ListOnlinePayments;
 using Maydel.Application.Reports;
 using Maydel.Application.Finance.ListDebtors;
 using Maydel.Application.Finance.RecordPayment;
@@ -67,6 +68,7 @@ public static class FinanceEndpoints
         admin.MapPost("/invoices/{id:guid}/cancel", CancelInvoice).WithName("CancelInvoice").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPost("/invoices/{id:guid}/adjustments", AdjustInvoice).WithName("AdjustInvoice").ProducesProblems(400, 401, 403, 404, 422);
         finance.MapGet("/students/{id:guid}/statement", Statement).WithName("GetStudentStatement").ProducesProblems(401, 403, 404);
+        finance.MapGet("/online-payments", OnlinePayments).WithName("ListOnlinePayments").ProducesProblems(400, 401, 403);
         finance.MapGet("/debtors", Debtors).WithName("ListDebtors").ProducesProblems(400, 401, 403, 404);
         finance.MapGet("/debtors.csv", DebtorsCsv).WithName("ExportDebtorsCsv")
             .Produces(StatusCodes.Status200OK, contentType: "text/csv").ProducesProblems(400, 401, 403, 404);
@@ -100,6 +102,9 @@ public static class FinanceEndpoints
 
     private static async Task<Results<Ok<StudentStatement>, ProblemHttpResult>> Statement(Guid id, IQueryHandler<GetStatementQuery, StudentStatement> h, CancellationToken ct) =>
         (await h.Handle(new GetStatementQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<PagedResult<OnlinePaymentRow>>, ProblemHttpResult>> OnlinePayments([AsParameters] ListOnlinePaymentsQuery query, IQueryHandler<ListOnlinePaymentsQuery, PagedResult<OnlinePaymentRow>> h, CancellationToken ct) =>
+        (await h.Handle(query, ct)).ToHttpResult();
 
     private static async Task<Results<Ok<DebtorsReport>, ProblemHttpResult>> Debtors([AsParameters] ListDebtorsQuery query, IQueryHandler<ListDebtorsQuery, DebtorsReport> h, CancellationToken ct) =>
         (await h.Handle(query, ct)).ToHttpResult();

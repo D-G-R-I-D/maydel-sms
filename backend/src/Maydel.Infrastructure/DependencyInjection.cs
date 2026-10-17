@@ -84,6 +84,14 @@ public static class DependencyInjection
         });
         services.AddHostedService<Notifications.EmailOutboxWorker>();
 
+        // E10.5 Paystack. Secret key from the environment only (Paystack__SecretKey).
+        services.AddOptions<PaystackOptions>().BindConfiguration(PaystackOptions.Section);
+        services.AddHttpClient<IPaymentGateway, Payments.PaystackGateway>(c =>
+        {
+            c.BaseAddress = new Uri("https://api.paystack.co/");
+            c.Timeout = TimeSpan.FromSeconds(20);
+        });
+
         return services;
     }
 }

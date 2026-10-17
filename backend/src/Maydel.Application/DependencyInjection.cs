@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<Attendance.RegisterReader>();
         services.AddScoped<SchoolSettings.SchoolBranding>();
         services.AddScoped<Finance.FinanceDocuments>();
+        services.AddScoped<Finance.OnlinePayments>();
         services.AddScoped<Notifications.EmailDispatcher>();
         return services;
     }

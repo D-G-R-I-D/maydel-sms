@@ -262,6 +262,21 @@ internal sealed class FeeItemConfig : IEntityTypeConfiguration<FeeItem>
     }
 }
 
+internal sealed class OnlinePaymentConfig : IEntityTypeConfiguration<OnlinePayment>
+{
+    public void Configure(EntityTypeBuilder<OnlinePayment> b)
+    {
+        b.HasIndex(x => x.Reference).IsUnique();
+        b.HasIndex(x => new { x.Status, x.CreatedAt });
+        b.Property(x => x.Reference).HasMaxLength(100);
+        b.Property(x => x.Amount).HasPrecision(14, 2);
+        b.Property(x => x.Excess).HasPrecision(14, 2);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Message).HasMaxLength(300);
+        b.HasOne<Invoice>().WithMany().HasForeignKey(x => x.InvoiceId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal sealed class FeeSettingsConfig : IEntityTypeConfiguration<FeeSettings>
 {
     public void Configure(EntityTypeBuilder<FeeSettings> b)
@@ -335,6 +350,8 @@ internal sealed class PaymentConfig : IEntityTypeConfiguration<Payment>
         // At most one reversal per payment, enforced by the database too.
         b.HasIndex(x => x.ReversesPaymentId).IsUnique().HasFilter("\"ReversesPaymentId\" IS NOT NULL");
         b.HasOne<Payment>().WithMany().HasForeignKey(x => x.ReversesPaymentId).OnDelete(DeleteBehavior.Restrict);
+        // A gateway reference is recorded once, even if the webhook and the parent's return arrive together.
+        b.HasIndex(x => x.Reference).IsUnique().HasFilter("\"Method\" = 'Online' AND \"ReversesPaymentId\" IS NULL");
     }
 }
 
