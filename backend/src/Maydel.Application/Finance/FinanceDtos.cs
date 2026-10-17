@@ -98,8 +98,18 @@ public sealed record OnlinePaymentRow(
     Guid Id, string Reference, OnlinePaymentStatus Status, decimal Amount, decimal Excess, Guid InvoiceId, string InvoiceNumber,
     string AdmissionNumber, string StudentName, string? ReceiptNumber, string? Message, DateTimeOffset StartedAt, DateTimeOffset? CompletedAt);
 
+/// <summary>A parent's proof of payment. <c>ReceiptNumber</c> once confirmed; <c>RejectReason</c> when rejected.</summary>
+public sealed record ProofDto(
+    Guid Id, Guid InvoiceId, string InvoiceNumber, Guid StudentId, string StudentName, string AdmissionNumber, decimal Amount, DateOnly PaidOn,
+    string? BankReference, string? Note, string ContentType, ProofStatus Status, string? RejectReason, string? ReceiptNumber, Guid? PaymentId,
+    DateTimeOffset SubmittedAt, DateTimeOffset? ReviewedAt, decimal InvoiceBalance);
+
 public static class FinanceErrors
 {
+    public static readonly Common.Error ProofNotFound = Common.Error.NotFound("proof.not_found", "That proof of payment doesn't exist.");
+    public static readonly Common.Error ProofFile = Common.Error.Validation("file", "Upload a photo (JPEG, PNG or WebP, up to 12 MB) or a PDF (up to 5 MB) of the teller or transfer.");
+    public static readonly Common.Error TooManyProofs = Common.Error.Rule("proof.too_many_pending",
+        $"There are already {Maydel.Domain.Finance.PaymentProof.MaxPendingPerInvoice} proofs waiting for the bursar on this invoice. Please wait for them to be checked.");
     public static readonly Common.Error OnlineUnavailable = Common.Error.Rule("payment.online_unavailable", "Online payment isn't set up yet. Please pay at the school or by bank transfer.");
     public static readonly Common.Error NothingOwed = Common.Error.Rule("invoice.nothing_owed", "There's nothing left to pay on this invoice.");
     public static readonly Common.Error OnlineNotFound = Common.Error.NotFound("payment.online_not_found", "We couldn't find that payment.");

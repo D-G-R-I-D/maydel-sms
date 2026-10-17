@@ -45,6 +45,7 @@ public interface IAppDbContext
     DbSet<FeeItem> FeeItems { get; }
     DbSet<FeeSettings> FeeSettings { get; }
     DbSet<OnlinePayment> OnlinePayments { get; }
+    DbSet<PaymentProof> PaymentProofs { get; }
     DbSet<InstalmentPlan> InstalmentPlans { get; }
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }

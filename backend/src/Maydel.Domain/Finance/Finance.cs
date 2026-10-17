@@ -339,7 +339,76 @@ public class Invoice : Entity
         return (payment, applied);
     }
 
+    /// <summary>
+    /// Records money the bursar has seen in the bank (a verified proof of payment, E10.8). Unlike a desk payment the
+    /// instalment minimum doesn't apply (the parent has already paid), but it can't exceed what's owed.
+    /// </summary>
+    public (Payment? Payment, DomainError? Error) RecordVerifiedPayment(
+        decimal amount, PaymentMethod method, string? reference, DateOnly paidOn, Guid? receivedBy, string receiptNumber)
+    {
+        if (IsCancelled) return (null, Cancelled);
+        if (amount <= 0 || decimal.Round(amount, 2) != amount)
+            return (null, new("payment.amount", "Enter an amount above ₦0 with at most 2 decimal places.", "amount"));
+        if (amount > Balance)
+            return (null, new("payment.exceeds_balance", $"That's more than the outstanding balance of ₦{Balance:N2}.", "amount"));
+        var payment = new Payment
+        {
+            InvoiceId = Id, Amount = amount, Method = method, Reference = Clean(reference), PaidOn = paidOn,
+            ReceivedByUserId = receivedBy, ReceiptNumber = receiptNumber,
+        };
+        Payments.Add(payment);
+        return (payment, null);
+    }
+
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}
+
+public enum ProofStatus
+{
+    Pending,
+    Confirmed,
+    Rejected,
+}
+
+/// <summary>
+/// A parent's evidence of a bank transfer or bank deposit (teller, screenshot), uploaded against an invoice (E10.8).
+/// Nothing is recorded until the bursar confirms it; then it's linked to the receipt it produced.
+/// </summary>
+public class PaymentProof : Entity
+{
+    public const int MaxPendingPerInvoice = 3;
+
+    public Guid InvoiceId { get; set; }
+    public Guid StudentId { get; set; }
+    public decimal Amount { get; set; }
+    public DateOnly PaidOn { get; set; }
+    public string? BankReference { get; set; }
+    public string? Note { get; set; }
+    public required string FilePath { get; set; }
+    public required string ContentType { get; set; }
+    public ProofStatus Status { get; set; } = ProofStatus.Pending;
+    public Guid? SubmittedByUserId { get; set; }
+    public Guid? ReviewedByUserId { get; set; }
+    public DateTimeOffset? ReviewedAt { get; set; }
+    public string? RejectReason { get; set; }
+    public Guid? PaymentId { get; set; }
+
+    private static readonly DomainError Reviewed = new("proof.already_reviewed", "This proof of payment has already been reviewed.");
+
+    public DomainError? Confirm(Guid paymentId, Guid? by, DateTimeOffset at)
+    {
+        if (Status != ProofStatus.Pending) return Reviewed;
+        (Status, PaymentId, ReviewedByUserId, ReviewedAt) = (ProofStatus.Confirmed, paymentId, by, at);
+        return null;
+    }
+
+    public DomainError? Reject(string reason, Guid? by, DateTimeOffset at)
+    {
+        if (Status != ProofStatus.Pending) return Reviewed;
+        if (string.IsNullOrWhiteSpace(reason)) return new("proof.reason", "Tell the parent why it was rejected.", "reason");
+        (Status, RejectReason, ReviewedByUserId, ReviewedAt) = (ProofStatus.Rejected, reason.Trim(), by, at);
+        return null;
+    }
 }
 
 public enum OnlinePaymentStatus

@@ -263,6 +263,23 @@ internal sealed class FeeItemConfig : IEntityTypeConfiguration<FeeItem>
     }
 }
 
+internal sealed class PaymentProofConfig : IEntityTypeConfiguration<PaymentProof>
+{
+    public void Configure(EntityTypeBuilder<PaymentProof> b)
+    {
+        b.HasIndex(x => new { x.Status, x.CreatedAt });
+        b.HasIndex(x => x.InvoiceId);
+        b.Property(x => x.Amount).HasPrecision(14, 2);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.BankReference).HasMaxLength(100);
+        b.Property(x => x.Note).HasMaxLength(500);
+        b.Property(x => x.RejectReason).HasMaxLength(300);
+        b.Property(x => x.FilePath).HasMaxLength(200);
+        b.Property(x => x.ContentType).HasMaxLength(60);
+        b.HasOne<Invoice>().WithMany().HasForeignKey(x => x.InvoiceId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal sealed class OnlinePaymentConfig : IEntityTypeConfiguration<OnlinePayment>
 {
     public void Configure(EntityTypeBuilder<OnlinePayment> b)

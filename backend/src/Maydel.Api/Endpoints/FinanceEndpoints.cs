@@ -11,6 +11,11 @@ using Maydel.Application.Finance.GetInvoicePdf;
 using Maydel.Application.Finance.GetReceiptPdf;
 using Maydel.Application.Finance.GetStatement;
 using Maydel.Application.Finance.ListOnlinePayments;
+using Maydel.Application.Finance.ListPaymentProofs;
+using Maydel.Application.Finance.GetPaymentProofFile;
+using Maydel.Application.Finance.ConfirmPaymentProof;
+using Maydel.Application.Finance.RejectPaymentProof;
+using Maydel.Application.Photos;
 using Maydel.Application.Finance.PublishInvoices;
 using Maydel.Application.Reports;
 using Maydel.Application.Finance.ListDebtors;
@@ -70,6 +75,10 @@ public static class FinanceEndpoints
         admin.MapPost("/invoices/{id:guid}/cancel", CancelInvoice).WithName("CancelInvoice").ProducesProblems(400, 401, 403, 404, 422);
         admin.MapPost("/invoices/{id:guid}/adjustments", AdjustInvoice).WithName("AdjustInvoice").ProducesProblems(400, 401, 403, 404, 422);
         finance.MapGet("/students/{id:guid}/statement", Statement).WithName("GetStudentStatement").ProducesProblems(401, 403, 404);
+        finance.MapGet("/proofs", Proofs).WithName("ListPaymentProofs").ProducesProblems(400, 401, 403);
+        finance.MapGet("/proofs/{id:guid}/file", ProofFile).WithName("GetPaymentProofFile").ProducesProblems(401, 403, 404);
+        finance.MapPost("/proofs/{id:guid}/confirm", ConfirmProof).WithName("ConfirmPaymentProof").ProducesProblems(400, 401, 403, 404, 422);
+        finance.MapPost("/proofs/{id:guid}/reject", RejectProof).WithName("RejectPaymentProof").ProducesProblems(400, 401, 403, 404, 422);
         finance.MapGet("/online-payments", OnlinePayments).WithName("ListOnlinePayments").ProducesProblems(400, 401, 403);
         finance.MapGet("/debtors", Debtors).WithName("ListDebtors").ProducesProblems(400, 401, 403, 404);
         finance.MapGet("/debtors.csv", DebtorsCsv).WithName("ExportDebtorsCsv")
@@ -79,6 +88,25 @@ public static class FinanceEndpoints
     public sealed record OptInsRequest(IReadOnlyList<Guid> StudentIds);
     public sealed record PaymentRequest(decimal Amount, Domain.Finance.PaymentMethod Method, string? Reference, DateOnly? PaidOn);
     public sealed record ReasonRequest(string Reason);
+    public sealed record ConfirmProofRequest(decimal? Amount, Domain.Finance.PaymentMethod? Method, DateOnly? PaidOn);
+
+    private static async Task<Results<Ok<PagedResult<ProofDto>>, ProblemHttpResult>> Proofs([AsParameters] ListPaymentProofsQuery query, IQueryHandler<ListPaymentProofsQuery, PagedResult<ProofDto>> h, CancellationToken ct) =>
+        (await h.Handle(query, ct)).ToHttpResult();
+
+    /// <summary>Always a download (never rendered inline), with nosniff from the security headers: proofs are untrusted uploads.</summary>
+    internal static Results<FileStreamHttpResult, ProblemHttpResult> ProofDownload(Result<PhotoContent> result) =>
+        result.IsSuccess
+            ? TypedResults.File(result.Value.Content, result.Value.ContentType, "proof-of-payment" + (result.Value.ContentType == "application/pdf" ? ".pdf" : ".jpg"))
+            : result.Error!.ToProblem();
+
+    private static async Task<Results<FileStreamHttpResult, ProblemHttpResult>> ProofFile(Guid id, IQueryHandler<GetPaymentProofFileQuery, PhotoContent> h, CancellationToken ct) =>
+        ProofDownload(await h.Handle(new GetPaymentProofFileQuery(id), ct));
+
+    private static async Task<Results<Ok<ProofDto>, ProblemHttpResult>> ConfirmProof(Guid id, ConfirmProofRequest body, ICommandHandler<ConfirmPaymentProofCommand, ProofDto> h, CancellationToken ct) =>
+        (await h.Handle(new ConfirmPaymentProofCommand(id, body.Amount, body.Method, body.PaidOn), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ProofDto>, ProblemHttpResult>> RejectProof(Guid id, ReasonRequest body, ICommandHandler<RejectPaymentProofCommand, ProofDto> h, CancellationToken ct) =>
+        (await h.Handle(new RejectPaymentProofCommand(id, body.Reason), ct)).ToHttpResult();
     public sealed record AdjustmentRequest(string Description, decimal Amount);
 
     private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> InvoicePdf(Guid id, IQueryHandler<GetInvoicePdfQuery, PdfFile> h, CancellationToken ct) =>

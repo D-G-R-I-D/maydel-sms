@@ -130,7 +130,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
   - Generated invoices start as *Draft*: staff-only, editable, and they can be regenerated.
   - **Publish** (per class level or all) makes them visible in the portal and queues an email to each guardian with the invoice PDF, a portal link, and "quote admission number MSS/…".
   - AC: drafts are never visible to parents (tested); publishing again doesn't re-email.
-- **E10.8** *(added 2026-10-17)* **Proof of payment upload.**
+- **E10.8** ✅ *API 2026-10-17.* **Proof of payment upload.**
   - A parent who paid by bank transfer or at the bank uploads the teller or screenshot (image or PDF, private, re-encoded) against an invoice in the portal, with amount, date and bank reference. This replaces "reply to the email with the receipt".
   - The bursar works a *To verify* queue: **Confirm** records the payment and issues an RCT receipt linked to the proof; **Reject** sends a reason to the parent.
   - AC: the parent sees the status; nothing is recorded until confirmed; the proof stays attached to the receipt.
