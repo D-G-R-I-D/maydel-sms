@@ -1,4 +1,4 @@
-import type { FeeItem, FeeSettings, GenerateInvoicesResult, InvoiceStatus } from "@/lib/api/types";
+import type { FeeAudience, FeeItem, FeeSettings, GenerateInvoicesResult, InvoiceStatus, PublishInvoicesResult } from "@/lib/api/types";
 
 /** Fees (E10 part 1): money formatting and the client-side rules the screens need. The API re-checks. */
 
@@ -92,6 +92,27 @@ export function generateToast(r: GenerateInvoicesResult): string {
   if (r.noFees) parts.push(`${r.noFees} with no fees`);
   parts.push(`${formatNairaShort(r.totalBilled)} billed`);
   return parts.join(" · ");
+}
+
+/** "Published 12 · 3 already published · 10 emails queued" */
+export function publishInvoicesToast(r: PublishInvoicesResult, notified: boolean): string {
+  const parts = [`Published ${r.published}`];
+  if (r.alreadyPublished) parts.push(`${r.alreadyPublished} already published`);
+  if (notified) parts.push(`${r.emailsQueued} ${r.emailsQueued === 1 ? "email" : "emails"} queued`);
+  return parts.join(" · ");
+}
+
+export const audienceLabel: Record<FeeAudience, string> = { All: "All students", NewIntake: "New intake only", Returning: "Returning only" };
+
+/** The API's default for an optional item's mode: on for new-intake items (uniform, books), off otherwise. */
+export function defaultChargedByDefault(audience: FeeAudience): boolean {
+  return audience === "NewIntake";
+}
+
+/** "12 paying" (off by default: who's ticked) or "3 excluded" (on by default: who's unticked). */
+export function optionalCount(item: Pick<FeeItem, "isMandatory" | "chargedByDefault" | "optedIn" | "optedOut">): string | null {
+  if (item.isMandatory) return null;
+  return item.chargedByDefault ? `${item.optedOut} excluded` : `${item.optedIn} paying`;
 }
 
 export const invoiceStatusLabel: Record<InvoiceStatus, string> = { Unpaid: "Unpaid", PartiallyPaid: "Part paid", Paid: "Paid", Cancelled: "Cancelled" };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FeeItem } from "@/lib/api/types";
-import { formatNaira, formatNairaShort, generateToast, groupFeeItems, groupTotal, instalmentErrors, instalmentTotal, parseAmount, siblingErrors, siblingPays } from "./rules";
+import { defaultChargedByDefault, formatNaira, formatNairaShort, generateToast, optionalCount, publishInvoicesToast, groupFeeItems, groupTotal, instalmentErrors, instalmentTotal, parseAmount, siblingErrors, siblingPays } from "./rules";
 
 const item = (name: string, level: string | null, mandatory = true, amount = 1000): FeeItem => ({
   id: name,
@@ -83,5 +83,22 @@ describe("generate toast", () => {
   it("summarises the run", () => {
     expect(generateToast({ created: 120, alreadyInvoiced: 4, noFees: 2, totalBilled: 18_400_000 })).toBe("Created 120 · 4 already invoiced · 2 with no fees · ₦18.4M billed");
     expect(generateToast({ created: 0, alreadyInvoiced: 0, noFees: 0, totalBilled: 0 })).toBe("Created 0 · ₦0 billed");
+  });
+});
+
+describe("publish and intake", () => {
+  it("summarises a publish run", () => {
+    expect(publishInvoicesToast({ published: 12, alreadyPublished: 3, emailsQueued: 10 }, true)).toBe("Published 12 · 3 already published · 10 emails queued");
+    expect(publishInvoicesToast({ published: 1, alreadyPublished: 0, emailsQueued: 1 }, true)).toBe("Published 1 · 1 email queued");
+    expect(publishInvoicesToast({ published: 4, alreadyPublished: 0, emailsQueued: 0 }, false)).toBe("Published 4");
+  });
+  it("defaults new-intake optional items to on", () => {
+    expect(defaultChargedByDefault("NewIntake")).toBe(true);
+    expect(defaultChargedByDefault("All")).toBe(false);
+  });
+  it("counts payers or exclusions by mode", () => {
+    expect(optionalCount({ isMandatory: false, chargedByDefault: false, optedIn: 12, optedOut: 0 })).toBe("12 paying");
+    expect(optionalCount({ isMandatory: false, chargedByDefault: true, optedIn: 40, optedOut: 3 })).toBe("3 excluded");
+    expect(optionalCount({ isMandatory: true, chargedByDefault: false, optedIn: 0, optedOut: 0 })).toBeNull();
   });
 });

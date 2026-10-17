@@ -28,7 +28,7 @@ test.afterAll(async ({ request }) => {
   }
 });
 
-test("add an optional fee, see who takes it, then delete it", async ({ page }) => {
+test("add an optional fee, see who pays it, then delete it", async ({ page }) => {
   await signIn(page, "bursar@maydel.test");
   await page.goto("/admin/fees");
   await expect(page.getByRole("heading", { name: "Fee items", level: 1 })).toBeVisible();
@@ -42,6 +42,11 @@ test("add an optional fee, see who takes it, then delete it", async ({ page }) =
   await dialog.getByLabel("Name").fill(name);
   await dialog.getByLabel("Amount (₦)").fill("12.345");
   await dialog.getByRole("switch", { name: "Mandatory" }).click(); // → optional
+  // New-intake optional items are charged by default (like the API); others aren't.
+  await dialog.getByLabel("Applies to").selectOption("NewIntake");
+  await expect(dialog.getByRole("switch", { name: "Charged by default" })).toHaveAttribute("aria-checked", "true");
+  await dialog.getByLabel("Applies to").selectOption("All");
+  await expect(dialog.getByRole("switch", { name: "Charged by default" })).toHaveAttribute("aria-checked", "false");
   await dialog.getByRole("button", { name: "Add fee" }).click();
   await expect(dialog.getByText("Enter an amount above ₦0 with at most 2 decimal places.")).toBeVisible();
   await dialog.getByLabel("Amount (₦)").fill("2,500");
@@ -51,9 +56,10 @@ test("add an optional fee, see who takes it, then delete it", async ({ page }) =
   const row = page.getByRole("main").getByRole("listitem").filter({ hasText: name });
   await expect(row).toContainText("₦2,500.00");
   await expect(row).toContainText("Optional");
-  await row.getByRole("button", { name: "Who takes this?" }).click();
-  const sheet = page.getByRole("dialog", { name: `Who takes ${name}?` });
-  await expect(sheet.getByText(/selected|No students to choose from/).first()).toBeVisible({ timeout: 30_000 });
+  await expect(row).toContainText("0 paying"); // off by default: nobody ticked yet
+  await row.getByRole("button", { name: "Who pays this?" }).click();
+  const sheet = page.getByRole("dialog", { name: `Who pays ${name}?` });
+  await expect(sheet.getByText(/paying|No students to choose from/).first()).toBeVisible({ timeout: 30_000 });
   await sheet.getByRole("button", { name: "Close" }).click();
 
   await row.getByRole("button", { name: `Delete ${name}` }).click();

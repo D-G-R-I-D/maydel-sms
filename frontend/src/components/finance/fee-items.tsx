@@ -5,7 +5,7 @@ import { Copy, Pencil, Plus, Trash2, Users, Wallet } from "lucide-react";
 import { problemMessage } from "@/lib/api/problem";
 import type { FeeItem } from "@/lib/api/types";
 import { copyFeeItems, deleteFeeItem } from "@/lib/finance/actions";
-import { formatNaira, groupFeeItems, groupTotal } from "@/lib/finance/rules";
+import { formatNaira, groupFeeItems, groupTotal, optionalCount } from "@/lib/finance/rules";
 import { runAction } from "@/lib/client/action";
 import { Badge, Button, Card, Select } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/states";
@@ -57,12 +57,11 @@ export function FeeItems({ termId, termLabel, items, levels, otherTerms }: { ter
                       <p className="font-medium">{item.name}</p>
                       <p className="mt-1 flex flex-wrap gap-1.5">
                         <Badge tone={item.isMandatory ? "brand" : "neutral"}>{item.isMandatory ? "Mandatory" : "Optional"}</Badge>
+                        {item.audience === "NewIntake" && <Badge tone="brand">New intake</Badge>}
+                        {item.audience === "Returning" && <Badge tone="brand">Returning</Badge>}
+                        {!item.isMandatory && item.chargedByDefault && <Badge>On by default</Badge>}
                         {item.siblingDiscount && <Badge tone="success">Sibling discount</Badge>}
-                        {!item.isMandatory && (
-                          <Badge tone={item.optedIn > 0 ? "neutral" : "warning"}>
-                            {item.optedIn} {item.optedIn === 1 ? "student" : "students"}
-                          </Badge>
-                        )}
+                        {!item.isMandatory && <Badge tone={!item.chargedByDefault && item.optedIn === 0 ? "warning" : "neutral"}>{optionalCount(item)}</Badge>}
                       </p>
                     </div>
                     <p className="tabular w-36 text-right font-semibold">{formatNaira(item.amount)}</p>
@@ -70,7 +69,7 @@ export function FeeItems({ termId, termLabel, items, levels, otherTerms }: { ter
                       {!item.isMandatory && (
                         <Button variant="secondary" size="sm" onClick={() => setOptIns(item)}>
                           <Users className="size-4" aria-hidden />
-                          Who takes this?
+                          Who pays this?
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" onClick={() => setEditing(item)} aria-label={`Edit ${item.name}`}>
@@ -95,8 +94,12 @@ export function FeeItems({ termId, termLabel, items, levels, otherTerms }: { ter
       <FormDialog
         open={optIns !== null}
         onOpenChange={(v) => !v && setOptIns(null)}
-        title={optIns ? `Who takes ${optIns.name}?` : "Who takes this?"}
-        description={optIns ? `${formatNaira(optIns.amount)} · ${optIns.classLevel ?? "All classes"} · only ticked students are billed` : undefined}
+        title={optIns ? `Who pays ${optIns.name}?` : "Who pays this?"}
+        description={
+          optIns
+            ? `${formatNaira(optIns.amount)} · ${optIns.classLevel ?? "All classes"} · ${optIns.chargedByDefault ? "everyone pays unless you untick them" : "only ticked students pay"}`
+            : undefined
+        }
         size="lg"
       >
         {(close) => optIns && <OptInSheet item={optIns} close={close} />}
