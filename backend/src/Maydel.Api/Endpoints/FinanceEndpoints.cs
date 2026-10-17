@@ -141,7 +141,7 @@ public static class FinanceEndpoints
         (await h.Handle(query, ct)).ToHttpResult();
 
     public sealed record CreateFeeItemRequest(Guid TermId, string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount,
-        Domain.Finance.FeeAudience Audience = Domain.Finance.FeeAudience.All, bool ChargedByDefault = false);
+        Domain.Finance.FeeAudience Audience = Domain.Finance.FeeAudience.All, bool? ChargedByDefault = null);
 
     private static async Task<Results<Ok<PublishInvoicesResult>, ProblemHttpResult>> Publish(PublishInvoicesCommand command, ICommandHandler<PublishInvoicesCommand, PublishInvoicesResult> h, CancellationToken ct) =>
         (await h.Handle(command, ct)).ToHttpResult();

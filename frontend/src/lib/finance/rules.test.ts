@@ -12,6 +12,9 @@ const item = (name: string, level: string | null, mandatory = true, amount = 100
   isMandatory: mandatory,
   siblingDiscount: false,
   optedIn: 0,
+  audience: "All",
+  chargedByDefault: false,
+  optedOut: 0,
 });
 
 describe("money", () => {

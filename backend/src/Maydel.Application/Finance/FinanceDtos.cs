@@ -17,8 +17,9 @@ public sealed record FeeItemDto(
     FeeAudience Audience, bool ChargedByDefault, int OptedOut);
 
 /// <summary><c>Audience</c> (default All): NewIntake for acceptance fee / uniform pack, Returning for re-registration.</summary>
+/// <summary><c>ChargedByDefault</c> null: on for new-intake items (so nothing a new student needs is forgotten), off otherwise.</summary>
 public sealed record FeeItemInput(
-    string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount, FeeAudience Audience = FeeAudience.All, bool ChargedByDefault = false);
+    string Name, decimal Amount, Guid? ClassLevelId, bool IsMandatory, bool SiblingDiscount, FeeAudience Audience = FeeAudience.All, bool? ChargedByDefault = null);
 
 public sealed record OptInStudent(Guid StudentId, string AdmissionNumber, string Name, string? ClassRoom, bool OptedIn);
 

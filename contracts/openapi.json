@@ -8815,8 +8815,10 @@
             "$ref": "#/components/schemas/FeeAudience"
           },
           "chargedByDefault": {
-            "type": "boolean",
-            "default": false
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },

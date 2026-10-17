@@ -25,9 +25,10 @@ internal sealed class SaveFeeItemHandler(IAppDbContext db) : ICommandHandler<Sav
 
         if (!Enum.IsDefined(input.Audience)) return Error.Validation("audience", "Choose All, NewIntake or Returning.");
         // Switching between "off by default" and "on by default" flips what the stored list means, so it starts afresh.
-        if (item.IsMandatory != input.IsMandatory || item.ChargedByDefault != input.ChargedByDefault) item.OptIns.Clear();
+        var chargedByDefault = !input.IsMandatory && (input.ChargedByDefault ?? input.Audience == FeeAudience.NewIntake);
+        if (item.IsMandatory != input.IsMandatory || item.ChargedByDefault != chargedByDefault) item.OptIns.Clear();
         (item.Name, item.Amount, item.ClassLevelId, item.IsMandatory, item.SiblingDiscount, item.Audience, item.ChargedByDefault) =
-            (input.Name.Trim(), input.Amount, input.ClassLevelId, input.IsMandatory, input.SiblingDiscount, input.Audience, !input.IsMandatory && input.ChargedByDefault);
+            (input.Name.Trim(), input.Amount, input.ClassLevelId, input.IsMandatory, input.SiblingDiscount, input.Audience, chargedByDefault);
         if (item.IsMandatory) item.OptIns.Clear();
         await db.SaveChangesAsync(ct);
         return await db.FeeItems.AsNoTracking().Where(f => f.Id == item.Id).FeeItemDtos().FirstAsync(ct);

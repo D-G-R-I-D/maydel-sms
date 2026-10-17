@@ -9,6 +9,7 @@
 - **Optional items have two modes** (`chargedByDefault`):
   - `false`, **off by default**: only students ticked pay it (bus). As before.
   - `true`, **on by default**: everyone in the item's level pays it unless unticked (books, lunch).
+  - **When `chargedByDefault` is left out, it is on for New-intake items** (uniform pack, books) so nothing a new student needs is forgotten, and off otherwise. Preselect it the same way in the dialog.
   - `GET/PUT /fee-items/{id}/opt-ins` always talks about **who pays**. `optedIn: true` means they pay, and PUT `studentIds` = everyone who pays, in both modes.
   - `FeeItemDto.optedIn` counts takers of an off-by-default item; `optedOut` counts exclusions from an on-by-default item.
   - Switching mode, or making an item mandatory, clears the ticks.

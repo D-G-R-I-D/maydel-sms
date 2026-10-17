@@ -1204,6 +1204,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/invoices/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublishInvoices"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/finance/invoices": {
         parameters: {
             query?: never;
@@ -1658,6 +1674,8 @@ export interface components {
             classLevelId: null | string;
             isMandatory: boolean;
             siblingDiscount: boolean;
+            audience?: components["schemas"]["FeeAudience"];
+            chargedByDefault?: null | boolean;
         };
         CreateSessionCommand: {
             name: string;
@@ -1717,6 +1735,8 @@ export interface components {
         };
         /** @enum {unknown} */
         EmailStatus: "Pending" | "Sent" | "Failed" | "Skipped";
+        /** @enum {unknown} */
+        FeeAudience: "All" | "NewIntake" | "Returning";
         FeeItemDto: {
             /** Format: uuid */
             id: string;
@@ -1732,6 +1752,10 @@ export interface components {
             siblingDiscount: boolean;
             /** Format: int32 */
             optedIn: number;
+            audience: components["schemas"]["FeeAudience"];
+            chargedByDefault: boolean;
+            /** Format: int32 */
+            optedOut: number;
         };
         FeeSettingsDto: {
             siblingMode: components["schemas"]["SiblingDiscountMode"];
@@ -1972,6 +1996,10 @@ export interface components {
             cancelReason: null | string;
             /** Format: double */
             minimumPayment: number;
+            isPublished: boolean;
+            /** Format: date-time */
+            publishedAt: null | string;
+            newIntake: boolean;
         };
         InvoiceLineDto: {
             description: string;
@@ -2003,6 +2031,8 @@ export interface components {
             dueOn: null | string;
             /** Format: date-time */
             issuedAt: string;
+            isPublished: boolean;
+            newIntake: boolean;
         };
         IssuedCredentials: {
             userName: string;
@@ -2246,6 +2276,21 @@ export interface components {
             /** Format: uuid */
             termId: string;
             notifyParents?: null | boolean;
+        };
+        PublishInvoicesCommand: {
+            /** Format: uuid */
+            termId: string;
+            /** Format: uuid */
+            classLevelId?: null | string;
+            notifyParents?: null | boolean;
+        };
+        PublishInvoicesResult: {
+            /** Format: int32 */
+            published: number;
+            /** Format: int32 */
+            alreadyPublished: number;
+            /** Format: int32 */
+            emailsQueued: number;
         };
         PublishResult: {
             /** Format: int32 */
@@ -8277,6 +8322,66 @@ export interface operations {
             };
         };
     };
+    PublishInvoices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishInvoicesCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishInvoicesResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     ListInvoices: {
         parameters: {
             query?: {
@@ -8286,6 +8391,8 @@ export interface operations {
                 search?: string;
                 page?: number;
                 pageSize?: number;
+                published?: boolean;
+                newIntake?: boolean;
             };
             header?: never;
             path?: never;

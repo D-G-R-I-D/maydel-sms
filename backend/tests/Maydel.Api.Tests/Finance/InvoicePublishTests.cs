@@ -111,6 +111,18 @@ public sealed class InvoicePublishTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Optional_new_intake_items_are_on_by_default_unless_said_otherwise()
+    {
+        var (_, _, bursar, _, term, level) = await SetUpAsync();
+        var uniform = await (await bursar.PostAsJsonAsync("/api/finance/fee-items", new { termId = term, name = "Uniform pack", amount = 25000, classLevelId = level, isMandatory = false, audience = "NewIntake" }))
+            .Content.ReadFromJsonAsync<FeeItemDto>(Json.Options);
+        var bus = await (await bursar.PostAsJsonAsync("/api/finance/fee-items", new { termId = term, name = "Bus", amount = 50000, classLevelId = level, isMandatory = false }))
+            .Content.ReadFromJsonAsync<FeeItemDto>(Json.Options);
+        Assert.True(uniform!.ChargedByDefault);
+        Assert.False(bus!.ChargedByDefault);
+    }
+
+    [Fact]
     public async Task Teachers_cannot_publish_invoices()
     {
         var (_, _, _, _, term, level) = await SetUpAsync();
