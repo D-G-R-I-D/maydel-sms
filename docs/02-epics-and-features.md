@@ -141,7 +141,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 
 ## E11 — Admissions pipeline
 - **E11.1** Kanban/list of applications: New → Contacted → Assessment scheduled → Offered → Enrolled / Declined, notes, assigned staff.
-- **E11.2** Convert to student (pre-fills student + guardian). AC: application links to created student.
+- **E11.2** ✅ *API 2026-10-17 (via E11.8 enrol).* Convert to student (pre-fills student + guardian). AC: application links to created student.
 - **E11.3 (S)** Email/SMS acknowledgement with reference number.
 - **E11.4** ✅ *API 2026-10-17 (applicant account at purchase, online or school form code, exam window opens on payment).* **Buy the admission form.**
   - Online through the gateway (E10.5/E10.9), or at the school (the bursar issues a form code).
@@ -161,7 +161,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
   - Admin sets a **cut-off mark**, then sees lists of *took the exam*, *passed* and *failed*, with scores, plus CSV export.
   - Passed applicants get a "you passed the first stage; the school will contact you about the next step" email.
   - AC: changing the cut-off recomputes the lists before anything is sent.
-- **E11.8** *(added 2026-10-17)* **Offers and letters.**
+- **E11.8** ✅ *API 2026-10-17 (draft ticks, publish with reserved admission numbers, letter PDF with signature, regret emails, accept/decline, enrol into student + guardians + parent login; NDPR purge after 6 months, idle applicant accounts off after 12).* *(added 2026-10-17)* **Offers and letters.**
   - From the passed list, admin ticks who gets admission, then **publishes** the decisions.
   - Offered applicants: an email with an **admission letter PDF** carrying the admission number and the **principal's uploaded signature** (E2.6), plus a short welcome guide: what's next, creating the parent account, paying fees online, seeing results.
   - Not offered: a kind "better luck next time" email with no letter.

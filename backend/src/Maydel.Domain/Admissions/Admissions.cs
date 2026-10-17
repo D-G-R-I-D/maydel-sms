@@ -79,7 +79,87 @@ public class AdmissionApplication : Entity
     /// <summary>When the "you passed the first stage" email was queued; each family is told once.</summary>
     public DateTimeOffset? StageOneNotifiedAt { get; set; }
 
+    // ---- Offers and enrolment (E11.8) ----
+    /// <summary>The admin's draft decision; families see nothing until it's published.</summary>
+    public OfferDecision? Decision { get; set; }
+    public DateTimeOffset? DecidedAt { get; set; }
+
+    /// <summary>Reserved when the offer is published, printed on the letter, and used when the child is enrolled.</summary>
+    public string? AdmissionNumber { get; set; }
+    public DateTimeOffset? RespondedAt { get; set; }
+    public DateTimeOffset? EnrolledAt { get; set; }
+
+    /// <summary>When the child's details and documents were deleted (NDPR clean-up of unsuccessful applications).</summary>
+    public DateTimeOffset? DataPurgedAt { get; set; }
+
+    public const int PurgeAfterMonths = 6;
+
     public string ChildName => $"{ChildFirstName} {ChildLastName}";
+
+    private static DomainError NotAssessed => new("admission.not_assessed", "Decisions can only be made for applicants who have an exam score.");
+
+    /// <summary>Ticks or unticks the applicant for an offer (draft until published).</summary>
+    public DomainError? SetDecision(OfferDecision? decision)
+    {
+        if (Status != ApplicationStatus.Assessed) return NotAssessed;
+        Decision = decision;
+        return null;
+    }
+
+    /// <summary>Publishes the decision: Offer → Offered with the reserved admission number; anything else → NotOffered.</summary>
+    public DomainError? PublishDecision(DateTimeOffset at, string? admissionNumber)
+    {
+        if (Status != ApplicationStatus.Assessed) return NotAssessed;
+        if (Decision == OfferDecision.Offer)
+        {
+            if (string.IsNullOrWhiteSpace(admissionNumber)) throw new ArgumentException("An offer needs an admission number.", nameof(admissionNumber));
+            (Status, AdmissionNumber) = (ApplicationStatus.Offered, admissionNumber);
+        }
+        else
+        {
+            (Status, Decision) = (ApplicationStatus.NotOffered, OfferDecision.Decline);
+        }
+        DecidedAt = at;
+        return null;
+    }
+
+    /// <summary>The family accepts (or turns down) the offer.</summary>
+    public DomainError? Respond(bool accept, DateTimeOffset at)
+    {
+        if (Status != ApplicationStatus.Offered) return new("admission.no_offer", "There's no open offer on this application.");
+        (Status, RespondedAt) = (accept ? ApplicationStatus.Accepted : ApplicationStatus.Withdrawn, at);
+        return null;
+    }
+
+    public DomainError? Enrol(Guid studentId, DateTimeOffset at)
+    {
+        if (Status != ApplicationStatus.Accepted) return new("admission.not_accepted", "Only accepted offers can be enrolled.");
+        (Status, StudentId, EnrolledAt) = (ApplicationStatus.Enrolled, studentId, at);
+        return null;
+    }
+
+    /// <summary>Unsuccessful, withdrawn or missed for over <see cref="PurgeAfterMonths"/> months, and not yet cleaned up.</summary>
+    public bool IsDueForPurge(DateTimeOffset now)
+    {
+        if (DataPurgedAt is not null) return false;
+        DateTimeOffset? since = Status switch
+        {
+            ApplicationStatus.NotOffered => DecidedAt,
+            ApplicationStatus.Withdrawn => RespondedAt ?? UpdatedAt,
+            ApplicationStatus.Missed => MissedAt,
+            _ => null,
+        };
+        return since is { } s && s.AddMonths(PurgeAfterMonths) <= now;
+    }
+
+    /// <summary>Deletes the child's personal details and documents; the reference, status and score stay for statistics.</summary>
+    public IReadOnlyList<string> Purge(DateTimeOffset at)
+    {
+        var files = Documents.Select(d => d.FilePath).ToList();
+        Documents.Clear();
+        (Form, ChildFirstName, ChildLastName, ChildDateOfBirth, StaffNotes, DataPurgedAt) = (new ApplicationForm(), "Removed", "applicant", null, null, at);
+        return files;
+    }
 
     /// <summary>
     /// Books (or moves) the entrance exam into <paramref name="slot"/>: after submitting the form, inside the exam window, before
@@ -274,6 +354,12 @@ public class ApplicationDocument
     public required string FilePath { get; set; }
     public required string ContentType { get; set; }
     public DateTimeOffset UploadedAt { get; set; }
+}
+
+public enum OfferDecision
+{
+    Offer,
+    Decline,
 }
 
 public enum ExamMode

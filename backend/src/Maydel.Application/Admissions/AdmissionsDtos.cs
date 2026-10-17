@@ -17,7 +17,7 @@ public sealed record ApplicationDto(
     Guid Id, string ReferenceNumber, Guid SessionId, string Session, Guid ClassLevelId, string ClassLevel,
     string ParentName, string Phone, string Email, string ChildFirstName, string ChildLastName, DateOnly? ChildDateOfBirth,
     ApplicationStatus Status, decimal FormFee, FormPaymentMethod? FormPaymentMethod, DateTimeOffset? FormPaidAt, DateOnly? ExamWindowEndsOn,
-    DateTimeOffset CreatedAt, ExamBooking? Exam);
+    DateTimeOffset CreatedAt, ExamBooking? Exam, string? AdmissionNumber, Guid? StudentId);
 
 /// <summary>The family's booked exam sitting (null until booked).</summary>
 public sealed record ExamBooking(Guid SlotId, DateTimeOffset StartsAt, DateTimeOffset EndsAt, string Venue, ExamMode Mode);
@@ -30,7 +30,7 @@ public sealed record ExamSlotOption(Guid Id, DateTimeOffset StartsAt, DateTimeOf
 
 /// <summary>One applicant in a sitting (attendance sheet / score entry) or on the results lists.</summary>
 public sealed record ExamCandidate(Guid ApplicationId, string ReferenceNumber, string ChildName, string ClassLevel, ApplicationStatus Status,
-    decimal? Score, DateTimeOffset? StageOneNotifiedAt);
+    decimal? Score, DateTimeOffset? StageOneNotifiedAt, OfferDecision? Decision);
 
 /// <summary>
 /// The entrance exam results for a session (E11.7). <c>Passed</c>/<c>Failed</c> are worked out from the current cut-off on every read,
@@ -70,6 +70,7 @@ public static class AdmissionErrors
     public static readonly Common.Error SlotHasBookings = Common.Error.Rule("exam_slot.has_bookings",
         "Applicants are booked for this exam time, so it can't be moved or deleted. Add another time instead.");
     public static readonly Common.Error NoCutOff = Common.Error.Rule("admission.no_cut_off", "Set the cut-off mark first.");
+    public static readonly Common.Error NoLetter = Common.Error.NotFound("admission.no_letter", "There's no admission letter for this application.");
     public static readonly Common.Error NotAwaitingPayment = Common.Error.Rule("admission.already_paid", "The admission form for this application is already paid for.");
 }
 
@@ -100,14 +101,15 @@ internal static class AdmissionQueries
                 x.a.ParentName, x.a.Phone, x.a.Email, x.a.ChildFirstName, x.a.ChildLastName, x.a.ChildDateOfBirth,
                 x.a.Status, x.a.FormFee, x.a.FormPaymentMethod, x.a.FormPaidAt, x.a.ExamWindowEndsOn, x.a.CreatedAt,
                 db.ExamSlots.Where(s => s.Id == x.a.ExamSlotId)
-                    .Select(s => new ExamBooking(s.Id, s.StartsAt, s.StartsAt.AddMinutes(s.DurationMinutes), s.Venue, s.Mode)).FirstOrDefault()));
+                    .Select(s => new ExamBooking(s.Id, s.StartsAt, s.StartsAt.AddMinutes(s.DurationMinutes), s.Venue, s.Mode)).FirstOrDefault(),
+                x.a.AdmissionNumber, x.a.StudentId));
 
     /// <summary>Applicants in a sitting or session, for staff lists.</summary>
     public static IQueryable<ExamCandidate> Candidates(this IAppDbContext db, IQueryable<AdmissionApplication> applications) =>
         applications.Join(db.ClassLevels, a => a.ClassLevelId, l => l.Id, (a, l) => new { a, l })
             .OrderBy(x => x.a.ChildLastName).ThenBy(x => x.a.ChildFirstName)
             .Select(x => new ExamCandidate(x.a.Id, x.a.ReferenceNumber, x.a.ChildFirstName + " " + x.a.ChildLastName, x.l.Name, x.a.Status,
-                x.a.ExamScore, x.a.StageOneNotifiedAt));
+                x.a.ExamScore, x.a.StageOneNotifiedAt, x.a.Decision));
 
     /// <summary>"APP-2026-0007": numbered per session by its start year.</summary>
     public static async Task<string> NextReferenceAsync(this IAppDbContext db, Guid sessionId, CancellationToken ct)

@@ -108,7 +108,10 @@ public static class StudentQueries
     public static async Task<string> NextAdmissionNumberAsync(this IAppDbContext db, int year, CancellationToken ct)
     {
         var prefix = Student.AdmissionPrefix(year);
-        var numbers = await db.Students.Where(s => s.AdmissionNumber.StartsWith(prefix)).Select(s => s.AdmissionNumber).ToListAsync(ct);
+        // Numbers reserved by published admission offers count too, so a letter's number is never given to someone else.
+        var numbers = await db.Students.Where(s => s.AdmissionNumber.StartsWith(prefix)).Select(s => s.AdmissionNumber)
+            .Concat(db.Applications.Where(a => a.AdmissionNumber != null && a.AdmissionNumber.StartsWith(prefix)).Select(a => a.AdmissionNumber!))
+            .ToListAsync(ct);
         var max = numbers.Select(n => int.TryParse(n[prefix.Length..], out var v) ? v : 0).DefaultIfEmpty(0).Max();
         return Student.AdmissionNumberFor(year, max + 1);
     }

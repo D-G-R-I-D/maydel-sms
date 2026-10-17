@@ -3,6 +3,11 @@ using Maydel.Application.Admissions;
 using System.Globalization;
 using System.Text;
 using Maydel.Application.Admissions.BookExam;
+using Maydel.Application.Admissions.EnrolApplicant;
+using Maydel.Application.Admissions.GetAdmissionLetter;
+using Maydel.Application.Admissions.PublishDecisions;
+using Maydel.Application.Admissions.RespondToOffer;
+using Maydel.Application.Admissions.SetDecisions;
 using Maydel.Application.Admissions.DeleteExamSlot;
 using Maydel.Application.Admissions.GetExamResults;
 using Maydel.Application.Admissions.ListBookableSlots;
@@ -76,6 +81,17 @@ public static class AdmissionEndpoints
         admin.MapPut("/results/cut-off", CutOff).WithName("SetExamCutOff").ProducesProblems(400, 401, 403, 404);
         admin.MapPost("/results/notify-passed", NotifyPassed).WithName("NotifyStageOnePasses").ProducesProblems(401, 403, 404, 422);
 
+        // Offers, letters and enrolment (E11.8)
+        admin.MapPut("/decisions", SetDecisions).WithName("SetAdmissionDecisions").ProducesProblems(400, 401, 403, 404, 422);
+        admin.MapPost("/decisions/publish", PublishDecisions).WithName("PublishAdmissionDecisions").ProducesProblems(401, 403, 404, 422);
+        family.MapPost("/applications/{id:guid}/accept", Accept).WithName("AcceptAdmissionOffer").ProducesProblems(401, 403, 404, 422);
+        family.MapPost("/applications/{id:guid}/decline", Decline).WithName("DeclineAdmissionOffer").ProducesProblems(401, 403, 404, 422);
+        family.MapGet("/applications/{id:guid}/letter.pdf", Letter).WithName("GetMyAdmissionLetter")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
+        finance.MapGet("/applications/{id:guid}/letter-pdf", StaffLetter).WithName("GetAdmissionLetter")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
+        admin.MapPost("/applications/{id:guid}/enrol", Enrol).WithName("EnrolApplicant").ProducesProblems(400, 401, 403, 404, 409, 422);
+
         open.MapGet("", Info).WithName("GetAdmissionsInfo");
         // Sign-ups create accounts: rate-limited per IP like the other public forms.
         open.MapPost("/register", Register).WithName("RegisterApplicant").RequireRateLimiting(RateLimits.PublicForms).ProducesProblems(400, 404, 409, 422, 429);
@@ -126,6 +142,28 @@ public static class AdmissionEndpoints
     public sealed record BookRequest(Guid SlotId);
     public sealed record SlotRequest(Guid SessionId, DateTimeOffset StartsAt, int DurationMinutes, string Venue, ExamMode Mode, int Capacity, string? Notes);
     public sealed record ScoreRequest(decimal Score);
+    public sealed record EnrolRequest(Guid? ClassRoomId);
+
+    private static async Task<Results<Ok<IReadOnlyList<ExamCandidate>>, ProblemHttpResult>> SetDecisions(SetDecisionsCommand command, ICommandHandler<SetDecisionsCommand, IReadOnlyList<ExamCandidate>> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<PublishDecisionsResult>, ProblemHttpResult>> PublishDecisions(PublishDecisionsCommand command, ICommandHandler<PublishDecisionsCommand, PublishDecisionsResult> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> Accept(Guid id, ICommandHandler<RespondToOfferCommand, ApplicationDetail> h, CancellationToken ct) =>
+        (await h.Handle(new RespondToOfferCommand(id, Accept: true), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<ApplicationDetail>, ProblemHttpResult>> Decline(Guid id, ICommandHandler<RespondToOfferCommand, ApplicationDetail> h, CancellationToken ct) =>
+        (await h.Handle(new RespondToOfferCommand(id, Accept: false), ct)).ToHttpResult();
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> Letter(Guid id, IQueryHandler<GetAdmissionLetterQuery, PdfFile> h, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await h.Handle(new GetAdmissionLetterQuery(id), ct));
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> StaffLetter(Guid id, IQueryHandler<GetAdmissionLetterQuery, PdfFile> h, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await h.Handle(new GetAdmissionLetterQuery(id, AsStaff: true), ct));
+
+    private static async Task<Results<Ok<EnrolmentResult>, ProblemHttpResult>> Enrol(Guid id, EnrolRequest body, ICommandHandler<EnrolApplicantCommand, EnrolmentResult> h, CancellationToken ct) =>
+        (await h.Handle(new EnrolApplicantCommand(id, body.ClassRoomId), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<IReadOnlyList<ExamSlotOption>>, ProblemHttpResult>> BookableSlots(Guid id, IQueryHandler<ListBookableSlotsQuery, IReadOnlyList<ExamSlotOption>> h, CancellationToken ct) =>
         (await h.Handle(new ListBookableSlotsQuery(id), ct)).ToHttpResult();
