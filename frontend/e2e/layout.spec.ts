@@ -32,6 +32,9 @@ const pages = [
   "/admin/settings/school",
   "/admin/settings/assessment",
   "/admin/settings/fees",
+  "/admin/settings/admissions",
+  "/admin/admissions",
+  "/admin/admissions/form-codes",
   "/admin/audit",
 ];
 

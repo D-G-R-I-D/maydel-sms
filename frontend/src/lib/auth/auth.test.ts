@@ -28,11 +28,19 @@ describe("roles", () => {
     expect(homeFor(["Student"])).toBe("/portal");
     expect(homeFor(["Parent", "Teacher"])).toBe("/admin");
     expect(homeFor([])).toBe("/login");
+    expect(homeFor(["Applicant"])).toBe("/admissions");
+    expect(homeFor(["Parent", "Applicant"])).toBe("/portal");
   });
 
   it("guards console and portal areas by role", () => {
     expect(canEnter("/admin", ["Teacher"])).toBe(true);
     expect(canEnter("/admin/audit", ["Parent"])).toBe(false);
+    expect(canEnter("/admissions", ["Applicant"])).toBe(true);
+    expect(canEnter("/admissions", ["Parent"])).toBe(true);
+    expect(canEnter("/admissions", ["Teacher"])).toBe(false);
+    expect(canEnter("/portal", ["Applicant"])).toBe(false);
+    expect(canEnter("/admin", ["Applicant"])).toBe(false);
+    expect(canEnter("/admissions/apply", [])).toBe(true);
     expect(canEnter("/portal", ["Student"])).toBe(true);
     expect(canEnter("/portal/results", ["Bursar"])).toBe(false);
     expect(canEnter("/administrator", ["Parent"])).toBe(true);

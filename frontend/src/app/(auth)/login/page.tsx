@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { googleClientId, showDemoAccounts } from "@/lib/api/config";
 import { safeNext } from "@/lib/auth/roles";
@@ -28,6 +29,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </Alert>
       )}
       <LoginForm next={next} googleClientId={googleClientId()} showDemo={showDemoAccounts()} />
+      <p className="mt-6 text-center text-sm text-muted">
+        Applying for a place?{" "}
+        <Link href="/admissions/apply" className="font-medium text-brand hover:underline">
+          Buy the admission form
+        </Link>
+      </p>
     </>
   );
 }
