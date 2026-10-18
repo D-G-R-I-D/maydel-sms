@@ -4,7 +4,9 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { CurrentTermChip, CurrentTermChipFallback } from "@/components/shell/current-term-chip";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { ConsoleSidebar } from "@/components/shell/console-sidebar";
-import { consoleNav, filterNav } from "@/components/shell/nav";
+import { consoleNav, filterNav, withBadges } from "@/components/shell/nav";
+import { load } from "@/lib/api/server";
+import { hasAnyRole } from "@/lib/auth/roles";
 import { UserMenu } from "@/components/shell/user-menu";
 import { DraftScope } from "@/components/drafts/draft-scope";
 
@@ -12,7 +14,9 @@ export const metadata: Metadata = { title: { default: "Console", template: "%s Â
 
 export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSessionUser();
-  const groups = filterNav(consoleNav, user.roles);
+  // Proofs of payment waiting for the bursar (E10.8): a count on "To verify".
+  const pending = hasAnyRole(user.roles, ["Admin", "Bursar"]) ? await load((api) => api.GET("/api/finance/proofs", { params: { query: { page: 1, pageSize: 1 } } })) : null;
+  const groups = withBadges(filterNav(consoleNav, user.roles), { "/admin/proofs": pending?.ok ? pending.data.totalCount : 0 });
 
   return (
     <div className="flex min-h-dvh">

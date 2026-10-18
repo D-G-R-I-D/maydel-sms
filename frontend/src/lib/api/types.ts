@@ -103,3 +103,5 @@ export type OnlinePaymentRow = Schemas["OnlinePaymentRow"];
 export type OnlinePaymentStatus = Schemas["OnlinePaymentStatus"];
 export type FeeAudience = Schemas["FeeAudience"];
 export type PublishInvoicesResult = Schemas["PublishInvoicesResult"];
+export type Proof = Schemas["ProofDto"];
+export type ProofStatus = Schemas["ProofStatus"];

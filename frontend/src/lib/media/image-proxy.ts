@@ -64,7 +64,7 @@ export async function proxyImageGet(request: NextRequest, path: string): Promise
   return finish(passImage(reply.data));
 }
 
-export async function proxyImageUpload(request: NextRequest, path: string, noun = "photo"): Promise<NextResponse> {
+export async function proxyImageUpload(request: NextRequest, path: string, noun = "photo", method: "PUT" | "POST" = "PUT"): Promise<NextResponse> {
   const blocked = crossSiteRejection(request);
   if (blocked) return blocked;
   const contentType = request.headers.get("content-type") ?? "";
@@ -76,7 +76,7 @@ export async function proxyImageUpload(request: NextRequest, path: string, noun 
     return problemResponse({ status: 400, title: `That ${noun} is too large.`, code: "validation", errors: { file: [`The ${noun} must be 12 MB or smaller.`] } });
   }
   const body = await request.arrayBuffer();
-  const { reply, finish } = await forward(request, path, { method: "PUT", body, contentType });
+  const { reply, finish } = await forward(request, path, { method, body, contentType });
   if (!reply.ok) return finish(problemResponse(reply.problem));
   const res = reply.data;
   const json: unknown = await res.json().catch(() => null);

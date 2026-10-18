@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { load, type Loaded } from "@/lib/api/server";
-import type { FeeAudience, FeeItem, FeeSettings, GenerateInvoicesResult, PublishInvoicesResult, InstalmentPlan, InvoiceDetail, OptInStudent, PaymentMethod, PlanScope, Receipt } from "@/lib/api/types";
+import type { FeeAudience, FeeItem, FeeSettings, GenerateInvoicesResult, PublishInvoicesResult, InstalmentPlan, InvoiceDetail, OptInStudent, PaymentMethod, PlanScope, Proof, Receipt } from "@/lib/api/types";
 
 /** Fees (E10 part 1). The API enforces Admin/Bursar (Finance policy) and admin-only settings. */
 
@@ -13,6 +13,7 @@ function done<T>(result: Loaded<T>): Loaded<T> {
     revalidatePath("/admin/settings/fees");
     revalidatePath("/admin/debtors");
     revalidatePath("/admin/students", "layout"); // fee statements
+    revalidatePath("/admin", "layout"); // "To verify" badge
   }
   return result;
 }
@@ -99,4 +100,16 @@ export async function cancelInvoice(invoiceId: string, reason: string): Promise<
 /** Admin: negative = scholarship/discount, positive = extra charge. */
 export async function addAdjustment(invoiceId: string, description: string, amount: number): Promise<Loaded<InvoiceDetail>> {
   return done(await load((api) => api.POST("/api/finance/invoices/{id}/adjustments", { params: { path: { id: invoiceId } }, body: { description, amount } })));
+}
+
+/* ----------------------------------------------------------------- E10.8: proofs of payment */
+
+/** Records the payment (RCT receipt, emailed to the parent). The instalment minimum is waived; the balance cap isn't. */
+export async function confirmProof(id: string, body: { amount: number | null; method: "BankTransfer" | "Cash" | "Pos"; paidOn: string | null }): Promise<Loaded<Proof>> {
+  return done(await load((api) => api.POST("/api/finance/proofs/{id}/confirm", { params: { path: { id } }, body })));
+}
+
+/** The reason is emailed to the parent. */
+export async function rejectProof(id: string, reason: string): Promise<Loaded<Proof>> {
+  return done(await load((api) => api.POST("/api/finance/proofs/{id}/reject", { params: { path: { id } }, body: { reason } })));
 }

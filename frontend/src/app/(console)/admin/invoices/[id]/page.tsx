@@ -13,6 +13,7 @@ import { Badge, Card, PageHeader, cn } from "@/components/ui/primitives";
 import { AccessDenied, Alert, ProblemState } from "@/components/ui/states";
 import { InvoiceAdminActions, PaymentsTable, RecordPaymentButton } from "@/components/finance/invoice-actions";
 import { PdfDownloadButton } from "@/components/reports/pdf-download";
+import { proofStatusLabel, proofStatusTone } from "@/lib/finance/proofs";
 
 const stateBadge: Record<ScheduleState, { label: string; tone: "success" | "danger" | "warning" | "neutral" }> = {
   paid: { label: "Paid", tone: "success" },
@@ -47,7 +48,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     );
   }
   if (!GUID.test(id)) notFound();
-  const invoice = await load((api) => api.GET("/api/finance/invoices/{id}", { params: { path: { id } } }));
+  const [invoice, invoiceProofs] = await Promise.all([
+    load((api) => api.GET("/api/finance/invoices/{id}", { params: { path: { id } } })),
+    // Proofs of bank payment for this invoice, every status (E10.8).
+    load((api) => api.GET("/api/finance/proofs", { params: { query: { invoiceId: id, page: 1, pageSize: 50 } } })),
+  ]);
+  const proofs = invoiceProofs.ok ? invoiceProofs.data.items : [];
   if (!invoice.ok) {
     if (invoice.problem.status === 404) notFound();
     return (
@@ -173,6 +179,30 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         </div>
         <PaymentsTable payments={inv.payments} isAdmin={isAdmin} />
       </Card>
+
+      {proofs.length > 0 && (
+        <Card className="mt-5 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3">
+            <h2 className="font-display text-lg font-semibold">Proofs of payment</h2>
+            <Link href="/admin/proofs" className="text-sm text-brand hover:underline">
+              To verify
+            </Link>
+          </div>
+          <ul className="divide-y divide-border text-sm">
+            {proofs.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2.5">
+                <span className="tabular min-w-0 flex-1">
+                  {formatNaira(p.amount)} <span className="text-muted">paid {day(p.paidOn)}</span>
+                  {p.bankReference && <span className="text-muted"> · ref {p.bankReference}</span>}
+                </span>
+                <Badge tone={proofStatusTone[p.status]}>{proofStatusLabel[p.status]}</Badge>
+                {p.receiptNumber && <span className="tabular text-xs text-muted">{p.receiptNumber}</span>}
+                {p.rejectReason && <span className="w-full text-xs text-muted">Not accepted: {p.rejectReason}</span>}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </>
   );
 }

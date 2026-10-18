@@ -13,7 +13,7 @@ export const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
  * refresh, browser IP/UA forwarded. Content-Type/-Disposition pass through; never cached shared.
  * Errors come back as short plain text, since these URLs are usually opened in a tab.
  */
-export async function proxyBinaryGet(request: NextRequest, apiPath: string): Promise<NextResponse> {
+export async function proxyBinaryGet(request: NextRequest, apiPath: string, opts: { allowInline?: boolean } = {}): Promise<NextResponse> {
   const { reply, finish } = await withSession<Response>(request, async (accessToken): Promise<ApiReply<Response>> => {
     let res: Response;
     try {
@@ -41,6 +41,11 @@ export async function proxyBinaryGet(request: NextRequest, apiPath: string): Pro
     if (v) headers.set(h, v);
   }
   // ?inline=1: open in the browser's viewer instead of downloading (the "View" action).
-  if (request.nextUrl.searchParams.get("inline") === "1") headers.set("content-disposition", toInline(res.headers.get("content-disposition")));
+  // Never for untrusted uploads (proofs of payment): those are always downloads.
+  if (opts.allowInline === false) {
+    const d = res.headers.get("content-disposition");
+    headers.set("content-disposition", d && /^\s*attachment/i.test(d) ? d : `attachment${d ? d.replace(/^\s*inline/i, "") : ""}`);
+    headers.set("Content-Security-Policy", "sandbox"); // belt and braces if a browser renders it anyway
+  } else if (request.nextUrl.searchParams.get("inline") === "1") headers.set("content-disposition", toInline(res.headers.get("content-disposition")));
   return finish(new NextResponse(res.body, { status: 200, headers }));
 }
