@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { CalendarClock, FileText } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CalendarClock, FileText } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { applicationStatusLabel, applicationStatusTone } from "@/lib/admissions/rules";
 import { firstName } from "@/lib/flash";
-import { Badge, Card, PageHeader } from "@/components/ui/primitives";
+import { Badge, Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
 import { EmptyState, ProblemState } from "@/components/ui/states";
 import { ApplyAnotherChild, PayFormButton, RedeemCodeForm } from "@/components/admissions/application-actions";
 
@@ -68,6 +69,15 @@ export default async function AdmissionsHomePage() {
                     <CalendarClock className="size-4 shrink-0 text-brand" aria-hidden />
                     Form paid. Fill in the form and book the entrance exam by <span className="font-medium">{day(a.examWindowEndsOn)}</span>.
                   </p>
+                )}
+
+                {a.status !== "AwaitingPayment" && (
+                  <div className="mt-4 flex justify-end">
+                    <Link href={`/admissions/${a.id}`} className={buttonClasses(a.status === "FormPaid" ? "primary" : "secondary", "sm")}>
+                      {a.status === "FormPaid" ? "Fill in the application form" : "View application"}
+                      <ArrowRight className="size-4" aria-hidden />
+                    </Link>
+                  </div>
                 )}
               </Card>
             </li>

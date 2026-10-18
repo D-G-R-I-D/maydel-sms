@@ -43,3 +43,31 @@ export async function saveAdmissionSettings(body: { sessionId: string; isOpen: b
 export async function issueFormCodes(body: { sessionId: string; count: number; amountPaid: number; issuedTo: string | null }): Promise<Loaded<FormCode[]>> {
   return staff(await load((api) => api.POST("/api/admissions/form-codes", { body })));
 }
+
+/* ----------------------------------------------------------------- E11.5: the online form */
+
+type FormBody = import("./form").ApplicationFormPayload;
+type Detail = import("./form").ApplicationDetail;
+
+export async function saveApplicationForm(id: string, body: FormBody): Promise<Loaded<Detail>> {
+  return family(await load((api) => api.PUT("/api/admissions/applications/{id}/form", { params: { path: { id } }, body })));
+}
+
+/** 400 names the first missing item; after this the form and documents are locked. */
+export async function submitApplication(id: string): Promise<Loaded<Detail>> {
+  return family(await load((api) => api.POST("/api/admissions/applications/{id}/submit", { params: { path: { id } } })));
+}
+
+export async function removeApplicationDocument(id: string, documentId: string): Promise<Loaded<true>> {
+  return family(
+    await load(async (api) => {
+      const r = await api.DELETE("/api/admissions/applications/{id}/documents/{documentId}", { params: { path: { id, documentId } } });
+      return { ...r, data: r.response.ok ? (true as const) : undefined };
+    }),
+  );
+}
+
+/** Admin: correct a submitted form (audited). Documents can't be changed here. */
+export async function correctApplicationForm(id: string, body: FormBody): Promise<Loaded<Detail>> {
+  return staff(await load((api) => api.PUT("/api/admissions/applications/{id}/correction", { params: { path: { id } }, body })));
+}
