@@ -22,7 +22,10 @@ function FlashReader() {
   return null;
 }
 
-/** Bottom-centre on phones (thumb reach), bottom-right on larger screens; themed with our tokens. */
+/**
+ * Bottom-centre on phones (thumb reach), bottom-right on larger screens; themed with our tokens. Both sit
+ * above the sticky form action bars (~72 px) so a toast never covers Save.
+ */
 export function Toaster() {
   return (
     <>
@@ -31,7 +34,7 @@ export function Toaster() {
         closeButton
         duration={5000}
         visibleToasts={3}
-        offset={16}
+        offset={{ right: 16, bottom: 88 }}
         mobileOffset={{ bottom: 88 }}
         icons={{
           success: <CircleCheck className="size-4 text-success" aria-hidden />,
