@@ -48,7 +48,7 @@ public sealed class AttemptTests
         Assert.Equal(5, a.Items.Select(i => i.QuestionId).Distinct().Count());
         Assert.DoesNotContain(a.Items.Skip(1).Take(3), i => i.QuestionId == test.Sections[0].QuestionIds[0]); // the fixed one isn't drawn again
         Assert.Equal(new[] { 2m, 1m, 1m, 1m, 10m }, a.Items.Select(i => i.Marks));
-        Assert.True(a.Items.Zip(b.Items).Any(p => p.First.QuestionId != p.Second.QuestionId || !p.First.OptionOrder.SequenceEqual(p.Second.OptionOrder)));
+        Assert.Contains(a.Items.Zip(b.Items), p => p.First.QuestionId != p.Second.QuestionId || !p.First.OptionOrder.SequenceEqual(p.Second.OptionOrder));
     }
 
     [Fact]

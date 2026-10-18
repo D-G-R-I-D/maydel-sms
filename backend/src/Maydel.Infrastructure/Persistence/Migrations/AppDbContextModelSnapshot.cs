@@ -1247,6 +1247,58 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("Questions");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Cbt.TestAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutoSubmitted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DeadlineAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SessionToken")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("TestId", "StudentId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("TestAttempts", (string)null);
+                });
+
             modelBuilder.Entity("Maydel.Domain.Communication.Announcement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2764,6 +2816,107 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Options");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Cbt.TestAttempt", b =>
+                {
+                    b.HasOne("Maydel.Domain.People.Student", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Cbt.CbtTest", null)
+                        .WithMany()
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsMany("Maydel.Domain.Cbt.AttemptItem", "Items", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid");
+
+                            b1.PrimitiveCollection<List<Guid>>("AnswerOptionIds")
+                                .IsRequired()
+                                .HasColumnType("uuid[]");
+
+                            b1.Property<string>("AnswerText")
+                                .HasMaxLength(5000)
+                                .HasColumnType("character varying(5000)");
+
+                            b1.Property<bool?>("AnswerTrueFalse")
+                                .HasColumnType("boolean");
+
+                            b1.Property<DateTimeOffset?>("AnsweredAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<Guid>("AttemptId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal?>("AutoScore")
+                                .HasPrecision(6, 2)
+                                .HasColumnType("numeric(6,2)");
+
+                            b1.Property<decimal>("Marks")
+                                .HasPrecision(6, 2)
+                                .HasColumnType("numeric(6,2)");
+
+                            b1.PrimitiveCollection<List<Guid>>("OptionOrder")
+                                .IsRequired()
+                                .HasColumnType("uuid[]");
+
+                            b1.Property<int>("Order")
+                                .HasColumnType("integer");
+
+                            b1.Property<Guid>("QuestionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("SectionId")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("AttemptId");
+
+                            b1.ToTable("TestAttemptItems", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("AttemptId");
+                        });
+
+                    b.OwnsMany("Maydel.Domain.Cbt.IntegrityEvent", "Events", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<DateTimeOffset>("At")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<Guid>("AttemptId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("AttemptId");
+
+                            b1.ToTable("TestAttemptEvents", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("AttemptId");
+                        });
+
+                    b.Navigation("Events");
+
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Finance.FeeItem", b =>
