@@ -14,6 +14,8 @@ import { PdfDownloadButton } from "@/components/reports/pdf-download";
 import { ApplicationFormView } from "@/components/admissions/application-form-view";
 import { DocumentsPanel } from "@/components/admissions/documents-panel";
 import { CorrectFormButton } from "@/components/admissions/correct-form-button";
+import { EnrolButton, ReopenButton } from "@/components/admissions/staff-application-actions";
+import { formatSlotRange, modeLabel } from "@/lib/admissions/exam";
 
 export const metadata: Metadata = { title: "Application" };
 
@@ -59,6 +61,15 @@ export default async function StaffApplicationPage({ params }: { params: Promise
   const a = d.application;
   const submitted = !["AwaitingPayment", "FormPaid"].includes(a.status);
   const correctable = isAdmin && submitted && !["Enrolled", "Withdrawn"].includes(a.status);
+  const hasLetter = ["Offered", "Accepted", "Enrolled"].includes(a.status);
+  const childName = `${a.childFirstName} ${a.childLastName}`;
+  // Class arms at the applied-for level, for enrolment (E11.8).
+  const classrooms =
+    isAdmin && a.status === "Accepted"
+      ? await load((api) => api.GET("/api/academics/classrooms")).then((r) =>
+          r.ok ? r.data.filter((c) => c.classLevelId === a.classLevelId).map((c) => ({ id: c.id, name: c.name, full: c.studentCount >= c.capacity })) : [],
+        )
+      : [];
 
   return (
     <>
@@ -76,7 +87,17 @@ export default async function StaffApplicationPage({ params }: { params: Promise
             {a.status !== "AwaitingPayment" && (
               <PdfDownloadButton href={`/api/media/admissions/staff/applications/${a.id}/form-pdf`} label="Form PDF" fallbackName={`${a.referenceNumber}.pdf`} size="sm" />
             )}
+            {hasLetter && (
+              <PdfDownloadButton href={`/api/media/admissions/staff/applications/${a.id}/letter`} label="Admission letter" fallbackName={`Admission letter - ${childName}.pdf`} size="sm" />
+            )}
             {correctable && <CorrectFormButton detail={d} />}
+            {isAdmin && a.status === "Missed" && <ReopenButton applicationId={a.id} childName={childName} />}
+            {isAdmin && a.status === "Accepted" && <EnrolButton applicationId={a.id} childName={childName} classrooms={classrooms} />}
+            {a.status === "Enrolled" && a.studentId && (
+              <Link href={`/admin/students/${a.studentId}`} className="text-sm text-brand hover:underline">
+                Student record{a.admissionNumber ? ` (${a.admissionNumber})` : ""}
+              </Link>
+            )}
           </div>
         }
       />
@@ -109,7 +130,14 @@ export default async function StaffApplicationPage({ params }: { params: Promise
         </div>
         <div>
           <p className="text-muted">Entrance exam</p>
-          <p>{a.examWindowEndsOn ? `Book by ${day(a.examWindowEndsOn)}` : "—"}</p>
+          {a.exam ? (
+            <p>
+              {formatSlotRange(a.exam.startsAt, a.exam.endsAt)} · {a.exam.venue} · {modeLabel[a.exam.mode]}
+            </p>
+          ) : (
+            <p>{a.examWindowEndsOn ? `Book by ${day(a.examWindowEndsOn)}` : "—"}</p>
+          )}
+          {a.admissionNumber && <p>Admission number <span className="tabular font-mono font-medium">{a.admissionNumber}</span></p>}
           {d.examScore !== null && d.examScore !== undefined && <p className="tabular font-medium">Score {d.examScore}</p>}
         </div>
       </Card>

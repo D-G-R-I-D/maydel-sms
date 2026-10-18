@@ -68,7 +68,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   return (
     <>
       <PageHeader title="Admissions" description="Families who bought the admission form, and where each application is." actions={<SessionPicker sessions={sessions} value={selected.id} />} />
-      <AdmissionsTabs active="applications" sessionId={selected.id} />
+      <AdmissionsTabs active="applications" sessionId={selected.id} isAdmin={hasAnyRole(user.roles, ["Admin"])} isBursar={hasAnyRole(user.roles, ["Bursar"])} />
       <ApplicationFilters levels={levels.ok ? levels.data.map((l) => ({ id: l.id, name: l.name })) : []} />
       <Card className="overflow-hidden">
         {!apps.ok ? (

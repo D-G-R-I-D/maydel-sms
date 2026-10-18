@@ -11,6 +11,7 @@ import { PdfDownloadButton } from "@/components/reports/pdf-download";
 import { ApplicationFormEditor } from "@/components/admissions/application-form-editor";
 import { ApplicationFormView } from "@/components/admissions/application-form-view";
 import { DocumentsPanel } from "@/components/admissions/documents-panel";
+import { NextSteps } from "@/components/admissions/next-steps";
 
 export const metadata: Metadata = { title: "Application" };
 
@@ -40,6 +41,11 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
   }
   const d = detail.data;
   const a = d.application;
+  // Exam times to book or move to, while that's still possible (E11.6).
+  const slots =
+    a.status === "Submitted" || a.status === "ExamBooked"
+      ? await load((api) => api.GET("/api/admissions/applications/{id}/exam-slots", { params: { path: { id } } }))
+      : null;
   const pdf = (
     <PdfDownloadButton
       href={`/api/media/admissions/applications/${a.id}/form-pdf`}
@@ -84,11 +90,12 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
         </div>
       ) : (
         <div className="space-y-5">
+          <NextSteps detail={d} slots={slots?.ok ? slots.data : []} />
           {d.submittedAt && (
             <Alert tone="success" title={`Submitted on ${timeFormat.format(new Date(d.submittedAt))}`}>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4" aria-hidden />
-                The form is locked. Next: book the entrance exam.
+                The form is locked.
               </span>
             </Alert>
           )}

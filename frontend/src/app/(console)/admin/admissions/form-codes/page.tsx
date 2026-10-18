@@ -67,7 +67,7 @@ export default async function FormCodesPage({ searchParams }: { searchParams: Pr
           </div>
         }
       />
-      <AdmissionsTabs active="codes" sessionId={selected.id} />
+      <AdmissionsTabs active="codes" sessionId={selected.id} isAdmin={hasAnyRole(user.roles, ["Admin"])} isBursar={hasAnyRole(user.roles, ["Bursar"])} />
       <nav aria-label="Filter codes" className="mb-4 flex flex-wrap gap-1 text-sm">
         {(
           [
