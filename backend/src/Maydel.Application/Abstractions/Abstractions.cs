@@ -57,6 +57,7 @@ public interface IAppDbContext
     DbSet<AdmissionApplication> Applications { get; }
     DbSet<AdmissionSettings> AdmissionSettings { get; }
     DbSet<ExamSlot> ExamSlots { get; }
+    DbSet<Domain.Cbt.Question> Questions { get; }
     DbSet<FormCode> FormCodes { get; }
     DbSet<FormPayment> FormPayments { get; }
     DbSet<ContactMessage> ContactMessages { get; }

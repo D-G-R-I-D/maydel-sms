@@ -453,6 +453,32 @@ internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionAppl
     }
 }
 
+internal sealed class QuestionConfig : IEntityTypeConfiguration<Domain.Cbt.Question>
+{
+    public void Configure(EntityTypeBuilder<Domain.Cbt.Question> b)
+    {
+        b.HasIndex(x => new { x.SubjectId, x.ClassLevelId, x.IsArchived });
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Difficulty).HasConversion<string>().HasMaxLength(8);
+        b.Property(x => x.Source).HasConversion<string>().HasMaxLength(8);
+        b.Property(x => x.Text).HasMaxLength(Domain.Cbt.Question.MaxTextLength);
+        b.Property(x => x.MarkingGuide).HasMaxLength(Domain.Cbt.Question.MaxTextLength);
+        b.Property(x => x.Topic).HasMaxLength(80);
+        b.Property(x => x.ImagePath).HasMaxLength(200);
+        b.Ignore(x => x.IsAutoMarked);
+        b.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Options, o =>
+        {
+            o.ToTable("QuestionOptions");
+            o.WithOwner().HasForeignKey("QuestionId");
+            o.HasKey(x => x.Id);
+            o.Property(x => x.Id).ValueGeneratedNever();
+            o.Property(x => x.Text).HasMaxLength(1000);
+        });
+    }
+}
+
 internal sealed class ExamSlotConfig : IEntityTypeConfiguration<ExamSlot>
 {
     public void Configure(EntityTypeBuilder<ExamSlot> b)
