@@ -479,6 +479,40 @@ internal sealed class QuestionConfig : IEntityTypeConfiguration<Domain.Cbt.Quest
     }
 }
 
+internal sealed class CbtTestConfig : IEntityTypeConfiguration<Domain.Cbt.CbtTest>
+{
+    public void Configure(EntityTypeBuilder<Domain.Cbt.CbtTest> b)
+    {
+        b.ToTable("CbtTests");
+        b.HasIndex(x => new { x.TermId, x.SubjectId, x.ClassLevelId });
+        b.Property(x => x.Title).HasMaxLength(150);
+        b.Property(x => x.Instructions).HasMaxLength(2000);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(10);
+        b.Ignore(x => x.QuestionCount);
+        b.Ignore(x => x.TotalMarks);
+        b.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Term>().WithMany().HasForeignKey(x => x.TermId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Domain.Assessment.AssessmentComponent>().WithMany().HasForeignKey(x => x.ComponentId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Sections, s =>
+        {
+            s.ToTable("CbtTestSections");
+            s.WithOwner().HasForeignKey("TestId");
+            s.HasKey(x => x.Id);
+            s.Property(x => x.Id).ValueGeneratedNever();
+            s.Property(x => x.Title).HasMaxLength(100);
+            s.Property(x => x.Instructions).HasMaxLength(1000);
+            s.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
+            s.Property(x => x.Mode).HasConversion<string>().HasMaxLength(8);
+            s.Property(x => x.Difficulty).HasConversion<string>().HasMaxLength(8);
+            s.Property(x => x.Topic).HasMaxLength(80);
+            s.Property(x => x.MarksPerQuestion).HasPrecision(6, 2);
+            s.Ignore(x => x.QuestionCount);
+            s.Ignore(x => x.Marks);
+        });
+    }
+}
+
 internal sealed class ExamSlotConfig : IEntityTypeConfiguration<ExamSlot>
 {
     public void Configure(EntityTypeBuilder<ExamSlot> b)

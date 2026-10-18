@@ -1098,6 +1098,84 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Cbt.CbtTest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClassLevelId")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<List<Guid>>("ClassRoomIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<DateTimeOffset>("ClosesAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ComponentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("OpensAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ShuffleOptions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ShuffleQuestions")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TermId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassLevelId");
+
+                    b.HasIndex("ComponentId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("TermId", "SubjectId", "ClassLevelId");
+
+                    b.ToTable("CbtTests", (string)null);
+                });
+
             modelBuilder.Entity("Maydel.Domain.Cbt.Question", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2553,6 +2631,93 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Cbt.CbtTest", b =>
+                {
+                    b.HasOne("Maydel.Domain.Academics.ClassLevel", null)
+                        .WithMany()
+                        .HasForeignKey("ClassLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Assessment.AssessmentComponent", null)
+                        .WithMany()
+                        .HasForeignKey("ComponentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Maydel.Domain.Academics.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Academics.Term", null)
+                        .WithMany()
+                        .HasForeignKey("TermId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsMany("Maydel.Domain.Cbt.TestSection", "Sections", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Difficulty")
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)");
+
+                            b1.Property<string>("Instructions")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)");
+
+                            b1.Property<string>("Kind")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)");
+
+                            b1.Property<decimal>("MarksPerQuestion")
+                                .HasPrecision(6, 2)
+                                .HasColumnType("numeric(6,2)");
+
+                            b1.Property<string>("Mode")
+                                .IsRequired()
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)");
+
+                            b1.Property<int>("Order")
+                                .HasColumnType("integer");
+
+                            b1.PrimitiveCollection<List<Guid>>("QuestionIds")
+                                .IsRequired()
+                                .HasColumnType("uuid[]");
+
+                            b1.Property<int?>("RandomCount")
+                                .HasColumnType("integer");
+
+                            b1.Property<Guid>("TestId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Title")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("Topic")
+                                .HasMaxLength(80)
+                                .HasColumnType("character varying(80)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("TestId");
+
+                            b1.ToTable("CbtTestSections", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("TestId");
+                        });
+
+                    b.Navigation("Sections");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Cbt.Question", b =>

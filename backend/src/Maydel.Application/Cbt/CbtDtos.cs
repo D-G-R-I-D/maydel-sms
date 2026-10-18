@@ -22,8 +22,46 @@ public sealed record QuestionInput(
 /// <summary>A subject at a class level the caller may write questions for, with how many live questions the bank has.</summary>
 public sealed record AuthoringScope(Guid SubjectId, string Subject, Guid ClassLevelId, string ClassLevel, int Questions);
 
+/// <summary>The test's header as the teacher sets it. Times are instants (send them with an offset).</summary>
+public sealed record TestInput(
+    string Title, string? Instructions, Guid SubjectId, Guid ClassLevelId, Guid TermId, Guid? ComponentId, IReadOnlyList<Guid> ClassRoomIds,
+    int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt, int MaxAttempts = 1, bool ShuffleQuestions = true, bool ShuffleOptions = true);
+
+/// <summary>A section: one kind of question, marks per question, and fixed questions or a random draw from the bank.</summary>
+public sealed record SectionInput(
+    string Title, string? Instructions, QuestionKind Kind, decimal MarksPerQuestion, SectionMode Mode, IReadOnlyList<Guid>? QuestionIds,
+    int? RandomCount, string? Topic, Difficulty? Difficulty);
+
+public sealed record SectionsInput(IReadOnlyList<SectionInput> Sections);
+
+public sealed record QuestionBrief(Guid Id, QuestionKind Kind, string Text, string? Topic, Difficulty Difficulty, bool HasImage, bool IsArchived);
+
+/// <summary><c>AvailableInBank</c>: random sections only, how many live questions match the draw.</summary>
+public sealed record SectionDto(
+    Guid Id, int Order, string Title, string? Instructions, QuestionKind Kind, decimal MarksPerQuestion, SectionMode Mode, int QuestionCount,
+    decimal Marks, int? RandomCount, string? Topic, Difficulty? Difficulty, IReadOnlyList<QuestionBrief> Questions, int? AvailableInBank);
+
+/// <summary>How the raw total maps to the gradebook column, e.g. 100 marks → Exams / 40 (×0.4).</summary>
+public sealed record ScalingPreview(Guid ComponentId, string Component, decimal ComponentMax, decimal TotalMarks, decimal Factor);
+
+public sealed record ClassRoomBrief(Guid Id, string Name);
+
+public sealed record TestSummary(
+    Guid Id, string Title, Guid SubjectId, string Subject, Guid ClassLevelId, string ClassLevel, Guid TermId, string? Component, TestStatus Status,
+    DateTimeOffset OpensAt, DateTimeOffset ClosesAt, int DurationMinutes, int QuestionCount, decimal TotalMarks, IReadOnlyList<string> ClassRooms);
+
+/// <summary>A test with its sections, totals, scaling and what still blocks publishing (<c>Problems</c> empty = ready).</summary>
+public sealed record TestDetail(
+    Guid Id, string Title, string? Instructions, Guid SubjectId, string Subject, Guid ClassLevelId, string ClassLevel, Guid TermId, string Term,
+    Guid? ComponentId, IReadOnlyList<ClassRoomBrief> ClassRooms, int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt,
+    int MaxAttempts, bool ShuffleQuestions, bool ShuffleOptions, TestStatus Status, DateTimeOffset? PublishedAt, IReadOnlyList<SectionDto> Sections,
+    int QuestionCount, decimal TotalMarks, ScalingPreview? Scaling, IReadOnlyList<string> Problems, bool CanEdit);
+
 public static class CbtErrors
 {
+    public static readonly Common.Error TestNotFound = Common.Error.NotFound("test.not_found", "That test doesn't exist.");
+    public static readonly Common.Error TermNotFound = Common.Error.Validation("termId", "Choose a term.");
+    public static readonly Common.Error ComponentNotFound = Common.Error.Validation("componentId", "Choose an active assessment component (or none for practice).");
     public static readonly Common.Error QuestionNotFound = Common.Error.NotFound("question.not_found", "That question doesn't exist.");
     public static readonly Common.Error NotYourSubject = Common.Error.Forbidden("question.forbidden",
         "You can only write questions for subjects and classes you teach.");
