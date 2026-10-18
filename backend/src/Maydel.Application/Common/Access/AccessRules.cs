@@ -37,6 +37,29 @@ public sealed class AccessRules(IAppDbContext db, ICurrentUser me)
             ((cs.Teacher != null && cs.Teacher.UserId == uid) || (cs.ClassRoom.FormTeacher != null && cs.ClassRoom.FormTeacher.UserId == uid)), ct);
     }
 
+    /// <summary>
+    /// Admins write questions for anything; teachers for a subject at a class level where they teach that subject in some arm,
+    /// or form-teach an arm (the question bank is shared by those teachers, E16.1).
+    /// </summary>
+    public async Task<bool> CanAuthorAsync(Guid classLevelId, Guid subjectId, CancellationToken ct)
+    {
+        if (me.IsInRole(Roles.Admin)) return true;
+        if (!me.IsInRole(Roles.Teacher) || me.UserId is not { } uid) return false;
+        return await db.ClassSubjects.AnyAsync(cs => cs.ClassRoom.ClassLevelId == classLevelId && cs.SubjectId == subjectId &&
+            ((cs.Teacher != null && cs.Teacher.UserId == uid) || (cs.ClassRoom.FormTeacher != null && cs.ClassRoom.FormTeacher.UserId == uid)), ct);
+    }
+
+    /// <summary>The (subject, class level) pairs the caller may write questions for; null means everything (admins).</summary>
+    public async Task<IReadOnlyList<(Guid SubjectId, Guid ClassLevelId)>?> AuthoringScopeAsync(CancellationToken ct)
+    {
+        if (me.IsInRole(Roles.Admin)) return null;
+        if (!me.IsInRole(Roles.Teacher) || me.UserId is not { } uid) return [];
+        var pairs = await db.ClassSubjects
+            .Where(cs => (cs.Teacher != null && cs.Teacher.UserId == uid) || (cs.ClassRoom.FormTeacher != null && cs.ClassRoom.FormTeacher.UserId == uid))
+            .Select(cs => new { cs.SubjectId, cs.ClassRoom.ClassLevelId }).Distinct().ToListAsync(ct);
+        return [.. pairs.Select(p => (p.SubjectId, p.ClassLevelId))];
+    }
+
     /// <summary>Admins, or the class's form teacher.</summary>
     public async Task<bool> IsFormTeacherAsync(Guid classRoomId, CancellationToken ct)
     {

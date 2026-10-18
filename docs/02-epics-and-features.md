@@ -190,7 +190,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 
 ## E16 — Online tests & exams (CBT)
 Computer-based tests for students, with results flowing into the gradebook.
-- **E16.1** Question bank per subject & class level: multiple choice, multi-select, true/false, fill-in-the-gap, short answer, essay (manual marking); images in questions; tags by topic & difficulty.
+- **E16.1** ✅ *API 2026-10-18 (all six kinds incl. fill-in-the-gap, keys, marking guides, topic/difficulty tags, pictures, shared per subject+level with teacher row-level access; archive not delete).* Question bank per subject & class level: multiple choice, multi-select, true/false, fill-in-the-gap, short answer, essay (manual marking); images in questions; tags by topic & difficulty.
 - **E16.2a** *(added 2026-10-17)* **Mixed sections and automatic mapping.**
   - A test/exam is built from sections, e.g. 40 objective + 10 true/false + 10 fill-in-the-gap + 3 theory, each with its own marks per question and its own instructions.
   - Objective, true/false and fill-in-the-gap are auto-marked; theory is teacher-marked against the marking guide.
