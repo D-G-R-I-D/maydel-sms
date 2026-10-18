@@ -513,6 +513,38 @@ internal sealed class CbtTestConfig : IEntityTypeConfiguration<Domain.Cbt.CbtTes
     }
 }
 
+internal sealed class TestAttemptConfig : IEntityTypeConfiguration<Domain.Cbt.TestAttempt>
+{
+    public void Configure(EntityTypeBuilder<Domain.Cbt.TestAttempt> b)
+    {
+        b.ToTable("TestAttempts");
+        // One sitting number per student per test: guards against a double "start" creating two attempts.
+        b.HasIndex(x => new { x.TestId, x.StudentId, x.Number }).IsUnique();
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(12);
+        b.Property(x => x.SessionToken).HasMaxLength(64);
+        b.HasOne<Domain.Cbt.CbtTest>().WithMany().HasForeignKey(x => x.TestId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Items, i =>
+        {
+            i.ToTable("TestAttemptItems");
+            i.WithOwner().HasForeignKey("AttemptId");
+            i.HasKey(x => x.Id);
+            i.Property(x => x.Id).ValueGeneratedNever();
+            i.Property(x => x.Marks).HasPrecision(6, 2);
+            i.Property(x => x.AutoScore).HasPrecision(6, 2);
+            i.Property(x => x.AnswerText).HasMaxLength(5000);
+        });
+        b.OwnsMany(x => x.Events, e =>
+        {
+            e.ToTable("TestAttemptEvents");
+            e.WithOwner().HasForeignKey("AttemptId");
+            e.Property<int>("Id").ValueGeneratedOnAdd();
+            e.HasKey("Id");
+            e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+        });
+    }
+}
+
 internal sealed class ExamSlotConfig : IEntityTypeConfiguration<ExamSlot>
 {
     public void Configure(EntityTypeBuilder<ExamSlot> b)

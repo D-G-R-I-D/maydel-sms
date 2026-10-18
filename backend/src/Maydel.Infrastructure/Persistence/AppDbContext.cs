@@ -57,6 +57,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ExamSlot> ExamSlots => Set<ExamSlot>();
     public DbSet<Domain.Cbt.Question> Questions => Set<Domain.Cbt.Question>();
     public DbSet<Domain.Cbt.CbtTest> CbtTests => Set<Domain.Cbt.CbtTest>();
+    public DbSet<Domain.Cbt.TestAttempt> TestAttempts => Set<Domain.Cbt.TestAttempt>();
     public DbSet<FormCode> FormCodes => Set<FormCode>();
     public DbSet<FormPayment> FormPayments => Set<FormPayment>();
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();

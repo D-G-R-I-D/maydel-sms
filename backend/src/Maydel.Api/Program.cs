@@ -105,6 +105,7 @@ app.MapFinanceEndpoints();
 app.MapWebhookEndpoints();
 app.MapAdmissionEndpoints();
 app.MapCbtEndpoints();
+app.MapStudentTestEndpoints();
 
 if (!generatingOpenApiDocument && app.Configuration.GetValue("Database:MigrateOnStartup", false))
 {

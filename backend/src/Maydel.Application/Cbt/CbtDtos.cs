@@ -57,8 +57,52 @@ public sealed record TestDetail(
     int MaxAttempts, bool ShuffleQuestions, bool ShuffleOptions, TestStatus Status, DateTimeOffset? PublishedAt, IReadOnlyList<SectionDto> Sections,
     int QuestionCount, decimal TotalMarks, ScalingPreview? Scaling, IReadOnlyList<string> Problems, bool CanEdit);
 
+public enum StudentTestState
+{
+    Upcoming,
+    Open,
+    InProgress,
+    /// <summary>Handed in and no attempts left (or the window closed after an attempt).</summary>
+    Done,
+    /// <summary>The window closed without an attempt.</summary>
+    Missed,
+}
+
+/// <summary>A test as a student sees it in their list (no questions, no keys).</summary>
+public sealed record StudentTestDto(
+    Guid Id, string Title, string Subject, string? Instructions, int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt,
+    int QuestionCount, decimal TotalMarks, int MaxAttempts, int AttemptsUsed, StudentTestState State, Guid? ActiveAttemptId);
+
+public sealed record PaperOption(Guid Id, string Text);
+
+/// <summary>A question on the student's paper: no answer key. <c>ImageUrl</c> is relative to the API.</summary>
+public sealed record PaperItem(
+    Guid Id, int Order, int Section, QuestionKind Kind, string Text, string? ImageUrl, decimal Marks, IReadOnlyList<PaperOption> Options,
+    IReadOnlyList<Guid> AnswerOptionIds, bool? AnswerTrueFalse, string? AnswerText, bool Answered);
+
+public sealed record PaperSection(int Index, string Title, string? Instructions, QuestionKind Kind, decimal MarksPerQuestion);
+
+/// <summary>
+/// The student's paper. Use <c>ServerNow</c> and <c>DeadlineAt</c> (not the device clock) for the countdown; send <c>SessionToken</c>
+/// with every save. Status Submitted: read-only.
+/// </summary>
+public sealed record AttemptPaper(
+    Guid Id, Guid TestId, string Title, string? Instructions, AttemptStatus Status, DateTimeOffset StartedAt, DateTimeOffset DeadlineAt,
+    DateTimeOffset ServerNow, int RemainingSeconds, string? SessionToken, IReadOnlyList<PaperSection> Sections, IReadOnlyList<PaperItem> Items,
+    int Answered, DateTimeOffset? SubmittedAt, bool AutoSubmitted);
+
+public sealed record AnswerSaved(Guid ItemId, DateTimeOffset SavedAt, int RemainingSeconds);
+
+public sealed record AnswerInput(string SessionToken, IReadOnlyList<Guid>? OptionIds, bool? TrueFalse, string? Text);
+
+public sealed record TokenInput(string SessionToken);
+
+public sealed record EventInput(string SessionToken, IntegrityEventKind Kind);
+
 public static class CbtErrors
 {
+    public static readonly Common.Error AttemptNotFound = Common.Error.NotFound("attempt.not_found", "That test attempt doesn't exist.");
+    public static readonly Common.Error NotAStudent = Common.Error.Forbidden("attempt.not_student", "Only students can sit online tests.");
     public static readonly Common.Error TestNotFound = Common.Error.NotFound("test.not_found", "That test doesn't exist.");
     public static readonly Common.Error TermNotFound = Common.Error.Validation("termId", "Choose a term.");
     public static readonly Common.Error ComponentNotFound = Common.Error.Validation("componentId", "Choose an active assessment component (or none for practice).");
