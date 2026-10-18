@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Inbox } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
@@ -67,7 +68,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   return (
     <>
       <PageHeader title="Admissions" description="Families who bought the admission form, and where each application is." actions={<SessionPicker sessions={sessions} value={selected.id} />} />
-      <AdmissionsTabs active="applications" sessionId={selected.id} />
+      <AdmissionsTabs active="applications" sessionId={selected.id} isAdmin={hasAnyRole(user.roles, ["Admin"])} isBursar={hasAnyRole(user.roles, ["Bursar"])} />
       <ApplicationFilters levels={levels.ok ? levels.data.map((l) => ({ id: l.id, name: l.name })) : []} />
       <Card className="overflow-hidden">
         {!apps.ok ? (
@@ -94,7 +95,11 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 <tbody className="divide-y divide-border">
                   {apps.data.items.map((a) => (
                     <tr key={a.id} className="align-top">
-                      <td className="tabular px-4 py-2.5 font-medium">{a.referenceNumber}</td>
+                      <td className="tabular px-4 py-2.5 font-medium">
+                        <Link href={`/admin/admissions/${a.id}`} className="text-brand hover:underline">
+                          {a.referenceNumber}
+                        </Link>
+                      </td>
                       <td className="px-3 py-2.5">
                         {a.childFirstName} {a.childLastName}
                         {a.childDateOfBirth && <span className="block text-xs text-muted">Born {day(a.childDateOfBirth)}</span>}

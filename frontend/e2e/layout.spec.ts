@@ -35,6 +35,8 @@ const pages = [
   "/admin/settings/admissions",
   "/admin/admissions",
   "/admin/admissions/form-codes",
+  "/admin/admissions/exams",
+  "/admin/admissions/results",
   "/admin/audit",
 ];
 

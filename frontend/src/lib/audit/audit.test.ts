@@ -69,7 +69,7 @@ describe("console navigation", () => {
   });
 
   it("gives teachers their working set", () => {
-    expect(labels(["Teacher"])).toEqual(["Dashboard", "Students", "Sessions & terms", "Score entry", "Reports", "Attendance", "Assessment"]);
+    expect(labels(["Teacher"])).toEqual(["Dashboard", "Students", "Sessions & terms", "Score entry", "Reports", "Attendance", "Entrance exams", "Assessment"]);
   });
 
   it("highlights the most specific match", () => {

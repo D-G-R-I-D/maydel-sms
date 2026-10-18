@@ -54,7 +54,13 @@ export const consoleNav: NavGroup[] = [
       { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB, ready: true },
     ],
   },
-  { label: "Admissions", items: [{ label: "Admissions", href: "/admin/admissions", icon: "admissions", roles: AB, ready: true }] },
+  {
+    label: "Admissions",
+    items: [
+      { label: "Applications", href: "/admin/admissions", icon: "admissions", roles: AB, ready: true },
+      { label: "Entrance exams", href: "/admin/admissions/exams", icon: "results", roles: AT, ready: true },
+    ],
+  },
   {
     label: "Website",
     items: [
