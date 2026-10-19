@@ -32,7 +32,12 @@ public static class SchoolEndpoints
         admin.MapPut("/profile/signature", SetSignature).WithName("SetPrincipalSignature").Upload();
         admin.MapDelete("/profile/signature", RemoveSignature).WithName("RemovePrincipalSignature").ProducesProblems(401, 403);
         open.MapGet("/logo", GetLogo).WithName("GetSchoolLogo").ProducesProblems(404).PrivateCache();
+        open.MapGet("/profile", GetPublic).WithName("GetPublicSchoolProfile");
     }
+
+    private static async Task<Results<Ok<PublicSchoolProfile>, ProblemHttpResult>> GetPublic(
+        IQueryHandler<Application.SchoolSettings.GetPublicSchoolProfile.GetPublicSchoolProfileQuery, PublicSchoolProfile> handler, CancellationToken ct) =>
+        (await handler.Handle(new Application.SchoolSettings.GetPublicSchoolProfile.GetPublicSchoolProfileQuery(), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<SchoolProfileDto>, ProblemHttpResult>> Get(
         IQueryHandler<GetSchoolProfileQuery, SchoolProfileDto> handler, CancellationToken ct) =>

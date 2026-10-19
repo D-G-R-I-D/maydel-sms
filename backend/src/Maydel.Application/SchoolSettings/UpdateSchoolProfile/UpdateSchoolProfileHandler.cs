@@ -11,6 +11,8 @@ internal sealed class UpdateSchoolProfileHandler(IAppDbContext db) : ICommandHan
         var profile = await db.CurrentAsync(ct);
         (profile.Name, profile.Motto, profile.Address) = (c.Name.Trim(), Clean(c.Motto), c.Address.Trim());
         (profile.Phone, profile.Email, profile.Website, profile.PrincipalName) = (Clean(c.Phone), Clean(c.Email), Clean(c.Website), Clean(c.PrincipalName));
+        (profile.WhatsApp, profile.MapUrl, profile.FacebookUrl, profile.InstagramUrl, profile.OfficeHours) =
+            (Clean(c.WhatsApp), Clean(c.MapUrl), Clean(c.FacebookUrl), Clean(c.InstagramUrl), Clean(c.OfficeHours));
         await db.SaveChangesAsync(ct);
         return profile.ToDto();
     }

@@ -17,5 +17,15 @@ public class SchoolProfile : Entity
     /// <summary>Printed under the principal's comment.</summary>
     public string? PrincipalName { get; set; }
     public string? LogoPath { get; set; }
+
+    // Website contact details (E7.1): read by the public site instead of being hard-coded.
+    /// <summary>WhatsApp number for the "Chat on WhatsApp" link, e.g. +2348031234567.</summary>
+    public string? WhatsApp { get; set; }
+    /// <summary>A Google Maps link to the school (https://maps.app.goo.gl/… or https://www.google.com/maps/…).</summary>
+    public string? MapUrl { get; set; }
+    public string? FacebookUrl { get; set; }
+    public string? InstagramUrl { get; set; }
+    /// <summary>Free text, e.g. "Mon–Fri 7:30am – 4:00pm".</summary>
+    public string? OfficeHours { get; set; }
     public string? SignaturePath { get; set; }
 }

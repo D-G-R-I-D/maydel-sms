@@ -11,7 +11,12 @@ namespace Maydel.Application.SchoolSettings;
 /// </summary>
 public sealed record SchoolProfileDto(
     string Name, string? Motto, string Address, string? Phone, string? Email, string? Website, string? PrincipalName,
-    string? LogoVersion, string? SignatureVersion);
+    string? LogoVersion, string? SignatureVersion, string? WhatsApp, string? MapUrl, string? FacebookUrl, string? InstagramUrl, string? OfficeHours);
+
+/// <summary>What the public website shows about the school (no signature). <c>LogoUrl</c> is versioned for caching.</summary>
+public sealed record PublicSchoolProfile(
+    string Name, string? Motto, string Address, string? Phone, string? Email, string? Website, string? WhatsApp, string? WhatsAppUrl, string? MapUrl,
+    string? FacebookUrl, string? InstagramUrl, string? OfficeHours, string? LogoUrl);
 
 public enum SchoolImage
 {
@@ -34,7 +39,15 @@ internal static class SchoolProfiles
 
     public static SchoolProfileDto ToDto(this SchoolProfile p) => new(
         p.Name, p.Motto, p.Address, p.Phone, p.Email, p.Website, p.PrincipalName,
-        PhotoStore.VersionOf(p.LogoPath), PhotoStore.VersionOf(p.SignaturePath));
+        PhotoStore.VersionOf(p.LogoPath), PhotoStore.VersionOf(p.SignaturePath), p.WhatsApp, p.MapUrl, p.FacebookUrl, p.InstagramUrl, p.OfficeHours);
+
+    public static PublicSchoolProfile ToPublic(this SchoolProfile p)
+    {
+        // wa.me wants the number in international form, digits only.
+        var digits = Domain.People.Guardian.NormalizePhone(p.WhatsApp)?.TrimStart('+');
+        return new PublicSchoolProfile(p.Name, p.Motto, p.Address, p.Phone, p.Email, p.Website, p.WhatsApp, digits is null ? null : $"https://wa.me/{digits}",
+            p.MapUrl, p.FacebookUrl, p.InstagramUrl, p.OfficeHours, p.LogoPath is null ? null : $"/api/public/school/logo?v={PhotoStore.VersionOf(p.LogoPath)}");
+    }
 
     public static string? PathOf(this SchoolProfile p, SchoolImage image) => image == SchoolImage.Logo ? p.LogoPath : p.SignaturePath;
 

@@ -133,3 +133,25 @@ public sealed class WebsiteTests(PostgresFixture fixture)
         isFeatured = featured, linkUrl = "/admissions/apply", linkText = "Buy form", inTicker = true, inCarousel = true,
     };
 }
+
+[Collection(nameof(ApiCollection))]
+public sealed class SchoolContactTests(PostgresFixture fixture)
+{
+    [Fact]
+    public async Task The_website_reads_the_school_contact_details_from_settings()
+    {
+        var api = fixture.Api;
+        var admin = await api.ClientAsync(Roles.Admin);
+        var current = await AdmissionsKit.ReadAsync<Maydel.Application.SchoolSettings.SchoolProfileDto>(await admin.GetAsync("/api/school/profile"));
+        var saved = await AdmissionsKit.ReadAsync<Maydel.Application.SchoolSettings.SchoolProfileDto>(await admin.PutAsJsonAsync("/api/school/profile", new
+        {
+            current.Name, current.Motto, current.Address, current.Phone, current.Email, current.Website, current.PrincipalName,
+            whatsApp = "0803 123 4567", mapUrl = "https://maps.app.goo.gl/example", officeHours = "Mon–Fri 7:30am – 4:00pm",
+        }));
+        Assert.Equal("0803 123 4567", saved.WhatsApp);
+        var site = await AdmissionsKit.ReadAsync<Maydel.Application.SchoolSettings.PublicSchoolProfile>(await api.CreateClient().GetAsync("/api/public/school/profile"));
+        Assert.Equal(("https://wa.me/2348031234567", "https://maps.app.goo.gl/example"), (site.WhatsAppUrl, site.MapUrl));
+        await (await admin.PutAsJsonAsync("/api/school/profile", new { current.Name, current.Address, mapUrl = "javascript:alert(1)" }))
+            .AssertProblemAsync(System.Net.HttpStatusCode.BadRequest, "validation");
+    }
+}
