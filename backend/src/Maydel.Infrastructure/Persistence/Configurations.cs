@@ -379,7 +379,17 @@ internal sealed class AnnouncementConfig : IEntityTypeConfiguration<Announcement
     public void Configure(EntityTypeBuilder<Announcement> b)
     {
         b.Property(x => x.Body).HasMaxLength(20000);
+        b.Property(x => x.Title).HasMaxLength(200);
+        b.Property(x => x.Slug).HasMaxLength(100);
+        b.Property(x => x.Summary).HasMaxLength(500);
+        b.Property(x => x.Category).HasMaxLength(60);
+        b.Property(x => x.ImagePath).HasMaxLength(200);
+        b.Property(x => x.LinkUrl).HasMaxLength(500);
+        b.Property(x => x.LinkText).HasMaxLength(60);
+        b.Property(x => x.Audience).HasConversion<int>();
+        b.Ignore(x => x.IsPublic);
         b.HasIndex(x => x.PublishedAt);
+        b.HasIndex(x => x.Slug).IsUnique().HasFilter("\"Slug\" <> ''");
     }
 }
 
@@ -388,13 +398,21 @@ internal sealed class EventConfig : IEntityTypeConfiguration<SchoolEvent>
     public void Configure(EntityTypeBuilder<SchoolEvent> b)
     {
         b.Property(x => x.Description).HasMaxLength(4000);
+        b.Property(x => x.Title).HasMaxLength(200);
+        b.Property(x => x.Location).HasMaxLength(200);
         b.HasIndex(x => x.StartsAt);
     }
 }
 
 internal sealed class GalleryPhotoConfig : IEntityTypeConfiguration<GalleryPhoto>
 {
-    public void Configure(EntityTypeBuilder<GalleryPhoto> b) => b.Property(x => x.Caption).HasMaxLength(1000);
+    public void Configure(EntityTypeBuilder<GalleryPhoto> b)
+    {
+        b.Property(x => x.Caption).HasMaxLength(1000);
+        b.Property(x => x.Title).HasMaxLength(200);
+        b.Property(x => x.Category).HasMaxLength(60);
+        b.Property(x => x.ImagePath).HasMaxLength(200);
+    }
 }
 
 internal sealed class ApplicationConfig : IEntityTypeConfiguration<AdmissionApplication>
@@ -654,6 +672,10 @@ internal sealed class ContactMessageConfig : IEntityTypeConfiguration<ContactMes
     public void Configure(EntityTypeBuilder<ContactMessage> b)
     {
         b.Property(x => x.Message).HasMaxLength(4000);
+        b.Property(x => x.Name).HasMaxLength(120);
+        b.Property(x => x.Email).HasMaxLength(254);
+        b.Property(x => x.Phone).HasMaxLength(30);
+        b.Property(x => x.Subject).HasMaxLength(150);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
     }
 }
