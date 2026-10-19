@@ -68,3 +68,25 @@ public sealed class TestTests
         Assert.Equal("closesAt", exam.Publish(Now, [])?.Field);
     }
 }
+
+public sealed class SectionOrderTests
+{
+    [Fact]
+    public void Checking_sections_loaded_out_of_order_keeps_the_saved_order()
+    {
+        // As EF may return them: storage order, not the teacher's order.
+        var test = new CbtTest
+        {
+            Title = "CAT",
+            Sections =
+            [
+                new() { Title = "Theory", Order = 2, Kind = QuestionKind.Theory, QuestionIds = [Guid.NewGuid()] },
+                new() { Title = "Objective", Order = 0, Kind = QuestionKind.Objective, QuestionIds = [Guid.NewGuid()] },
+                new() { Title = "Gap", Order = 1, Kind = QuestionKind.FillInTheGap, QuestionIds = [Guid.NewGuid()] },
+            ],
+        };
+        Assert.Null(test.CheckSections());
+        Assert.Equal(["Objective", "Gap", "Theory"], test.Sections.Select(s => s.Title));
+        Assert.Equal([0, 1, 2], test.Sections.Select(s => s.Order));
+    }
+}

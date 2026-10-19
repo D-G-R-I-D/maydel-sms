@@ -551,6 +551,52 @@ internal sealed class TestAttemptConfig : IEntityTypeConfiguration<Domain.Cbt.Te
     }
 }
 
+internal sealed class AiGenerationConfig : IEntityTypeConfiguration<Domain.Cbt.AiGeneration>
+{
+    public void Configure(EntityTypeBuilder<Domain.Cbt.AiGeneration> b)
+    {
+        b.HasIndex(x => new { x.UserId, x.CreatedAt });
+        b.Property(x => x.AssessmentType).HasConversion<string>().HasMaxLength(8);
+        b.Property(x => x.Guidance).HasMaxLength(4000);
+        // Kinds as their names (e.g. {Objective,Theory}) so the column reads well and survives enum reordering.
+        b.Property(x => x.Kinds).HasConversion(
+            v => v.Select(k => k.ToString()).ToList(),
+            v => v.Select(Enum.Parse<Domain.Cbt.QuestionKind>).ToList(),
+            new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<Domain.Cbt.QuestionKind>>(
+                (a, c) => a!.SequenceEqual(c!), v => v.Aggregate(0, (h, k) => HashCode.Combine(h, k)), v => v.ToList()));
+        b.Ignore(x => x.Regenerations);
+        b.Ignore(x => x.CanRegenerate);
+        b.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<ClassLevel>().WithMany().HasForeignKey(x => x.ClassLevelId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Files, f =>
+        {
+            f.ToTable("AiSourceFiles");
+            f.WithOwner().HasForeignKey("GenerationId");
+            f.HasKey(x => x.Id);
+            f.Property(x => x.Id).ValueGeneratedNever();
+            f.Property(x => x.Name).HasMaxLength(200);
+            f.Property(x => x.FilePath).HasMaxLength(200);
+            f.Property(x => x.ContentType).HasMaxLength(60);
+        });
+        b.OwnsMany(x => x.Versions, v =>
+        {
+            v.ToTable("AiVersions");
+            v.WithOwner().HasForeignKey("GenerationId");
+            v.HasKey(x => x.Id);
+            v.Property(x => x.Id).ValueGeneratedNever();
+            v.Property(x => x.Status).HasConversion<string>().HasMaxLength(8);
+            v.Property(x => x.Message).HasMaxLength(500);
+            v.Property(x => x.Model).HasMaxLength(60);
+            v.Property(x => x.QuestionsJson).HasColumnType("jsonb");
+        });
+    }
+}
+
+internal sealed class AiAllowanceConfig : IEntityTypeConfiguration<Domain.Cbt.AiAllowance>
+{
+    public void Configure(EntityTypeBuilder<Domain.Cbt.AiAllowance> b) => b.HasIndex(x => x.UserId).IsUnique();
+}
+
 internal sealed class ExamSlotConfig : IEntityTypeConfiguration<ExamSlot>
 {
     public void Configure(EntityTypeBuilder<ExamSlot> b)

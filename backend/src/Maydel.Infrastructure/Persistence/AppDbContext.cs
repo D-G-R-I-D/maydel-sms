@@ -58,6 +58,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Domain.Cbt.Question> Questions => Set<Domain.Cbt.Question>();
     public DbSet<Domain.Cbt.CbtTest> CbtTests => Set<Domain.Cbt.CbtTest>();
     public DbSet<Domain.Cbt.TestAttempt> TestAttempts => Set<Domain.Cbt.TestAttempt>();
+    public DbSet<Domain.Cbt.AiGeneration> AiGenerations => Set<Domain.Cbt.AiGeneration>();
+    public DbSet<Domain.Cbt.AiSettings> AiSettings => Set<Domain.Cbt.AiSettings>();
+    public DbSet<Domain.Cbt.AiAllowance> AiAllowances => Set<Domain.Cbt.AiAllowance>();
     public DbSet<FormCode> FormCodes => Set<FormCode>();
     public DbSet<FormPayment> FormPayments => Set<FormPayment>();
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();

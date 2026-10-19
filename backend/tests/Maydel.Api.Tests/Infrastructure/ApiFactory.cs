@@ -48,6 +48,7 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
     public FakeEmailSender Email { get; } = new();
     public FakeSchoolClock Clock { get; } = new();
     public FakePaymentGateway Paystack { get; } = new();
+    public FakeQuestionGenerator Ai { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -73,6 +74,8 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             services.AddSingleton<IPaymentGateway>(Paystack);
             services.RemoveAll<ISchoolClock>();
             services.AddSingleton<ISchoolClock>(Clock);
+            services.RemoveAll<IQuestionGenerator>();
+            services.AddSingleton<IQuestionGenerator>(Ai);
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Email);
             foreach (var worker in services.Where(d => d.ImplementationType?.Name is "EmailOutboxWorker" or "AdmissionsWorker").ToList()) services.Remove(worker);

@@ -202,14 +202,14 @@ Computer-based tests for students, with results flowing into the gradebook.
 - **E16.5** ✅ *API 2026-10-19 (preview raw → scaled per student, confirm, writes only that component, skips published reports).* Push marks into the grade sheet (scaled to the component's max) with teacher confirmation. AC: never overwrites a published report.
 - **E16.6** ✅ *API 2026-10-19 (one live session token, blur/focus/takeover log, per-student order, results hidden until release).* Integrity: one active session per attempt, tab-switch/blur events logged, randomised order per student, results hidden until released. (Proctoring by camera is out of scope.)
 - **E16.7** ✅ *API 2026-10-19 (mean/median/high/low, 10-band distribution, per-arm means, per-question facility and option picks).* Analytics: item difficulty, score distribution per class.
-- **E16.8** *(added 2026-10-17)* **AI-assisted question writing for teachers.**
+- **E16.8** ✅ *API 2026-10-19 (Claude claude-opus-5-5 via the official SDK, PDF/photo material, schema-checked drafts with keys and guides, 5 regenerations, edit and save to bank; needs `Ai:ApiKey`).* *(added 2026-10-17)* **AI-assisted question writing for teachers.**
   - The teacher picks subject, class, term and assessment type (test / CAT / exam), then uploads the scheme of work, notes (PDF) or a photo of notes. Files are stored privately.
   - They choose question kinds (objective, multi-select, true/false, short answer, theory), how many, and the difficulty mix.
   - The AI (Claude, server-side) generates questions **only from the uploaded material and the chosen subject/class scope**, each with an answer key and, for theory, a marking guide.
   - The teacher can **regenerate up to 5 times** per request, then accept any version, edit questions and options freely, or write their own.
   - Saved questions go to the question bank (E16.1) and are published as a test/CAT/exam with an availability window (E16.2/E16.3).
   - AC: no student data is ever sent to the AI; output is always reviewable and editable before students see it.
-- **E16.9** *(added 2026-10-17)* **Per-teacher AI quota.**
+- **E16.9** ✅ *API 2026-10-19 (monthly allowance per teacher with default + overrides, school cap, failures free, usage dashboard).* *(added 2026-10-17)* **Per-teacher AI quota.**
   - Each teacher has their own monthly allowance (generations / tokens), set by admin, with a default that's equal for all. One teacher using theirs never reduces anyone else's.
   - There's a school-wide cap and usage dashboard for admin.
   - AC: a request over quota is refused with a clear message, and the remaining allowance is shown before generating.

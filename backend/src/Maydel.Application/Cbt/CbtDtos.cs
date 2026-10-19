@@ -176,8 +176,38 @@ public sealed record TokenInput(string SessionToken);
 
 public sealed record EventInput(string SessionToken, IntegrityEventKind Kind);
 
+public sealed record AiQuotaDto(bool Available, bool Enabled, int Allowance, int Used, int Remaining, int SchoolCap, int SchoolUsed,
+    DateTimeOffset ResetsAt);
+
+/// <summary>A generated question with any problem that must be fixed before it can be saved (e.g. two correct options).</summary>
+public sealed record DraftQuestion(int Index, GeneratedQuestion Question, string? Problem);
+
+public sealed record AiVersionDto(Guid Id, int Number, DateTimeOffset CreatedAt, GenerationStatus Status, string? Message, IReadOnlyList<DraftQuestion> Questions);
+
+public sealed record AiGenerationDto(
+    Guid Id, Guid SubjectId, string Subject, Guid ClassLevelId, string ClassLevel, AssessmentType AssessmentType, IReadOnlyList<QuestionKind> Kinds,
+    int Count, int Easy, int Medium, int Hard, string? Guidance, IReadOnlyList<string> Files, IReadOnlyList<AiVersionDto> Versions, int Regenerations,
+    bool CanRegenerate, DateTimeOffset CreatedAt, AiQuotaDto Quota);
+
+public sealed record AiGenerationSummary(Guid Id, string Subject, string ClassLevel, AssessmentType AssessmentType, int Count, int Versions, DateTimeOffset CreatedAt);
+
+/// <summary>The questions to save from a version, as the teacher edited them (same shape as the bank's input, minus subject/level).</summary>
+public sealed record SaveDraftsInput(IReadOnlyList<DraftInput> Questions);
+
+public sealed record DraftInput(
+    QuestionKind Kind, string Text, IReadOnlyList<OptionInput>? Options, bool? TrueFalseAnswer, IReadOnlyList<string>? AcceptedAnswers,
+    string? MarkingGuide, string? Topic, Difficulty Difficulty = Difficulty.Medium);
+
+public sealed record AiSettingsDto(bool Available, bool Enabled, int DefaultMonthlyGenerations, int SchoolMonthlyGenerations);
+
+public sealed record AiUsageRow(Guid UserId, string Name, int Allowance, bool CustomAllowance, int Used, long InputTokens, long OutputTokens);
+
+public sealed record AiUsage(DateTimeOffset From, DateTimeOffset To, int SchoolCap, int SchoolUsed, long InputTokens, long OutputTokens, IReadOnlyList<AiUsageRow> Teachers);
+
 public static class CbtErrors
 {
+    public static readonly Common.Error GenerationNotFound = Common.Error.NotFound("ai.not_found", "That AI request doesn't exist.");
+    public static readonly Common.Error AiUnavailable = Common.Error.Rule("ai.unavailable", "AI question writing isn't set up on this server yet.");
     public static readonly Common.Error NoComponent = Common.Error.Rule("test.no_component", "This is a practice test: it isn't linked to a gradebook column.");
     public static readonly Common.Error NotReleased = Common.Error.Rule("test.not_released", "Release the results before sending them to the grade sheet.");
     public static readonly Common.Error AttemptNotFound = Common.Error.NotFound("attempt.not_found", "That test attempt doesn't exist.");

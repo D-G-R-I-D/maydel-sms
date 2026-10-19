@@ -1,6 +1,15 @@
 using Maydel.Api.Common;
 using Maydel.Application.Cbt;
 using Maydel.Application.Cbt.ArchiveQuestion;
+using Maydel.Application.Cbt.GenerateQuestions;
+using Maydel.Application.Cbt.GetAiQuota;
+using Maydel.Application.Cbt.GetAiUsage;
+using Maydel.Application.Cbt.GetGeneration;
+using Maydel.Application.Cbt.ListGenerations;
+using Maydel.Application.Cbt.RegenerateQuestions;
+using Maydel.Application.Cbt.SaveAiSettings;
+using Maydel.Application.Cbt.SaveDrafts;
+using Maydel.Domain.Cbt;
 using Maydel.Application.Cbt.DeleteTest;
 using Maydel.Application.Cbt.GetAttemptReview;
 using Maydel.Application.Cbt.GetTestAnalytics;
@@ -69,7 +78,77 @@ public static class CbtEndpoints
         bank.MapGet("/tests/{id:guid}/gradebook", GradebookPreview).WithName("PreviewCbtGradebookPush").ProducesProblems(401, 403, 404, 422);
         bank.MapPost("/tests/{id:guid}/gradebook", PushGradebook).WithName("PushCbtToGradebook").ProducesProblems(401, 403, 404, 422);
         bank.MapGet("/tests/{id:guid}/analytics", Analytics).WithName("GetCbtTestAnalytics").ProducesProblems(401, 403, 404);
+
+        // AI question writing and quotas (E16.8, E16.9)
+        bank.MapGet("/ai/quota", Quota).WithName("GetAiQuota").ProducesProblems(401, 403);
+        bank.MapGet("/ai/generations", Generations).WithName("ListAiGenerations").ProducesProblems(401, 403);
+        bank.MapGet("/ai/generations/{id:guid}", Generation).WithName("GetAiGeneration").ProducesProblems(401, 403, 404);
+        bank.MapPost("/ai/generations", Generate).WithName("GenerateQuestions")
+            .DisableAntiforgery().WithMetadata(new RequestSizeLimitAttribute(5 * PhotoStore.MaxUploadBytes + 256 * 1024))
+            .Accepts<IFormFileCollection>("multipart/form-data").ProducesProblems(400, 401, 403, 422);
+        bank.MapPost("/ai/generations/{id:guid}/regenerate", Regenerate).WithName("RegenerateQuestions").ProducesProblems(401, 403, 404, 422);
+        bank.MapPost("/ai/generations/{id:guid}/save", SaveDrafts).WithName("SaveAiQuestions").ProducesProblems(400, 401, 403, 404);
+        var admin = app.MapGroup("/api/cbt/ai").WithTags("CBT").RequireAuthorization(Policies.Admin);
+        admin.MapGet("/settings", AiSettingsGet).WithName("GetAiSettings").ProducesProblems(401, 403);
+        admin.MapPut("/settings", AiSettingsSave).WithName("SaveAiSettings").ProducesProblems(400, 401, 403);
+        admin.MapPut("/allowances/{userId:guid}", Allowance).WithName("SetAiAllowance").ProducesProblems(400, 401, 403, 404);
+        admin.MapGet("/usage", Usage).WithName("GetAiUsage").ProducesProblems(401, 403);
     }
+
+    private static async Task<Results<Ok<AiQuotaDto>, ProblemHttpResult>> Quota(IQueryHandler<GetAiQuotaQuery, AiQuotaDto> h, CancellationToken ct) =>
+        (await h.Handle(new GetAiQuotaQuery(), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<IReadOnlyList<AiGenerationSummary>>, ProblemHttpResult>> Generations(IQueryHandler<ListGenerationsQuery, IReadOnlyList<AiGenerationSummary>> h, CancellationToken ct) =>
+        (await h.Handle(new ListGenerationsQuery(), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<AiGenerationDto>, ProblemHttpResult>> Generation(Guid id, IQueryHandler<GetGenerationQuery, AiGenerationDto> h, CancellationToken ct) =>
+        (await h.Handle(new GetGenerationQuery(id), ct)).ToHttpResult();
+
+    /// <summary>Multipart: subjectId, classLevelId, termId?, assessmentType, kinds (repeat), count, easy, medium, hard, guidance?, files (repeat).</summary>
+    private static async Task<Results<Ok<AiGenerationDto>, ProblemHttpResult>> Generate(HttpRequest request, ICommandHandler<GenerateQuestionsCommand, AiGenerationDto> h, CancellationToken ct)
+    {
+        var form = await request.ReadFormAsync(ct);
+        static Guid? G(string? v) => Guid.TryParse(v, out var g) ? g : null;
+        static int I(string? v) => int.TryParse(v, out var i) ? i : -1;
+        if (G(form["subjectId"]) is not { } subject || G(form["classLevelId"]) is not { } level)
+            return Error.Validation("subjectId", "Choose a subject and class level.").ToProblem();
+        var kinds = new List<QuestionKind>();
+        foreach (var k in form["kinds"].SelectMany(v => (v ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)))
+        {
+            if (!Enum.TryParse<QuestionKind>(k, ignoreCase: true, out var kind)) return Error.Validation("kinds", $"\"{k}\" isn't a kind of question.").ToProblem();
+            kinds.Add(kind);
+        }
+        if (!Enum.TryParse<AssessmentType>(form["assessmentType"], ignoreCase: true, out var type)) return Error.Validation("assessmentType", "Choose test, CAT or exam.").ToProblem();
+        if (form.Files.Count > AiGeneration.MaxFiles) return Error.Validation("files", $"Upload at most {AiGeneration.MaxFiles} files.").ToProblem();
+        var files = new List<UploadedFile>();
+        foreach (var f in form.Files)
+        {
+            if (await PhotoEndpoints.ReadAsync(f, ct) is not { } bytes) return Error.Validation("files", $"\"{f.FileName}\" is empty or over 12 MB.").ToProblem();
+            files.Add(new UploadedFile(f.FileName, bytes));
+        }
+        return (await h.Handle(new GenerateQuestionsCommand(subject, level, G(form["termId"]), type, kinds, I(form["count"]), I(form["easy"]), I(form["medium"]),
+            I(form["hard"]), form["guidance"], files), ct)).ToHttpResult();
+    }
+
+    private static async Task<Results<Ok<AiGenerationDto>, ProblemHttpResult>> Regenerate(Guid id, ICommandHandler<RegenerateQuestionsCommand, AiGenerationDto> h, CancellationToken ct) =>
+        (await h.Handle(new RegenerateQuestionsCommand(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<IReadOnlyList<QuestionDto>>, ProblemHttpResult>> SaveDrafts(Guid id, SaveDraftsInput body, ICommandHandler<SaveDraftsCommand, IReadOnlyList<QuestionDto>> h, CancellationToken ct) =>
+        (await h.Handle(new SaveDraftsCommand(id, body), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<AiSettingsDto>, ProblemHttpResult>> AiSettingsGet(IQueryHandler<GetAiSettingsQuery, AiSettingsDto> h, CancellationToken ct) =>
+        (await h.Handle(new GetAiSettingsQuery(), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<AiSettingsDto>, ProblemHttpResult>> AiSettingsSave(SaveAiSettingsCommand command, ICommandHandler<SaveAiSettingsCommand, AiSettingsDto> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
+
+    public sealed record AllowanceInput(int? MonthlyGenerations);
+
+    private static async Task<Results<Ok<AiUsageRow>, ProblemHttpResult>> Allowance(Guid userId, AllowanceInput body, ICommandHandler<SetAiAllowanceCommand, AiUsageRow> h, CancellationToken ct) =>
+        (await h.Handle(new SetAiAllowanceCommand(userId, body.MonthlyGenerations), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<AiUsage>, ProblemHttpResult>> Usage([AsParameters] GetAiUsageQuery query, IQueryHandler<GetAiUsageQuery, AiUsage> h, CancellationToken ct) =>
+        (await h.Handle(query, ct)).ToHttpResult();
 
     private static async Task<Results<Ok<AttemptRows>, ProblemHttpResult>> Attempts(Guid id, IQueryHandler<ListTestAttemptsQuery, AttemptRows> h, CancellationToken ct) =>
         (await h.Handle(new ListTestAttemptsQuery(id), ct)).ToHttpResult();
