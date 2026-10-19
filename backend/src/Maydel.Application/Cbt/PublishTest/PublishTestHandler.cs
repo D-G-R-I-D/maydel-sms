@@ -1,6 +1,7 @@
 using Maydel.Application.Abstractions;
 using Maydel.Application.Common;
 using Maydel.Application.Common.Messaging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Maydel.Application.Cbt.PublishTest;
 
@@ -11,7 +12,7 @@ internal sealed class PublishTestHandler(IAppDbContext db, Tests tests, ISchoolC
         if (await tests.ManageableAsync(c.Id, ct) is not { } test) return CbtErrors.TestNotFound;
         var invalid = c.Publish
             ? test.Publish(clock.Now.ToUniversalTime(), await tests.ProblemsAsync(test, ct))
-            : test.Unpublish(anyAttempts: false);
+            : test.Unpublish(await db.TestAttempts.AnyAsync(a => a.TestId == test.Id, ct));
         if (invalid is not null) return invalid.ToError();
         await db.SaveChangesAsync(ct);
         return await tests.DetailAsync(test.Id, ct);

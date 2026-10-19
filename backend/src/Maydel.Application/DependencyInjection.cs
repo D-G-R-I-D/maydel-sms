@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<Admissions.AdmissionEmails>();
         services.AddScoped<Admissions.AdmissionLetters>();
         services.AddScoped<Cbt.Tests>();
+        services.AddScoped<Cbt.Attempts>();
         services.AddScoped<Admissions.FormPayments>();
         return services;
     }

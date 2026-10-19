@@ -197,10 +197,10 @@ Computer-based tests for students, with results flowing into the gradebook.
   - The total is **scaled automatically** to the assessment component it feeds (e.g. a 100-mark exam becomes /40 for "Exams" or /30 for "CAT") and goes into the grade sheet after the teacher confirms.
   - AC: section totals and scaling are shown before publishing; rounding follows the report rules.
 - **E16.2** ✅ *API 2026-10-18 (fixed or random-from-bank sections, window, attempts, shuffle, component + term, readiness checks, publish/unpublish).* Create a test/exam: questions (fixed or random from bank), duration, open/close window, attempts, shuffle questions & options, linked to an assessment component (e.g. CAT or Exams) and term.
-- **E16.3** *As a student, I take the test in the portal* with a countdown timer; answers autosaved; resumes after a dropped connection within the window; auto-submits at time-out. AC: server is the source of truth for time; answers rejected after deadline.
+- **E16.3** ✅ *API 2026-10-18 (per-student papers, server deadline, autosave, resume/takeover, auto-submit, objective marking on hand-in).* *As a student, I take the test in the portal* with a countdown timer; answers autosaved; resumes after a dropped connection within the window; auto-submits at time-out. AC: server is the source of truth for time; answers rejected after deadline.
 - **E16.4** Auto-marking for objective questions; teacher marking screen for essays; moderation before release.
 - **E16.5** Push marks into the grade sheet (scaled to the component's max) with teacher confirmation. AC: never overwrites a published report.
-- **E16.6** Integrity: one active session per attempt, tab-switch/blur events logged, randomised order per student, results hidden until released. (Proctoring by camera is out of scope.)
+- **E16.6** 🟡 *API 2026-10-18: one live session token, blur/focus/takeover log, per-student order; results hidden until release comes with E16.4.* Integrity: one active session per attempt, tab-switch/blur events logged, randomised order per student, results hidden until released. (Proctoring by camera is out of scope.)
 - **E16.7** Analytics: item difficulty, score distribution per class.
 - **E16.8** *(added 2026-10-17)* **AI-assisted question writing for teachers.**
   - The teacher picks subject, class, term and assessment type (test / CAT / exam), then uploads the scheme of work, notes (PDF) or a photo of notes. Files are stored privately.

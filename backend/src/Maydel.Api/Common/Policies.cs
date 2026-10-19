@@ -12,6 +12,7 @@ public static class Policies
     public const string Finance = nameof(Finance);
     public const string Portal = nameof(Portal);
     public const string Applicants = nameof(Applicants);
+    public const string Students = nameof(Students);
 
     public static void Configure(AuthorizationOptions o)
     {
@@ -22,6 +23,8 @@ public static class Policies
         o.AddPolicy(Portal, p => p.RequireRole(Roles.Parent, Roles.Student));
         // Families applying for admission; existing parents apply for siblings from the same account.
         o.AddPolicy(Applicants, p => p.RequireRole(Roles.Applicant, Roles.Parent));
+        // Only students sit online tests; parents follow results through the portal.
+        o.AddPolicy(Students, p => p.RequireRole(Roles.Student));
 
         // Secure by default: an endpoint that forgets to declare a policy still requires a signed-in user.
         o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
