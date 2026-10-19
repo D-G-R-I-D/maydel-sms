@@ -33,10 +33,13 @@ internal sealed class EnrolApplicantHandler(IAppDbContext db, UserManager<AppUse
             classRoom = room.Name;
         }
 
-        // Admitted from the start of the session (or today, if it has started) so the first invoice bills new-intake items.
+        // Admitted from the start of the entry term (or today, if it has started) so that term's invoice bills new-intake items.
         var today = clock.Today;
-        var sessionStart = await db.Sessions.Where(s => s.Id == application.SessionId).Select(s => s.StartsOn).FirstAsync(ct);
-        var admittedOn = sessionStart > today ? sessionStart : today;
+        if (c.EntryTermId is { } chosen && !await db.Terms.AnyAsync(t => t.Id == chosen && t.SessionId == application.SessionId, ct))
+            return Error.Validation("entryTermId", "Choose a term of the session the child was offered.");
+        var entry = await db.EntryTermAsync(application.SessionId, c.EntryTermId, ct);
+        var start = entry?.StartsOn ?? await db.Sessions.Where(s => s.Id == application.SessionId).Select(s => s.StartsOn).FirstAsync(ct);
+        var admittedOn = start > today ? start : today;
         if (Student.ValidateDates(application.ChildDateOfBirth, admittedOn, today) is { } invalid) return invalid.ToError();
 
         var f = application.Form;
@@ -92,6 +95,8 @@ internal sealed class EnrolApplicantHandler(IAppDbContext db, UserManager<AppUse
 
         // The applicant login becomes the parent login (same email and password).
         var portalReady = false;
+        var outcome = applicant is null ? ParentLoginOutcome.NoGuardian : ParentLoginOutcome.PhoneBelongsToAnotherAccount;
+        string? message = applicant is null ? "No guardian could be created from the form (no valid phone number). Add one under Students → Guardians." : null;
         if (applicant is not null && await users.FindByIdAsync(application.ApplicantUserId.ToString()) is { } user)
         {
             var linkedElsewhere = await db.Guardians.AnyAsync(g => g.UserId == user.Id && g.Id != applicant.Id, ct);
@@ -101,6 +106,13 @@ internal sealed class EnrolApplicantHandler(IAppDbContext db, UserManager<AppUse
                 if (!await users.IsInRoleAsync(user, Roles.Parent)) await users.AddToRoleAsync(user, Roles.Parent);
                 await users.UpdateSecurityStampAsync(user);
                 portalReady = true;
+                outcome = ParentLoginOutcome.Linked;
+            }
+            else
+            {
+                var other = await users.Users.Where(u => u.Id == applicant.UserId).Select(u => u.Email).FirstOrDefaultAsync(ct);
+                message = $"The phone number {applicant.Phone} already belongs to another parent account ({other ?? "unknown"}). " +
+                          "The child is linked to that guardian; give this family access from Students → Guardians.";
             }
         }
 
@@ -112,6 +124,6 @@ internal sealed class EnrolApplicantHandler(IAppDbContext db, UserManager<AppUse
                 ? "Sign in with your usual email and password to open the parent portal, where you can see fees, pay online and view results."
                 : "The school will send your parent portal login separately."), ct);
         await db.SaveChangesAsync(ct);
-        return new EnrolmentResult(student.Id, number, (await db.DetailAsync(application.Id, ct, asStaff: true))!);
+        return new EnrolmentResult(student.Id, number, (await db.DetailAsync(application.Id, ct, asStaff: true))!, outcome, message);
     }
 }

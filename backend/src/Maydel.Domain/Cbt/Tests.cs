@@ -44,6 +44,12 @@ public class CbtTest : Entity
     public bool ShuffleQuestions { get; set; } = true;
     public bool ShuffleOptions { get; set; } = true;
 
+    /// <summary>
+    /// Show students the computer-marked score as soon as they hand in (provisional while theory awaits the teacher). Off: nothing
+    /// until results are released (E16.4).
+    /// </summary>
+    public bool ShowScoreOnSubmit { get; set; }
+
     public TestStatus Status { get; set; } = TestStatus.Draft;
     public DateTimeOffset? PublishedAt { get; set; }
     public Guid? CreatedByUserId { get; set; }

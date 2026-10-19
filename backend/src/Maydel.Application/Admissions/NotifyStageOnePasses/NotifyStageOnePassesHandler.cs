@@ -26,6 +26,7 @@ internal sealed class NotifyStageOnePassesHandler(IAppDbContext db, ISchoolClock
                 "The school will contact you shortly about the next step.", ct);
         }
         await db.SaveChangesAsync(ct);
-        return new NotifyResult(passed.Count);
+        var already = await db.Applications.CountAsync(a => a.SessionId == c.SessionId && a.ExamScore >= mark && a.StageOneNotifiedAt != null && a.StageOneNotifiedAt != now, ct);
+        return new NotifyResult(passed.Count, already);
     }
 }

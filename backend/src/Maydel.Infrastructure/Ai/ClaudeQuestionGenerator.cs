@@ -16,6 +16,22 @@ public sealed class AiOptions
     /// <summary>The Anthropic API key: user-secrets or the <c>Ai__ApiKey</c> environment variable, never appsettings.</summary>
     public string? ApiKey { get; set; }
     public string Model { get; set; } = "claude-opus-5-5";
+
+    /// <summary>
+    /// Google Gemini API key (free tier from Google AI Studio): used only when no Anthropic key is set. User-secrets or
+    /// <c>Ai__GeminiApiKey</c>, never appsettings.
+    /// </summary>
+    public string? GeminiApiKey { get; set; }
+    public string GeminiModel { get; set; } = "gemini-2.5-flash";
+}
+
+/// <summary>Uses Claude when an Anthropic key is configured, otherwise Gemini (free tier) when its key is, otherwise reports off.</summary>
+internal sealed class AiRouter(ClaudeQuestionGenerator claude, GeminiQuestionGenerator gemini) : IQuestionGenerator
+{
+    public bool IsEnabled => claude.IsEnabled || gemini.IsEnabled;
+
+    public Task<GenerationResult> GenerateAsync(GenerationRequest request, CancellationToken ct) =>
+        claude.IsEnabled ? claude.GenerateAsync(request, ct) : gemini.GenerateAsync(request, ct);
 }
 
 /// <summary>
@@ -29,7 +45,7 @@ internal sealed class ClaudeQuestionGenerator(IOptions<AiOptions> options, ILogg
 
     public bool IsEnabled => !string.IsNullOrWhiteSpace(options.Value.ApiKey);
 
-    private const string System = """
+    internal const string System = """
         You write assessment questions for a Nigerian primary and secondary school (British/Nigerian curriculum, Nigerian English).
         Write questions ONLY from the teaching material and topics the teacher provides, for the stated subject and class. Do not add
         topics that are not in the material. Questions must be accurate, unambiguous, age-appropriate and culturally relevant.
@@ -103,7 +119,7 @@ internal sealed class ClaudeQuestionGenerator(IOptions<AiOptions> options, ILogg
 
     private sealed record GeneratedSet(List<GeneratedQuestion> Questions);
 
-    private static string Prompt(GenerationRequest r)
+    internal static string Prompt(GenerationRequest r)
     {
         var assessment = r.AssessmentType switch { AssessmentType.Cat => "continuous assessment test (CAT)", AssessmentType.Exam => "end-of-term examination", _ => "class test" };
         var avoid = r.Avoid.Count == 0 ? "" : "\n\nThe teacher has already seen these questions; write different ones:\n" + string.Join("\n", r.Avoid.Select(a => "- " + a));

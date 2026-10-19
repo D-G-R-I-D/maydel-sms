@@ -39,6 +39,7 @@ using Maydel.Application.Admissions.ListFormCodes;
 using Maydel.Application.Admissions.ListMyApplications;
 using Maydel.Application.Admissions.RedeemFormCode;
 using Maydel.Application.Admissions.Register;
+using Maydel.Application.Admissions.RegisterWithGoogle;
 using Maydel.Application.Admissions.SaveAdmissionSettings;
 using Maydel.Application.Admissions.StartApplication;
 using Maydel.Application.Admissions.StartFormPayment;
@@ -95,6 +96,8 @@ public static class AdmissionEndpoints
         open.MapGet("", Info).WithName("GetAdmissionsInfo");
         // Sign-ups create accounts: rate-limited per IP like the other public forms.
         open.MapPost("/register", Register).WithName("RegisterApplicant").RequireRateLimiting(RateLimits.PublicForms).ProducesProblems(400, 404, 409, 422, 429);
+        open.MapPost("/register/google", RegisterGoogle).WithName("RegisterApplicantWithGoogle").RequireRateLimiting(RateLimits.PublicForms)
+            .ProducesProblems(400, 401, 404, 409, 422, 429);
 
         family.MapGet("/my-applications", Mine).WithName("ListMyApplications").ProducesProblems(401, 403);
         family.MapPost("/applications", Start).WithName("StartApplication").ProducesProblems(400, 401, 403, 404, 422);
@@ -129,6 +132,9 @@ public static class AdmissionEndpoints
     private static async Task<Results<Ok<IReadOnlyList<AdmissionsInfo>>, ProblemHttpResult>> Info(IQueryHandler<GetAdmissionsInfoQuery, IReadOnlyList<AdmissionsInfo>> h, CancellationToken ct) =>
         (await h.Handle(new GetAdmissionsInfoQuery(), ct)).ToHttpResult();
 
+    private static async Task<Results<Ok<GoogleRegistration>, ProblemHttpResult>> RegisterGoogle(RegisterWithGoogleCommand command, ICommandHandler<RegisterWithGoogleCommand, GoogleRegistration> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
+
     private static async Task<Results<Ok<ApplicationDto>, ProblemHttpResult>> Register(RegisterApplicantCommand command, ICommandHandler<RegisterApplicantCommand, ApplicationDto> h, CancellationToken ct) =>
         (await h.Handle(command, ct)).ToHttpResult();
 
@@ -142,7 +148,7 @@ public static class AdmissionEndpoints
     public sealed record BookRequest(Guid SlotId);
     public sealed record SlotRequest(Guid SessionId, DateTimeOffset StartsAt, int DurationMinutes, string Venue, ExamMode Mode, int Capacity, string? Notes);
     public sealed record ScoreRequest(decimal Score);
-    public sealed record EnrolRequest(Guid? ClassRoomId);
+    public sealed record EnrolRequest(Guid? ClassRoomId, Guid? EntryTermId = null);
 
     private static async Task<Results<Ok<IReadOnlyList<ExamCandidate>>, ProblemHttpResult>> SetDecisions(SetDecisionsCommand command, ICommandHandler<SetDecisionsCommand, IReadOnlyList<ExamCandidate>> h, CancellationToken ct) =>
         (await h.Handle(command, ct)).ToHttpResult();
@@ -163,7 +169,7 @@ public static class AdmissionEndpoints
         FinanceEndpoints.Pdf(await h.Handle(new GetAdmissionLetterQuery(id, AsStaff: true), ct));
 
     private static async Task<Results<Ok<EnrolmentResult>, ProblemHttpResult>> Enrol(Guid id, EnrolRequest body, ICommandHandler<EnrolApplicantCommand, EnrolmentResult> h, CancellationToken ct) =>
-        (await h.Handle(new EnrolApplicantCommand(id, body.ClassRoomId), ct)).ToHttpResult();
+        (await h.Handle(new EnrolApplicantCommand(id, body.ClassRoomId, body.EntryTermId), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<IReadOnlyList<ExamSlotOption>>, ProblemHttpResult>> BookableSlots(Guid id, IQueryHandler<ListBookableSlotsQuery, IReadOnlyList<ExamSlotOption>> h, CancellationToken ct) =>
         (await h.Handle(new ListBookableSlotsQuery(id), ct)).ToHttpResult();

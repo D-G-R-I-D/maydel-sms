@@ -195,8 +195,26 @@ public sealed class AttemptApiTests(PostgresFixture fixture)
         }
     }
 
+    [Fact]
+    public async Task Tests_can_show_the_computer_marked_score_on_hand_in()
+    {
+        var (s, test, questions) = await PublishedTestAsync(showScore: true);
+        Assert.True(test.ShowScoreOnSubmit);
+        var student = await StudentClientAsync(s.Students[0]);
+        var paper = await AdmissionsKit.ReadAsync<AttemptPaper>(await student.PostAsync($"/api/student/tests/{test.Id}/start", null));
+        var objective = paper.Items.Single(i => i.Kind == QuestionKind.Objective);
+        (await student.PutAsJsonAsync($"/api/student/attempts/{paper.Id}/items/{objective.Id}",
+            new { sessionToken = paper.SessionToken, optionIds = new[] { questions[objective.Text].Options.Single(o => o.IsCorrect).Id } })).EnsureSuccessStatusCode();
+        var handedIn = await AdmissionsKit.ReadAsync<AttemptPaper>(await student.PostAsJsonAsync($"/api/student/attempts/{paper.Id}/submit", new { sessionToken = paper.SessionToken }));
+        // 2 marks for the objective now; theory still with the teacher, so it's provisional.
+        Assert.Equal((false, 2m, true), (handedIn.Released, handedIn.Score!.Value, handedIn.ScoreIsProvisional));
+        Assert.Null(handedIn.Items.Single(i => i.Kind == QuestionKind.Theory).Score);
+        var listed = (await AdmissionsKit.ReadAsync<List<StudentTestDto>>(await student.GetAsync("/api/student/tests"))).Single(x => x.Id == test.Id);
+        Assert.Equal((2m, true), (listed.Score!.Value, listed.ScoreIsProvisional));
+    }
+
     /// <summary>A published 3-question test (objective 2 marks, gap 1 mark, theory 5 marks) for the school's class, open now on the fake clock.</summary>
-    private async Task<(School School, TestDetail Test, Dictionary<string, QuestionDto> Questions)> PublishedTestAsync(Guid? componentId = null)
+    private async Task<(School School, TestDetail Test, Dictionary<string, QuestionDto> Questions)> PublishedTestAsync(Guid? componentId = null, bool showScore = false)
     {
         var s = await SchoolBuilder.SetUpAsync(Api);
         var admin = await Api.ClientAsync(Roles.Admin);
@@ -219,7 +237,7 @@ public sealed class AttemptApiTests(PostgresFixture fixture)
         // Open from 07:30 to 10:30 in Abuja on the fake clock's day (it reads 08:00).
         var test = await AdmissionsKit.ReadAsync<TestDetail>(await t.PostAsJsonAsync("/api/cbt/tests", new
         {
-            title = $"CAT {tag}", subjectId = s.SubjectId, classLevelId = level, termId = s.TermId, componentId, classRoomIds = new[] { s.ClassRoomId }, durationMinutes = 45,
+            title = $"CAT {tag}", subjectId = s.SubjectId, classLevelId = level, termId = s.TermId, componentId, classRoomIds = new[] { s.ClassRoomId }, durationMinutes = 45, showScoreOnSubmit = showScore,
             opensAt = "2026-10-15T07:30:00+01:00", closesAt = "2026-10-15T10:30:00+01:00",
         }));
         (await t.PutAsJsonAsync($"/api/cbt/tests/{test.Id}/sections", new

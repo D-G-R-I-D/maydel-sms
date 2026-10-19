@@ -8637,6 +8637,96 @@
         }
       }
     },
+    "/api/public/admissions/register/google": {
+      "post": {
+        "tags": [
+          "Admissions"
+        ],
+        "operationId": "RegisterApplicantWithGoogle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterWithGoogleCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleRegistration"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/admissions/blank-form.pdf": {
       "get": {
         "tags": [
@@ -16396,7 +16486,10 @@
           "formFee",
           "examWindowDays",
           "instructions",
-          "cutOffMark"
+          "cutOffMark",
+          "entryTermId",
+          "entryTerm",
+          "entryStartsOn"
         ],
         "type": "object",
         "properties": {
@@ -16430,6 +16523,26 @@
               "number"
             ],
             "format": "double"
+          },
+          "entryTermId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "entryTerm": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entryStartsOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
           }
         }
       },
@@ -17313,7 +17426,8 @@
           "autoSubmitted",
           "released",
           "score",
-          "totalMarks"
+          "totalMarks",
+          "scoreIsProvisional"
         ],
         "type": "object",
         "properties": {
@@ -17398,6 +17512,9 @@
           "totalMarks": {
             "type": "number",
             "format": "double"
+          },
+          "scoreIsProvisional": {
+            "type": "boolean"
           }
         }
       },
@@ -19135,7 +19252,9 @@
         "required": [
           "studentId",
           "admissionNumber",
-          "application"
+          "application",
+          "parentLogin",
+          "message"
         ],
         "type": "object",
         "properties": {
@@ -19148,6 +19267,15 @@
           },
           "application": {
             "$ref": "#/components/schemas/ApplicationDetail"
+          },
+          "parentLogin": {
+            "$ref": "#/components/schemas/ParentLoginOutcome"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -19158,6 +19286,13 @@
         "type": "object",
         "properties": {
           "classRoomId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "entryTermId": {
             "type": [
               "null",
               "string"
@@ -19795,6 +19930,21 @@
         "properties": {
           "idToken": {
             "type": "string"
+          }
+        }
+      },
+      "GoogleRegistration": {
+        "required": [
+          "session",
+          "application"
+        ],
+        "type": "object",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/AuthResponse"
+          },
+          "application": {
+            "$ref": "#/components/schemas/ApplicationDto"
           }
         }
       },
@@ -21178,11 +21328,16 @@
       },
       "NotifyResult": {
         "required": [
-          "queued"
+          "queued",
+          "alreadyNotified"
         ],
         "type": "object",
         "properties": {
           "queued": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyNotified": {
             "type": "integer",
             "format": "int32"
           }
@@ -22021,6 +22176,13 @@
             "format": "double"
           }
         }
+      },
+      "ParentLoginOutcome": {
+        "enum": [
+          "Linked",
+          "PhoneBelongsToAnotherAccount",
+          "NoGuardian"
+        ]
       },
       "PaymentDto": {
         "required": [
@@ -23676,6 +23838,57 @@
           }
         }
       },
+      "RegisterWithGoogleCommand": {
+        "required": [
+          "idToken",
+          "parentName",
+          "phone",
+          "childFirstName",
+          "childLastName",
+          "childDateOfBirth",
+          "classLevelId",
+          "sessionId"
+        ],
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string"
+          },
+          "parentName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "childFirstName": {
+            "type": "string"
+          },
+          "childLastName": {
+            "type": "string"
+          },
+          "childDateOfBirth": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "classLevelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "website": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ReportCard": {
         "required": [
           "studentId",
@@ -24266,6 +24479,13 @@
               "null",
               "string"
             ]
+          },
+          "entryTermId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -25843,7 +26063,8 @@
           "activeAttemptId",
           "resultsReleased",
           "score",
-          "resultAttemptId"
+          "resultAttemptId",
+          "scoreIsProvisional"
         ],
         "type": "object",
         "properties": {
@@ -25917,6 +26138,9 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "scoreIsProvisional": {
+            "type": "boolean"
           }
         }
       },
@@ -26198,6 +26422,7 @@
           "maxAttempts",
           "shuffleQuestions",
           "shuffleOptions",
+          "showScoreOnSubmit",
           "status",
           "publishedAt",
           "sections",
@@ -26278,6 +26503,9 @@
             "type": "boolean"
           },
           "shuffleOptions": {
+            "type": "boolean"
+          },
+          "showScoreOnSubmit": {
             "type": "boolean"
           },
           "status": {
@@ -26413,6 +26641,10 @@
           "shuffleOptions": {
             "type": "boolean",
             "default": true
+          },
+          "showScoreOnSubmit": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

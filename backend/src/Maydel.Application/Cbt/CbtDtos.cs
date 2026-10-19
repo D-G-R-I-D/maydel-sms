@@ -25,7 +25,8 @@ public sealed record AuthoringScope(Guid SubjectId, string Subject, Guid ClassLe
 /// <summary>The test's header as the teacher sets it. Times are instants (send them with an offset).</summary>
 public sealed record TestInput(
     string Title, string? Instructions, Guid SubjectId, Guid ClassLevelId, Guid TermId, Guid? ComponentId, IReadOnlyList<Guid> ClassRoomIds,
-    int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt, int MaxAttempts = 1, bool ShuffleQuestions = true, bool ShuffleOptions = true);
+    int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt, int MaxAttempts = 1, bool ShuffleQuestions = true, bool ShuffleOptions = true,
+    bool ShowScoreOnSubmit = false);
 
 /// <summary>A section: one kind of question, marks per question, and fixed questions or a random draw from the bank.</summary>
 public sealed record SectionInput(
@@ -54,7 +55,7 @@ public sealed record TestSummary(
 public sealed record TestDetail(
     Guid Id, string Title, string? Instructions, Guid SubjectId, string Subject, Guid ClassLevelId, string ClassLevel, Guid TermId, string Term,
     Guid? ComponentId, IReadOnlyList<ClassRoomBrief> ClassRooms, int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt,
-    int MaxAttempts, bool ShuffleQuestions, bool ShuffleOptions, TestStatus Status, DateTimeOffset? PublishedAt, IReadOnlyList<SectionDto> Sections,
+    int MaxAttempts, bool ShuffleQuestions, bool ShuffleOptions, bool ShowScoreOnSubmit, TestStatus Status, DateTimeOffset? PublishedAt, IReadOnlyList<SectionDto> Sections,
     int QuestionCount, decimal TotalMarks, ScalingPreview? Scaling, IReadOnlyList<string> Problems, bool CanEdit,
     DateTimeOffset? ResultsReleasedAt, DateTimeOffset? GradebookPushedAt);
 
@@ -148,7 +149,7 @@ public enum StudentTestState
 public sealed record StudentTestDto(
     Guid Id, string Title, string Subject, string? Instructions, int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt,
     int QuestionCount, decimal TotalMarks, int MaxAttempts, int AttemptsUsed, StudentTestState State, Guid? ActiveAttemptId,
-    bool ResultsReleased, decimal? Score, Guid? ResultAttemptId);
+    bool ResultsReleased, decimal? Score, Guid? ResultAttemptId, bool ScoreIsProvisional);
 
 public sealed record PaperOption(Guid Id, string Text);
 
@@ -166,7 +167,7 @@ public sealed record PaperSection(int Index, string Title, string? Instructions,
 public sealed record AttemptPaper(
     Guid Id, Guid TestId, string Title, string? Instructions, AttemptStatus Status, DateTimeOffset StartedAt, DateTimeOffset DeadlineAt,
     DateTimeOffset ServerNow, int RemainingSeconds, string? SessionToken, IReadOnlyList<PaperSection> Sections, IReadOnlyList<PaperItem> Items,
-    int Answered, DateTimeOffset? SubmittedAt, bool AutoSubmitted, bool Released, decimal? Score, decimal TotalMarks);
+    int Answered, DateTimeOffset? SubmittedAt, bool AutoSubmitted, bool Released, decimal? Score, decimal TotalMarks, bool ScoreIsProvisional);
 
 public sealed record AnswerSaved(Guid ItemId, DateTimeOffset SavedAt, int RemainingSeconds);
 

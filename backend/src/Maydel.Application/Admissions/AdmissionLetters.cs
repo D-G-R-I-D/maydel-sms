@@ -17,8 +17,8 @@ public sealed class AdmissionLetters(IAppDbContext db, SchoolBranding branding, 
         if (app is not { AdmissionNumber: { } number, DecidedAt: { } decided }) return null;
         var session = await db.Sessions.AsNoTracking().Where(s => s.Id == app.SessionId).Select(s => new { s.Name, s.StartsOn }).FirstAsync(ct);
         var level = await db.ClassLevels.AsNoTracking().Where(l => l.Id == app.ClassLevelId).Select(l => l.Name).FirstAsync(ct);
-        var resumes = await db.Terms.AsNoTracking().Where(t => t.SessionId == app.SessionId).OrderBy(t => t.StartsOn).Select(t => (DateOnly?)t.StartsOn).FirstOrDefaultAsync(ct)
-            ?? session.StartsOn;
+        // Resumption: the entry term (2nd/3rd-term intakes), else the first term.
+        var resumes = (await db.EntryTermAsync(app.SessionId, null, ct))?.StartsOn ?? session.StartsOn;
         var name = string.Join(' ', new[] { app.ChildFirstName, app.Form.ChildMiddleName, app.ChildLastName }.Where(p => !string.IsNullOrWhiteSpace(p)));
         var letter = new AdmissionLetterDocument(app.ReferenceNumber, number, name, level, session.Name, app.ParentName, app.Form.HomeAddress,
             RegisterRules.TodayAt(decided), resumes);

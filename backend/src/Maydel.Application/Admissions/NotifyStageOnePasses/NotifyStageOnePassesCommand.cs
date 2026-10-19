@@ -8,4 +8,5 @@ namespace Maydel.Application.Admissions.NotifyStageOnePasses;
 /// </summary>
 public sealed record NotifyStageOnePassesCommand(Guid SessionId) : ICommand<NotifyResult>;
 
-public sealed record NotifyResult(int Queued);
+/// <summary><c>Queued</c>: emailed now (sent within minutes); <c>AlreadyNotified</c>: on the passed list and told before.</summary>
+public sealed record NotifyResult(int Queued, int AlreadyNotified);

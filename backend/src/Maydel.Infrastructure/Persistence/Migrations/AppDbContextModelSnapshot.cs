@@ -554,6 +554,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
+                    b.Property<Guid?>("EntryTermId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("ExamWindowDays")
                         .HasColumnType("integer");
 
@@ -575,6 +578,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EntryTermId");
 
                     b.HasIndex("SessionId")
                         .IsUnique();
@@ -1256,6 +1261,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTimeOffset?>("ResultsReleasedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ShowScoreOnSubmit")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("ShuffleOptions")
                         .HasColumnType("boolean");
@@ -2655,6 +2663,11 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Maydel.Domain.Admissions.AdmissionSettings", b =>
                 {
+                    b.HasOne("Maydel.Domain.Academics.Term", null)
+                        .WithMany()
+                        .HasForeignKey("EntryTermId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Maydel.Domain.Academics.AcademicSession", null)
                         .WithMany()
                         .HasForeignKey("SessionId")
