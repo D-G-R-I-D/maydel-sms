@@ -163,11 +163,12 @@ test("a student sits a test: answers save, resume, takeover, hand in", async ({ 
   await expect(page.getByRole("listitem").filter({ hasText: `${tag} sitting` })).toContainText("Handed in");
 });
 
-test("parents don't sit tests", async ({ page }) => {
+test("parents see results but don't sit tests", async ({ page }) => {
   await signIn(page, "parent@maydel.test");
-  await expect(page.getByRole("link", { name: "Tests" })).toHaveCount(0);
   await page.goto("/portal/tests");
-  await expect(page.getByText("Tests are taken with the student's own account")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tests", level: 1 })).toBeVisible();
+  await expect(page.getByText("Computer-based test results your children's teachers have released.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /^(Start|Continue)$/ })).toHaveCount(0);
   await page.goto("/exam/00000000-0000-4000-8000-000000000000");
   await expect(page).toHaveURL(/\/portal$/);
 });

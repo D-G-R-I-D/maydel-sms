@@ -85,3 +85,22 @@ export async function searchBank(q: { subjectId: string; classLevelId: string; k
 export async function loadBankTopics(subjectId: string, classLevelId: string) {
   return load((api) => api.GET("/api/cbt/topics", { params: { query: { subjectId, classLevelId } } }));
 }
+
+/* ------------------------------------------------- E16.4–E16.5: marking, release, grade sheet */
+
+type AttemptReview = import("./marking").AttemptReview;
+
+/** Marks one answer (theory) or overrides the computer's mark. Final once results are released. */
+export async function markAnswer(attemptId: string, itemId: string, score: number, comment: string | null): Promise<Loaded<AttemptReview>> {
+  return tests(await load((api) => api.PUT("/api/cbt/attempts/{id}/items/{itemId}/mark", { params: { path: { id: attemptId, itemId } }, body: { score, comment } })));
+}
+
+/** 422 test.still_open / test.still_sitting / test.unmarked explain what's missing. */
+export async function releaseResults(testId: string): Promise<Loaded<TestDetail>> {
+  return tests(await load((api) => api.POST("/api/cbt/tests/{id}/release", { params: { path: { id: testId } } })));
+}
+
+/** Writes scaled scores for one component; never touches published reports. Safe to re-run. */
+export async function pushToGradebook(testId: string, studentIds: string[] | null) {
+  return tests(await load((api) => api.POST("/api/cbt/tests/{id}/gradebook", { params: { path: { id: testId } }, body: { studentIds } })));
+}
