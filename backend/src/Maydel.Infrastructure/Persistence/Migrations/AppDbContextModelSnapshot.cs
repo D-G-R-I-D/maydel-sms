@@ -1125,6 +1125,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("GradebookPushedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Instructions")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
@@ -1136,6 +1139,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ResultsReleasedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("ShuffleOptions")
@@ -2858,6 +2864,12 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                                 .HasPrecision(6, 2)
                                 .HasColumnType("numeric(6,2)");
 
+                            b1.Property<DateTimeOffset?>("MarkedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<Guid?>("MarkedByUserId")
+                                .HasColumnType("uuid");
+
                             b1.Property<decimal>("Marks")
                                 .HasPrecision(6, 2)
                                 .HasColumnType("numeric(6,2)");
@@ -2874,6 +2886,14 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                             b1.Property<Guid>("SectionId")
                                 .HasColumnType("uuid");
+
+                            b1.Property<string>("TeacherComment")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)");
+
+                            b1.Property<decimal?>("TeacherScore")
+                                .HasPrecision(6, 2)
+                                .HasColumnType("numeric(6,2)");
 
                             b1.HasKey("Id");
 

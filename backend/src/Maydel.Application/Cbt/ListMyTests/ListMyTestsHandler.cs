@@ -27,8 +27,9 @@ internal sealed class ListMyTestsHandler(IAppDbContext db, Attempts attempts) : 
                 : now < t.ClosesAt && used.Count < t.MaxAttempts ? StudentTestState.Open
                 : used.Count > 0 ? StudentTestState.Done
                 : StudentTestState.Missed;
+            var best = t.ResultsReleasedAt is null ? null : Attempts.Best(used);
             return new StudentTestDto(t.Id, t.Title, subjects[t.SubjectId], t.Instructions, t.DurationMinutes, t.OpensAt, t.ClosesAt, t.QuestionCount, t.TotalMarks,
-                t.MaxAttempts, used.Count, state, active?.Id);
+                t.MaxAttempts, used.Count, state, active?.Id, t.ResultsReleasedAt is not null, best?.TotalScore, best?.Id ?? used.LastOrDefault()?.Id);
         })
         .OrderBy(t => t.State switch { StudentTestState.InProgress => 0, StudentTestState.Open => 1, StudentTestState.Upcoming => 2, _ => 3 })
         .ThenBy(t => t.OpensAt)

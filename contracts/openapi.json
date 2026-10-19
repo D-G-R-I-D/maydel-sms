@@ -5491,6 +5491,70 @@
         }
       }
     },
+    "/api/portal/children/{studentId}/tests": {
+      "get": {
+        "tags": [
+          "Portal"
+        ],
+        "operationId": "ListChildTests",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChildTestResult"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/portal/children/{studentId}/results": {
       "get": {
         "tags": [
@@ -12904,6 +12968,580 @@
         }
       }
     },
+    "/api/cbt/tests/{id}/attempts": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "ListCbtTestAttempts",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptRows"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/tests/{id}/questions/{questionId}/responses": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "ListCbtQuestionResponses",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionResponses"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/attempts/{id}": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GetCbtAttemptReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptReview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/attempts/{id}/items/{itemId}/mark": {
+      "put": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "MarkCbtAnswer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptReview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/tests/{id}/release": {
+      "post": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "ReleaseCbtResults",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/tests/{id}/gradebook": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "PreviewCbtGradebookPush",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GradebookPreview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "PushCbtToGradebook",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/tests/{id}/analytics": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GetCbtTestAnalytics",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestAnalytics"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/student/tests": {
       "get": {
         "tags": [
@@ -14030,7 +14668,10 @@
           "items",
           "answered",
           "submittedAt",
-          "autoSubmitted"
+          "autoSubmitted",
+          "released",
+          "score",
+          "totalMarks"
         ],
         "type": "object",
         "properties": {
@@ -14101,8 +14742,263 @@
           },
           "autoSubmitted": {
             "type": "boolean"
+          },
+          "released": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "totalMarks": {
+            "type": "number",
+            "format": "double"
           }
         }
+      },
+      "AttemptReview": {
+        "required": [
+          "id",
+          "testId",
+          "studentId",
+          "studentName",
+          "admissionNumber",
+          "number",
+          "status",
+          "startedAt",
+          "deadlineAt",
+          "submittedAt",
+          "autoSubmitted",
+          "events",
+          "items",
+          "totalMarks",
+          "score",
+          "needsMarking",
+          "canMark"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "testId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentName": {
+            "type": "string"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AttemptStatus"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "submittedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "autoSubmitted": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrityEventDto"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewItem"
+            }
+          },
+          "totalMarks": {
+            "type": "number",
+            "format": "double"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "needsMarking": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "canMark": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AttemptRow": {
+        "required": [
+          "studentId",
+          "name",
+          "admissionNumber",
+          "classRoom",
+          "attemptId",
+          "attempts",
+          "state",
+          "startedAt",
+          "submittedAt",
+          "autoSubmitted",
+          "blurs",
+          "takeOvers",
+          "autoScore",
+          "score",
+          "needsMarking"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "classRoom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "attemptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/AttemptRowState"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "submittedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "autoSubmitted": {
+            "type": "boolean"
+          },
+          "blurs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "takeOvers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "autoScore": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "needsMarking": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AttemptRows": {
+        "required": [
+          "testId",
+          "totalMarks",
+          "resultsReleasedAt",
+          "sitting",
+          "needsMarking",
+          "students"
+        ],
+        "type": "object",
+        "properties": {
+          "testId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalMarks": {
+            "type": "number",
+            "format": "double"
+          },
+          "resultsReleasedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sitting": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "needsMarking": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttemptRow"
+            }
+          }
+        }
+      },
+      "AttemptRowState": {
+        "enum": [
+          "NotStarted",
+          "InProgress",
+          "Submitted"
+        ]
       },
       "AttemptStatus": {
         "enum": [
@@ -14393,6 +15289,49 @@
           },
           "newPassword": {
             "type": "string"
+          }
+        }
+      },
+      "ChildTestResult": {
+        "required": [
+          "testId",
+          "title",
+          "subject",
+          "submittedAt",
+          "score",
+          "totalMarks",
+          "percent"
+        ],
+        "type": "object",
+        "properties": {
+          "testId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalMarks": {
+            "type": "number",
+            "format": "double"
+          },
+          "percent": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -14706,6 +15645,27 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "ClassResult": {
+        "required": [
+          "classRoom",
+          "students",
+          "mean"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoom": {
+            "type": "string"
+          },
+          "students": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mean": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -15916,6 +16876,84 @@
           }
         }
       },
+      "GradebookPreview": {
+        "required": [
+          "testId",
+          "component",
+          "componentMax",
+          "totalMarks",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "testId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "component": {
+            "type": "string"
+          },
+          "componentMax": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalMarks": {
+            "type": "number",
+            "format": "double"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradebookRow"
+            }
+          }
+        }
+      },
+      "GradebookRow": {
+        "required": [
+          "studentId",
+          "name",
+          "classRoom",
+          "raw",
+          "scaled",
+          "current",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "classRoom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "raw": {
+            "type": "number",
+            "format": "double"
+          },
+          "scaled": {
+            "type": "number",
+            "format": "double"
+          },
+          "current": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PushState"
+          }
+        }
+      },
       "GradeSheet": {
         "required": [
           "classRoomId",
@@ -16542,6 +17580,22 @@
           }
         }
       },
+      "IntegrityEventDto": {
+        "required": [
+          "kind",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/IntegrityEventKind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "IntegrityEventKind": {
         "enum": [
           "Blur",
@@ -16846,6 +17900,60 @@
           }
         }
       },
+      "ItemAnalysis": {
+        "required": [
+          "questionId",
+          "kind",
+          "text",
+          "section",
+          "marks",
+          "responses",
+          "answered",
+          "facility",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "text": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "number",
+            "format": "double"
+          },
+          "responses": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "answered": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "facility": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionPicks"
+            }
+          }
+        }
+      },
       "JsonElement": { },
       "LoginCommand": {
         "required": [
@@ -16870,6 +17978,25 @@
         "properties": {
           "refreshToken": {
             "type": "string"
+          }
+        }
+      },
+      "MarkInput": {
+        "required": [
+          "score",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "format": "double"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -17187,6 +18314,31 @@
           },
           "isCorrect": {
             "type": "boolean"
+          }
+        }
+      },
+      "OptionPicks": {
+        "required": [
+          "optionId",
+          "text",
+          "isCorrect",
+          "picks"
+        ],
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "picks": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -17520,7 +18672,9 @@
           "answerOptionIds",
           "answerTrueFalse",
           "answerText",
-          "answered"
+          "answered",
+          "score",
+          "comment"
         ],
         "type": "object",
         "properties": {
@@ -17579,6 +18733,19 @@
           },
           "answered": {
             "type": "boolean"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -18265,6 +19432,51 @@
           }
         }
       },
+      "PushInput": {
+        "required": [
+          "studentIds"
+        ],
+        "type": "object",
+        "properties": {
+          "studentIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "PushResult": {
+        "required": [
+          "pushed",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "pushed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GradebookRow"
+            }
+          }
+        }
+      },
+      "PushState": {
+        "enum": [
+          "Ready",
+          "ReportPublished",
+          "NotInClass",
+          "NotYourClass"
+        ]
+      },
       "QuestionBrief": {
         "required": [
           "id",
@@ -18491,6 +19703,107 @@
           "ShortAnswer",
           "Theory"
         ]
+      },
+      "QuestionResponse": {
+        "required": [
+          "attemptId",
+          "itemId",
+          "studentName",
+          "marks",
+          "answerText",
+          "answered",
+          "autoScore",
+          "score",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentName": {
+            "type": "string"
+          },
+          "marks": {
+            "type": "number",
+            "format": "double"
+          },
+          "answerText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "answered": {
+            "type": "boolean"
+          },
+          "autoScore": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "QuestionResponses": {
+        "required": [
+          "questionId",
+          "kind",
+          "text",
+          "markingGuide",
+          "acceptedAnswers",
+          "responses"
+        ],
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "text": {
+            "type": "string"
+          },
+          "markingGuide": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "acceptedAnswers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionResponse"
+            }
+          }
+        }
       },
       "QuestionSource": {
         "enum": [
@@ -19132,6 +20445,150 @@
           }
         }
       },
+      "ReviewItem": {
+        "required": [
+          "id",
+          "order",
+          "section",
+          "kind",
+          "questionId",
+          "text",
+          "hasImage",
+          "marks",
+          "options",
+          "correctTrueFalse",
+          "acceptedAnswers",
+          "markingGuide",
+          "answerTrueFalse",
+          "answerText",
+          "answered",
+          "autoScore",
+          "teacherScore",
+          "score",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "section": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "questionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string"
+          },
+          "hasImage": {
+            "type": "boolean"
+          },
+          "marks": {
+            "type": "number",
+            "format": "double"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewOption"
+            }
+          },
+          "correctTrueFalse": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "acceptedAnswers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "markingGuide": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "answerTrueFalse": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "answerText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "answered": {
+            "type": "boolean"
+          },
+          "autoScore": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "teacherScore": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReviewOption": {
+        "required": [
+          "id",
+          "text",
+          "isCorrect",
+          "chosen"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "chosen": {
+            "type": "boolean"
+          }
+        }
+      },
       "Role": {
         "enum": [
           "Admin",
@@ -19501,6 +20958,28 @@
           "JuniorSecondary",
           "SeniorSecondary"
         ]
+      },
+      "ScoreBand": {
+        "required": [
+          "fromPercent",
+          "toPercent",
+          "students"
+        ],
+        "type": "object",
+        "properties": {
+          "fromPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "students": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "ScoreRequest": {
         "required": [
@@ -20604,7 +22083,10 @@
           "maxAttempts",
           "attemptsUsed",
           "state",
-          "activeAttemptId"
+          "activeAttemptId",
+          "resultsReleased",
+          "score",
+          "resultAttemptId"
         ],
         "type": "object",
         "properties": {
@@ -20656,6 +22138,23 @@
             "$ref": "#/components/schemas/StudentTestState"
           },
           "activeAttemptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "resultsReleased": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "resultAttemptId": {
             "type": [
               "null",
               "string"
@@ -20848,6 +22347,81 @@
           }
         }
       },
+      "TestAnalytics": {
+        "required": [
+          "testId",
+          "totalMarks",
+          "students",
+          "mean",
+          "median",
+          "highest",
+          "lowest",
+          "distribution",
+          "byClass",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "testId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalMarks": {
+            "type": "number",
+            "format": "double"
+          },
+          "students": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mean": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "median": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "highest": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "lowest": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "distribution": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoreBand"
+            }
+          },
+          "byClass": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClassResult"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemAnalysis"
+            }
+          }
+        }
+      },
       "TestDetail": {
         "required": [
           "id",
@@ -20874,7 +22448,9 @@
           "totalMarks",
           "scaling",
           "problems",
-          "canEdit"
+          "canEdit",
+          "resultsReleasedAt",
+          "gradebookPushedAt"
         ],
         "type": "object",
         "properties": {
@@ -20989,6 +22565,20 @@
           },
           "canEdit": {
             "type": "boolean"
+          },
+          "resultsReleasedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "gradebookPushedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

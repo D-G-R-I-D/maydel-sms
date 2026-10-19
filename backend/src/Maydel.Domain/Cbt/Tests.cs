@@ -48,6 +48,10 @@ public class CbtTest : Entity
     public DateTimeOffset? PublishedAt { get; set; }
     public Guid? CreatedByUserId { get; set; }
 
+    /// <summary>Scores visible to students and parents from here on (E16.4); marks are then final.</summary>
+    public DateTimeOffset? ResultsReleasedAt { get; set; }
+    public DateTimeOffset? GradebookPushedAt { get; set; }
+
     public List<TestSection> Sections { get; set; } = [];
 
     public int QuestionCount => Sections.Sum(s => s.QuestionCount);
@@ -108,6 +112,22 @@ public class CbtTest : Entity
         if (problems.Count > 0) return new("test.not_ready", "The test isn't ready: " + problems[0]);
         if (ClosesAt <= now) return new("test.window", "The window has already closed. Move the closing time.", "closesAt");
         (Status, PublishedAt) = (TestStatus.Published, now);
+        return null;
+    }
+
+    /// <summary>
+    /// Releases the results after the window has closed, once nobody is still sitting and every answer has a mark (E16.4).
+    /// </summary>
+    public DomainError? ReleaseResults(DateTimeOffset now, IReadOnlyCollection<TestAttempt> attempts)
+    {
+        if (Status != TestStatus.Published) return new("test.draft", "This test isn't published.");
+        if (ResultsReleasedAt is not null) return new("test.released", "The results are already released.");
+        if (now < ClosesAt) return new("test.still_open", "Results can be released once the test has closed.");
+        if (attempts.Count(a => a.Status == AttemptStatus.InProgress) is > 0 and var sitting)
+            return new("test.still_sitting", $"{sitting} student(s) are still sitting the test.");
+        if (attempts.Sum(a => a.NeedsMarking) is > 0 and var unmarked)
+            return new("test.unmarked", $"{unmarked} answer(s) still need marking.");
+        ResultsReleasedAt = now;
         return null;
     }
 

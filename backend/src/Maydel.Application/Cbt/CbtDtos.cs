@@ -55,7 +55,83 @@ public sealed record TestDetail(
     Guid Id, string Title, string? Instructions, Guid SubjectId, string Subject, Guid ClassLevelId, string ClassLevel, Guid TermId, string Term,
     Guid? ComponentId, IReadOnlyList<ClassRoomBrief> ClassRooms, int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt,
     int MaxAttempts, bool ShuffleQuestions, bool ShuffleOptions, TestStatus Status, DateTimeOffset? PublishedAt, IReadOnlyList<SectionDto> Sections,
-    int QuestionCount, decimal TotalMarks, ScalingPreview? Scaling, IReadOnlyList<string> Problems, bool CanEdit);
+    int QuestionCount, decimal TotalMarks, ScalingPreview? Scaling, IReadOnlyList<string> Problems, bool CanEdit,
+    DateTimeOffset? ResultsReleasedAt, DateTimeOffset? GradebookPushedAt);
+
+public enum AttemptRowState
+{
+    NotStarted,
+    InProgress,
+    Submitted,
+}
+
+/// <summary>One student on the test's results page. <c>Score</c>: total once every answer is marked (best attempt).</summary>
+public sealed record AttemptRow(
+    Guid StudentId, string Name, string AdmissionNumber, string? ClassRoom, Guid? AttemptId, int Attempts, AttemptRowState State,
+    DateTimeOffset? StartedAt, DateTimeOffset? SubmittedAt, bool AutoSubmitted, int Blurs, int TakeOvers, decimal? AutoScore, decimal? Score, int NeedsMarking);
+
+public sealed record AttemptRows(Guid TestId, decimal TotalMarks, DateTimeOffset? ResultsReleasedAt, int Sitting, int NeedsMarking, IReadOnlyList<AttemptRow> Students);
+
+public sealed record ReviewOption(Guid Id, string Text, bool IsCorrect, bool Chosen);
+
+/// <summary>An answer with everything the marker needs: the key or guide, the student's answer, and the marks so far.</summary>
+public sealed record ReviewItem(
+    Guid Id, int Order, string Section, QuestionKind Kind, Guid QuestionId, string Text, bool HasImage, decimal Marks,
+    IReadOnlyList<ReviewOption> Options, bool? CorrectTrueFalse, IReadOnlyList<string> AcceptedAnswers, string? MarkingGuide,
+    bool? AnswerTrueFalse, string? AnswerText, bool Answered, decimal? AutoScore, decimal? TeacherScore, decimal? Score, string? Comment);
+
+public sealed record IntegrityEventDto(IntegrityEventKind Kind, DateTimeOffset At);
+
+public sealed record AttemptReview(
+    Guid Id, Guid TestId, Guid StudentId, string StudentName, string AdmissionNumber, int Number, AttemptStatus Status, DateTimeOffset StartedAt,
+    DateTimeOffset DeadlineAt, DateTimeOffset? SubmittedAt, bool AutoSubmitted, IReadOnlyList<IntegrityEventDto> Events, IReadOnlyList<ReviewItem> Items,
+    decimal TotalMarks, decimal? Score, int NeedsMarking, bool CanMark);
+
+public sealed record MarkInput(decimal Score, string? Comment);
+
+/// <summary>Every student's answer to one question, for marking theory question by question.</summary>
+public sealed record QuestionResponses(Guid QuestionId, QuestionKind Kind, string Text, string? MarkingGuide, IReadOnlyList<string> AcceptedAnswers,
+    IReadOnlyList<QuestionResponse> Responses);
+
+public sealed record QuestionResponse(Guid AttemptId, Guid ItemId, string StudentName, decimal Marks, string? AnswerText, bool Answered,
+    decimal? AutoScore, decimal? Score, string? Comment);
+
+public enum PushState
+{
+    Ready,
+    /// <summary>The student's report for the term is published: never overwritten (E16.5).</summary>
+    ReportPublished,
+    /// <summary>The student isn't (any more) an active member of one of the test's classes.</summary>
+    NotInClass,
+    /// <summary>The caller isn't the subject or form teacher of the student's class.</summary>
+    NotYourClass,
+}
+
+public sealed record GradebookRow(Guid StudentId, string Name, string? ClassRoom, decimal Raw, decimal Scaled, decimal? Current, PushState State);
+
+public sealed record GradebookPreview(Guid TestId, string Component, decimal ComponentMax, decimal TotalMarks, IReadOnlyList<GradebookRow> Rows);
+
+public sealed record PushInput(IReadOnlyList<Guid>? StudentIds);
+
+public sealed record PushResult(int Pushed, IReadOnlyList<GradebookRow> Skipped);
+
+public sealed record ScoreBand(int FromPercent, int ToPercent, int Students);
+
+public sealed record ClassResult(string ClassRoom, int Students, decimal Mean);
+
+public sealed record OptionPicks(Guid OptionId, string Text, bool IsCorrect, int Picks);
+
+/// <summary>How one question went: <c>Facility</c> = average share of the marks earned (0–1); low means hard.</summary>
+public sealed record ItemAnalysis(Guid QuestionId, QuestionKind Kind, string Text, string Section, decimal Marks, int Responses, int Answered,
+    decimal? Facility, IReadOnlyList<OptionPicks> Options);
+
+/// <summary>Score spread (best attempt per student, fully marked only) and per-question analysis (E16.7).</summary>
+public sealed record TestAnalytics(
+    Guid TestId, decimal TotalMarks, int Students, decimal? Mean, decimal? Median, decimal? Highest, decimal? Lowest, IReadOnlyList<ScoreBand> Distribution,
+    IReadOnlyList<ClassResult> ByClass, IReadOnlyList<ItemAnalysis> Items);
+
+/// <summary>A released test result for the parent portal.</summary>
+public sealed record ChildTestResult(Guid TestId, string Title, string Subject, DateTimeOffset? SubmittedAt, decimal Score, decimal TotalMarks, decimal Percent);
 
 public enum StudentTestState
 {
@@ -71,14 +147,15 @@ public enum StudentTestState
 /// <summary>A test as a student sees it in their list (no questions, no keys).</summary>
 public sealed record StudentTestDto(
     Guid Id, string Title, string Subject, string? Instructions, int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt,
-    int QuestionCount, decimal TotalMarks, int MaxAttempts, int AttemptsUsed, StudentTestState State, Guid? ActiveAttemptId);
+    int QuestionCount, decimal TotalMarks, int MaxAttempts, int AttemptsUsed, StudentTestState State, Guid? ActiveAttemptId,
+    bool ResultsReleased, decimal? Score, Guid? ResultAttemptId);
 
 public sealed record PaperOption(Guid Id, string Text);
 
 /// <summary>A question on the student's paper: no answer key. <c>ImageUrl</c> is relative to the API.</summary>
 public sealed record PaperItem(
     Guid Id, int Order, int Section, QuestionKind Kind, string Text, string? ImageUrl, decimal Marks, IReadOnlyList<PaperOption> Options,
-    IReadOnlyList<Guid> AnswerOptionIds, bool? AnswerTrueFalse, string? AnswerText, bool Answered);
+    IReadOnlyList<Guid> AnswerOptionIds, bool? AnswerTrueFalse, string? AnswerText, bool Answered, decimal? Score, string? Comment);
 
 public sealed record PaperSection(int Index, string Title, string? Instructions, QuestionKind Kind, decimal MarksPerQuestion);
 
@@ -89,7 +166,7 @@ public sealed record PaperSection(int Index, string Title, string? Instructions,
 public sealed record AttemptPaper(
     Guid Id, Guid TestId, string Title, string? Instructions, AttemptStatus Status, DateTimeOffset StartedAt, DateTimeOffset DeadlineAt,
     DateTimeOffset ServerNow, int RemainingSeconds, string? SessionToken, IReadOnlyList<PaperSection> Sections, IReadOnlyList<PaperItem> Items,
-    int Answered, DateTimeOffset? SubmittedAt, bool AutoSubmitted);
+    int Answered, DateTimeOffset? SubmittedAt, bool AutoSubmitted, bool Released, decimal? Score, decimal TotalMarks);
 
 public sealed record AnswerSaved(Guid ItemId, DateTimeOffset SavedAt, int RemainingSeconds);
 
@@ -101,6 +178,8 @@ public sealed record EventInput(string SessionToken, IntegrityEventKind Kind);
 
 public static class CbtErrors
 {
+    public static readonly Common.Error NoComponent = Common.Error.Rule("test.no_component", "This is a practice test: it isn't linked to a gradebook column.");
+    public static readonly Common.Error NotReleased = Common.Error.Rule("test.not_released", "Release the results before sending them to the grade sheet.");
     public static readonly Common.Error AttemptNotFound = Common.Error.NotFound("attempt.not_found", "That test attempt doesn't exist.");
     public static readonly Common.Error NotAStudent = Common.Error.Forbidden("attempt.not_student", "Only students can sit online tests.");
     public static readonly Common.Error TestNotFound = Common.Error.NotFound("test.not_found", "That test doesn't exist.");

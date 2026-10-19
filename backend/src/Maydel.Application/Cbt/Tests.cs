@@ -107,7 +107,7 @@ public sealed class Tests(IAppDbContext db, AccessRules access)
         return new TestDetail(test.Id, test.Title, test.Instructions, test.SubjectId, subject, test.ClassLevelId, level, test.TermId, term.DisplayName,
             test.ComponentId, rooms, test.DurationMinutes, test.OpensAt, test.ClosesAt, test.MaxAttempts, test.ShuffleQuestions, test.ShuffleOptions,
             test.Status, test.PublishedAt, sections, test.QuestionCount, test.TotalMarks, scaling,
-            test.Status == TestStatus.Draft ? await ProblemsAsync(test, ct) : [], test.Status == TestStatus.Draft);
+            test.Status == TestStatus.Draft ? await ProblemsAsync(test, ct) : [], test.Status == TestStatus.Draft, test.ResultsReleasedAt, test.GradebookPushedAt);
     }
 
     public static void ApplyHeader(CbtTest test, TestInput input)

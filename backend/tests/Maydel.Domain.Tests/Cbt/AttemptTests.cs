@@ -87,3 +87,42 @@ public sealed class AttemptTests
         Assert.Equal("attempt.submitted", attempt.Submit("t1", Now, bank)?.Code);
     }
 }
+
+public sealed class MarkingTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 10, 15, 7, 0, 0, TimeSpan.Zero);
+
+    private static TestAttempt Submitted(params (decimal Marks, decimal? Auto)[] items) => new()
+    {
+        SessionToken = "t", Status = AttemptStatus.Submitted,
+        Items = [.. items.Select((x, i) => new AttemptItem { Order = i, Marks = x.Marks, AutoScore = x.Auto })],
+    };
+
+    [Fact]
+    public void Teachers_mark_theory_and_can_override_the_computer_within_the_marks()
+    {
+        var attempt = Submitted((2, 2), (1, 0), (10, null));
+        Assert.Equal((1, (decimal?)null), (attempt.NeedsMarking, attempt.TotalScore));
+        Assert.Equal("score", attempt.Mark(attempt.Items[2].Id, 11, null, null, Now)?.Field);
+        Assert.Null(attempt.Mark(attempt.Items[2].Id, 7.5m, " Good points ", null, Now));
+        Assert.Null(attempt.Mark(attempt.Items[1].Id, 1, "Accepted spelling", null, Now));
+        Assert.Equal((0, 10.5m, "Good points"), (attempt.NeedsMarking, attempt.TotalScore!.Value, attempt.Items[2].TeacherComment));
+
+        var sitting = new TestAttempt { SessionToken = "t", Items = [new AttemptItem { Marks = 1 }] };
+        Assert.Equal("attempt.not_submitted", sitting.Mark(sitting.Items[0].Id, 1, null, null, Now)?.Code);
+    }
+
+    [Fact]
+    public void Results_release_only_after_closing_with_everyone_done_and_marked()
+    {
+        var test = new CbtTest { Title = "CAT", Status = TestStatus.Published, OpensAt = Now.AddHours(-3), ClosesAt = Now };
+        var unmarked = Submitted((5, null));
+        var sitting = new TestAttempt { SessionToken = "t" };
+        Assert.Equal("test.still_open", test.ReleaseResults(Now.AddMinutes(-1), [])?.Code);
+        Assert.Equal("test.still_sitting", test.ReleaseResults(Now, [sitting, unmarked])?.Code);
+        Assert.Equal("test.unmarked", test.ReleaseResults(Now, [unmarked])?.Code);
+        unmarked.Mark(unmarked.Items[0].Id, 3, null, null, Now);
+        Assert.Null(test.ReleaseResults(Now, [unmarked]));
+        Assert.Equal("test.released", test.ReleaseResults(Now, [unmarked])?.Code);
+    }
+}

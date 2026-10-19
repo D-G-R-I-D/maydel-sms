@@ -2,6 +2,14 @@ using Maydel.Api.Common;
 using Maydel.Application.Cbt;
 using Maydel.Application.Cbt.ArchiveQuestion;
 using Maydel.Application.Cbt.DeleteTest;
+using Maydel.Application.Cbt.GetAttemptReview;
+using Maydel.Application.Cbt.GetTestAnalytics;
+using Maydel.Application.Cbt.ListQuestionResponses;
+using Maydel.Application.Cbt.ListTestAttempts;
+using Maydel.Application.Cbt.MarkAnswer;
+using Maydel.Application.Cbt.PreviewGradebookPush;
+using Maydel.Application.Cbt.PushToGradebook;
+using Maydel.Application.Cbt.ReleaseResults;
 using Maydel.Application.Cbt.GetTest;
 using Maydel.Application.Cbt.ListTests;
 using Maydel.Application.Cbt.PublishTest;
@@ -51,7 +59,41 @@ public static class CbtEndpoints
         bank.MapPost("/tests/{id:guid}/publish", Publish).WithName("PublishCbtTest").ProducesProblems(400, 401, 403, 404, 422);
         bank.MapPost("/tests/{id:guid}/unpublish", Unpublish).WithName("UnpublishCbtTest").ProducesProblems(401, 403, 404, 422);
         bank.MapDelete("/tests/{id:guid}", DeleteTest).WithName("DeleteCbtTest").ProducesProblems(401, 403, 404, 422);
+
+        // Marking, release, gradebook and analytics (E16.4, E16.5, E16.7)
+        bank.MapGet("/tests/{id:guid}/attempts", Attempts).WithName("ListCbtTestAttempts").ProducesProblems(401, 403, 404);
+        bank.MapGet("/tests/{id:guid}/questions/{questionId:guid}/responses", Responses).WithName("ListCbtQuestionResponses").ProducesProblems(401, 403, 404);
+        bank.MapGet("/attempts/{id:guid}", Review).WithName("GetCbtAttemptReview").ProducesProblems(401, 403, 404);
+        bank.MapPut("/attempts/{id:guid}/items/{itemId:guid}/mark", Mark).WithName("MarkCbtAnswer").ProducesProblems(400, 401, 403, 404, 422);
+        bank.MapPost("/tests/{id:guid}/release", Release).WithName("ReleaseCbtResults").ProducesProblems(401, 403, 404, 422);
+        bank.MapGet("/tests/{id:guid}/gradebook", GradebookPreview).WithName("PreviewCbtGradebookPush").ProducesProblems(401, 403, 404, 422);
+        bank.MapPost("/tests/{id:guid}/gradebook", PushGradebook).WithName("PushCbtToGradebook").ProducesProblems(401, 403, 404, 422);
+        bank.MapGet("/tests/{id:guid}/analytics", Analytics).WithName("GetCbtTestAnalytics").ProducesProblems(401, 403, 404);
     }
+
+    private static async Task<Results<Ok<AttemptRows>, ProblemHttpResult>> Attempts(Guid id, IQueryHandler<ListTestAttemptsQuery, AttemptRows> h, CancellationToken ct) =>
+        (await h.Handle(new ListTestAttemptsQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<QuestionResponses>, ProblemHttpResult>> Responses(Guid id, Guid questionId, IQueryHandler<ListQuestionResponsesQuery, QuestionResponses> h, CancellationToken ct) =>
+        (await h.Handle(new ListQuestionResponsesQuery(id, questionId), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<AttemptReview>, ProblemHttpResult>> Review(Guid id, IQueryHandler<GetAttemptReviewQuery, AttemptReview> h, CancellationToken ct) =>
+        (await h.Handle(new GetAttemptReviewQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<AttemptReview>, ProblemHttpResult>> Mark(Guid id, Guid itemId, MarkInput body, ICommandHandler<MarkAnswerCommand, AttemptReview> h, CancellationToken ct) =>
+        (await h.Handle(new MarkAnswerCommand(id, itemId, body), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<TestDetail>, ProblemHttpResult>> Release(Guid id, ICommandHandler<ReleaseResultsCommand, TestDetail> h, CancellationToken ct) =>
+        (await h.Handle(new ReleaseResultsCommand(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<GradebookPreview>, ProblemHttpResult>> GradebookPreview(Guid id, IQueryHandler<PreviewGradebookPushQuery, GradebookPreview> h, CancellationToken ct) =>
+        (await h.Handle(new PreviewGradebookPushQuery(id), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<PushResult>, ProblemHttpResult>> PushGradebook(Guid id, PushInput body, ICommandHandler<PushToGradebookCommand, PushResult> h, CancellationToken ct) =>
+        (await h.Handle(new PushToGradebookCommand(id, body.StudentIds), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<TestAnalytics>, ProblemHttpResult>> Analytics(Guid id, IQueryHandler<GetTestAnalyticsQuery, TestAnalytics> h, CancellationToken ct) =>
+        (await h.Handle(new GetTestAnalyticsQuery(id), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<IReadOnlyList<TestSummary>>, ProblemHttpResult>> Tests([AsParameters] ListTestsQuery query, IQueryHandler<ListTestsQuery, IReadOnlyList<TestSummary>> h, CancellationToken ct) =>
         (await h.Handle(query, ct)).ToHttpResult();
