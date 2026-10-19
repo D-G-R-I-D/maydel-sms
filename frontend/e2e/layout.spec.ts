@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 // No console page may scroll sideways at phone or tablet width (user report: the class reports
 // page "floated" off to the left on a phone). Wide tables scroll inside their own container.
 const PASSWORD = "Demo#Pass2026";
-test.setTimeout(300_000);
+test.setTimeout(600_000);
 
 async function signIn(page: Page, userName: string) {
   await page.goto("/login");
@@ -40,6 +40,8 @@ const pages = [
   "/admin/cbt",
   "/admin/tests",
   "/admin/tests/new",
+  "/admin/cbt/ai",
+  "/admin/settings/ai",
   "/admin/audit",
 ];
 

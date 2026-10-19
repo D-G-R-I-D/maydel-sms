@@ -79,6 +79,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Assessment", href: "/admin/settings/assessment", icon: "assessment", roles: AT, ready: true },
       { label: "Fees", href: "/admin/settings/fees", icon: "fees", roles: AB, ready: true },
       { label: "Admissions", href: "/admin/settings/admissions", icon: "admissions", roles: AB, ready: true },
+      { label: "AI questions", href: "/admin/settings/ai", icon: "questions", roles: A, ready: true },
       { label: "Users", href: "/admin/settings/users", icon: "users", roles: A },
     ],
   },

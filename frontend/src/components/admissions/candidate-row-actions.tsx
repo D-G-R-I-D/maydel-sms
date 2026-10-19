@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Printer, UserX } from "lucide-react";
 import { problemMessage } from "@/lib/api/problem";
 import type { ExamCandidate } from "@/lib/admissions/exam";
@@ -77,11 +78,68 @@ export function CandidateScore({ candidate }: { candidate: ExamCandidate }) {
   );
 }
 
-export function PrintButton() {
+const surname = (name: string) => name.trim().split(/s+/).at(-1) ?? name;
+
+/**
+ * Prints a clean attendance sheet. The site's print CSS shows only a body-level `.print-root`, so the
+ * sheet is portalled there while printing: surname order, blank Signature and Score columns.
+ */
+export function PrintButton({ title, subtitle, candidates }: { title: string; subtitle?: string; candidates: ExamCandidate[] }) {
+  const [printing, setPrinting] = useState(false);
+  useEffect(() => {
+    if (!printing) return;
+    const done = () => setPrinting(false);
+    window.addEventListener("afterprint", done, { once: true });
+    window.print();
+    return () => window.removeEventListener("afterprint", done);
+  }, [printing]);
+  const rows = [...candidates].sort((a, b) => surname(a.childName).localeCompare(surname(b.childName)) || a.childName.localeCompare(b.childName));
+
   return (
-    <Button variant="secondary" onClick={() => window.print()} className="print:hidden">
-      <Printer className="size-4" aria-hidden />
-      Print attendance sheet
-    </Button>
+    <>
+      <Button variant="secondary" onClick={() => setPrinting(true)} className="print:hidden">
+        <Printer className="size-4" aria-hidden />
+        Print attendance sheet
+      </Button>
+      {printing &&
+        createPortal(
+          <div className="print-root hidden" data-testid="attendance-sheet">
+            <h1 className="text-xl font-semibold">Entrance exam attendance</h1>
+            <p className="mb-4 text-sm">
+              {title}
+              {subtitle ? ` · ${subtitle}` : ""}
+            </p>
+            {rows.length === 0 ? (
+              <p>No one has booked this sitting yet.</p>
+            ) : (
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-black text-left">
+                    <th className="py-2 pr-2">#</th>
+                    <th className="py-2 pr-2">Reference</th>
+                    <th className="py-2 pr-2">Child</th>
+                    <th className="py-2 pr-2">Class</th>
+                    <th className="w-48 py-2 pr-2">Signature</th>
+                    <th className="w-20 py-2">Score (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((c, i) => (
+                    <tr key={c.applicationId} className="h-10 border-b border-black/40 align-bottom">
+                      <td className="py-2 pr-2">{i + 1}</td>
+                      <td className="py-2 pr-2">{c.referenceNumber}</td>
+                      <td className="py-2 pr-2">{c.childName}</td>
+                      <td className="py-2 pr-2">{c.classLevel}</td>
+                      <td className="py-2 pr-2" />
+                      <td className="py-2" />
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

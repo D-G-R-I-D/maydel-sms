@@ -65,15 +65,25 @@ export async function proxyImageGet(request: NextRequest, path: string): Promise
 }
 
 export async function proxyImageUpload(request: NextRequest, path: string, noun = "photo", method: "PUT" | "POST" = "PUT"): Promise<NextResponse> {
+  return proxyMultipart(request, path, { method, maxBytes: MAX_PHOTO_BYTES + 64 * 1024, field: "file", noun, tooLarge: `The ${noun} must be 12 MB or smaller.`, wrongType: `Upload a JPEG, PNG or WebP ${noun} (up to 12 MB).` });
+}
+
+/** Any multipart form to the API (images, documents, AI source material), with a size cap; JSON back. */
+export async function proxyMultipart(
+  request: NextRequest,
+  path: string,
+  o: { method: "PUT" | "POST"; maxBytes: number; field: string; noun: string; tooLarge: string; wrongType: string },
+): Promise<NextResponse> {
+  const { method, noun } = o;
   const blocked = crossSiteRejection(request);
   if (blocked) return blocked;
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.startsWith("multipart/form-data")) {
-    return problemResponse({ status: 400, title: `Upload a ${noun}.`, code: "validation", errors: { file: [`Upload a JPEG, PNG or WebP ${noun} (up to 12 MB).`] } });
+    return problemResponse({ status: 400, title: `Upload a ${noun}.`, code: "validation", errors: { [o.field]: [o.wrongType] } });
   }
   const declared = Number(request.headers.get("content-length") ?? "0");
-  if (declared > MAX_PHOTO_BYTES + 64 * 1024) {
-    return problemResponse({ status: 400, title: `That ${noun} is too large.`, code: "validation", errors: { file: [`The ${noun} must be 12 MB or smaller.`] } });
+  if (declared > o.maxBytes) {
+    return problemResponse({ status: 400, title: `That ${noun} is too large.`, code: "validation", errors: { [o.field]: [o.tooLarge] } });
   }
   const body = await request.arrayBuffer();
   const { reply, finish } = await forward(request, path, { method, body, contentType });

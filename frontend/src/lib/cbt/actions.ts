@@ -104,3 +104,35 @@ export async function releaseResults(testId: string): Promise<Loaded<TestDetail>
 export async function pushToGradebook(testId: string, studentIds: string[] | null) {
   return tests(await load((api) => api.POST("/api/cbt/tests/{id}/gradebook", { params: { path: { id: testId } }, body: { studentIds } })));
 }
+
+/* ------------------------------------------------------------- E16.8–E16.9: AI questions */
+
+type DraftInput = import("./ai").DraftInput;
+
+function ai<T>(result: Loaded<T>): Loaded<T> {
+  if (result.ok) revalidatePath("/admin/cbt", "layout");
+  return result;
+}
+
+/** A fresh version that avoids the earlier ones (at most 5). Uses 1 from the allowance when it succeeds. */
+export async function regenerateQuestions(id: string) {
+  return ai(await load((api) => api.POST("/api/cbt/ai/generations/{id}/regenerate", { params: { path: { id } } })));
+}
+
+/** All or nothing; 400 errors are keyed questions[i].field. They go to the bank as source "Ai". */
+export async function saveAiDrafts(id: string, questions: DraftInput[]) {
+  return ai(await load((api) => api.POST("/api/cbt/ai/generations/{id}/save", { params: { path: { id } }, body: { questions } })));
+}
+
+export async function saveAiSettings(body: { enabled: boolean; defaultMonthlyGenerations: number; schoolMonthlyGenerations: number }) {
+  const r = await load((api) => api.PUT("/api/cbt/ai/settings", { body }));
+  if (r.ok) revalidatePath("/admin/settings/ai");
+  return r;
+}
+
+/** null = back to the school default. */
+export async function setAiAllowance(userId: string, monthlyGenerations: number | null) {
+  const r = await load((api) => api.PUT("/api/cbt/ai/allowances/{userId}", { params: { path: { userId } }, body: { monthlyGenerations } }));
+  if (r.ok) revalidatePath("/admin/settings/ai");
+  return r;
+}

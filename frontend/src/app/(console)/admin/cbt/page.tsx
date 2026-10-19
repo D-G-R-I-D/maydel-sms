@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, FileQuestion } from "lucide-react";
+import { ChevronRight, FileQuestion, Sparkles } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { bankHref, type AuthoringScope } from "@/lib/cbt/questions";
-import { Card, PageHeader } from "@/components/ui/primitives";
+import { Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 
 export const metadata: Metadata = { title: "Question bank" };
@@ -13,7 +13,20 @@ export const metadata: Metadata = { title: "Question bank" };
 /** E16.1: the banks the caller can write for, one per subject and class level, grouped by level. */
 export default async function QuestionBankPage() {
   const user = await requireSessionUser();
-  const header = <PageHeader title="Question bank" description="Questions for computer-based tests, shared by everyone who teaches the subject at that level." />;
+  const header = (
+    <PageHeader
+      title="Question bank"
+      description="Questions for computer-based tests, shared by everyone who teaches the subject at that level."
+      actions={
+        hasAnyRole(user.roles, ["Admin", "Teacher"]) ? (
+          <Link href="/admin/cbt/ai" className={buttonClasses("secondary")}>
+            <Sparkles className="size-4" aria-hidden />
+            Write with AI
+          </Link>
+        ) : undefined
+      }
+    />
+  );
   if (!hasAnyRole(user.roles, ["Admin", "Teacher"])) {
     return (
       <>
