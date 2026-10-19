@@ -7,13 +7,14 @@ import type { AdmissionSettings } from "@/lib/api/types";
 import { saveAdmissionSettings } from "@/lib/admissions/actions";
 import { formatNaira, parseAmount } from "@/lib/finance/rules";
 import { runAction } from "@/lib/client/action";
-import { Button, Card, Field, Input, describedBy } from "@/components/ui/primitives";
+import { Button, Card, Field, Input, Select, describedBy } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 
 /** E11.4: per-session admissions settings. Admin edits; bursar sees them read-only. */
-export function AdmissionSettingsForm({ initial, canEdit }: { initial: AdmissionSettings; canEdit: boolean }) {
+export function AdmissionSettingsForm({ initial, canEdit, terms = [] }: { initial: AdmissionSettings; canEdit: boolean; terms?: { id: string; label: string }[] }) {
   const [saved, setSaved] = useState(initial);
+  const [entryTermId, setEntryTermId] = useState(initial.entryTermId ?? "");
   const [isOpen, setIsOpen] = useState(initial.isOpen);
   const [fee, setFee] = useState(initial.formFee.toFixed(2));
   const [days, setDays] = useState(String(initial.examWindowDays));
@@ -26,14 +27,14 @@ export function AdmissionSettingsForm({ initial, canEdit }: { initial: Admission
   const feeError = feeValue === null ? "Enter ₦0 or more, with at most 2 decimal places." : undefined;
   const daysError = !Number.isInteger(daysValue) || daysValue < 1 || daysValue > 30 ? "Enter a whole number of days from 1 to 30." : undefined;
   const instructionsError = instructions.length > 2000 ? "Use 2,000 characters or fewer." : undefined;
-  const dirty = isOpen !== saved.isOpen || feeValue !== saved.formFee || daysValue !== saved.examWindowDays || (instructions.trim() || null) !== (saved.instructions ?? null);
+  const dirty = isOpen !== saved.isOpen || feeValue !== saved.formFee || daysValue !== saved.examWindowDays || (instructions.trim() || null) !== (saved.instructions ?? null) || (entryTermId || null) !== (saved.entryTermId ?? null);
 
   const save = async () => {
     setProblem(null);
     if (feeError || daysError || instructionsError) return;
     setBusy(true);
     const r = await runAction(
-      () => saveAdmissionSettings({ sessionId: saved.sessionId, isOpen, formFee: feeValue!, examWindowDays: daysValue, instructions: instructions.trim() || null }),
+      () => saveAdmissionSettings({ sessionId: saved.sessionId, isOpen, formFee: feeValue!, examWindowDays: daysValue, instructions: instructions.trim() || null, entryTermId: entryTermId || null }),
       { success: isOpen ? "Admissions settings saved: open" : "Admissions settings saved: closed", onProblem: setProblem },
     );
     setBusy(false);
@@ -54,6 +55,22 @@ export function AdmissionSettingsForm({ initial, canEdit }: { initial: Admission
         </div>
         <Switch checked={isOpen} onCheckedChange={setIsOpen} label="Admissions open" disabled={!canEdit} />
       </div>
+      {terms.length > 1 && (
+        <Field
+          id="adm-entry"
+          label="New pupils start in"
+          hint={saved.entryStartsOn ? `Offer letters give the resumption date; enrolment bills new-intake fees from this term.` : "Offer letters and enrolment use this term's start; leave it on the first term for a normal intake."}
+        >
+          <Select {...describedBy("adm-entry", undefined, true)} value={entryTermId} onChange={(e) => setEntryTermId(e.target.value)} disabled={!canEdit}>
+            <option value="">{terms[0]?.label ?? "First term"} (the normal intake)</option>
+            {terms.slice(1).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="adm-fee" label="Form fee (₦)" error={feeError} hint={feeValue === 0 ? "Free: families skip the payment step." : feeValue ? formatNaira(feeValue) : undefined}>
           <Input {...describedBy("adm-fee", feeError, true)} value={fee} onChange={(e) => setFee(e.target.value)} inputMode="decimal" className="tabular" disabled={!canEdit} />

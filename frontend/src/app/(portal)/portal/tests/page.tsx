@@ -80,6 +80,13 @@ export default async function PortalTestsPage({ searchParams }: { searchParams: 
                           </Link>
                         )}
                       </div>
+                    ) : t.state === "Done" && t.score !== null ? (
+                      <p className="text-sm">
+                        <span className="tabular font-semibold">
+                          {t.scoreIsProvisional ? "Score so far" : "Score"}: {formatMarks(t.score)} / {formatMarks(t.totalMarks)}
+                        </span>
+                        {t.scoreIsProvisional && <span className="text-muted"> (theory still being marked)</span>}
+                      </p>
                     ) : t.state === "Done" ? (
                       <p className="text-sm text-muted">Handed in. Your teacher will release the results.</p>
                     ) : null}

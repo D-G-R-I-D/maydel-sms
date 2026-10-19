@@ -36,7 +36,8 @@ export async function checkFormPayment(reference: string) {
   return load((api) => api.GET("/api/admissions/payments/{reference}", { params: { path: { reference } } }));
 }
 
-export async function saveAdmissionSettings(body: { sessionId: string; isOpen: boolean; formFee: number; examWindowDays: number; instructions: string | null }): Promise<Loaded<AdmissionSettings>> {
+/** entryTermId: the term new pupils start in (null = the first term). */
+export async function saveAdmissionSettings(body: { sessionId: string; isOpen: boolean; formFee: number; examWindowDays: number; instructions: string | null; entryTermId?: string | null }): Promise<Loaded<AdmissionSettings>> {
   return staff(await load((api) => api.PUT("/api/admissions/settings", { body })));
 }
 
@@ -134,8 +135,9 @@ export async function publishDecisions(sessionId: string) {
   return staff(await load((api) => api.POST("/api/admissions/decisions/publish", { body: { sessionId } })));
 }
 
-export async function enrolApplicant(id: string, classRoomId: string | null) {
-  const r = await load((api) => api.POST("/api/admissions/applications/{id}/enrol", { params: { path: { id } }, body: { classRoomId } }));
+/** entryTermId: admit this child from a later term (null = the admissions settings' entry term). */
+export async function enrolApplicant(id: string, classRoomId: string | null, entryTermId: string | null = null) {
+  const r = await load((api) => api.POST("/api/admissions/applications/{id}/enrol", { params: { path: { id } }, body: { classRoomId, entryTermId } }));
   if (r.ok) revalidatePath("/admin/students", "layout");
   return staff(r);
 }

@@ -30,14 +30,14 @@ async function api(request: APIRequestContext, userName = "admin@maydel.test", p
   };
 }
 
-type Settings = { sessionId: string; isOpen: boolean; formFee: number; examWindowDays: number; instructions: string | null; cutOffMark?: number | null };
+type Settings = { sessionId: string; isOpen: boolean; formFee: number; examWindowDays: number; instructions: string | null; entryTermId?: string | null; cutOffMark?: number | null };
 const restore: { settings?: Settings; cutOff?: number | null; studentId?: string } = {};
 
 test.afterAll(async ({ request }) => {
   const admin = await api(request);
   if (restore.settings) {
-    const { sessionId, isOpen, formFee, examWindowDays, instructions } = restore.settings;
-    await admin.put("/api/admissions/settings", { sessionId, isOpen, formFee, examWindowDays, instructions });
+    const { sessionId, isOpen, formFee, examWindowDays, instructions, entryTermId } = restore.settings;
+    await admin.put("/api/admissions/settings", { sessionId, isOpen, formFee, examWindowDays, instructions, entryTermId: entryTermId ?? null });
     if (restore.cutOff !== undefined) await admin.put("/api/admissions/results/cut-off", { sessionId, cutOffMark: restore.cutOff });
   }
   if (restore.studentId) await admin.post(`/api/students/${restore.studentId}/status`, { status: "Withdrawn" });

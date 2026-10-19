@@ -74,6 +74,7 @@ export default async function TestPage({ params }: { params: Promise<{ id: strin
           </p>
           <p className="text-xs text-muted">
             {t.shuffleQuestions ? "Questions shuffled" : "Questions in order"} · {t.shuffleOptions ? "options shuffled" : "options in order"}
+            {t.showScoreOnSubmit ? " · score shown on hand-in" : ""}
           </p>
         </div>
         <div>

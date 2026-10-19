@@ -230,6 +230,7 @@ export function TestHeaderForm({
           [
             ["shuffleQuestions", "Shuffle the questions"],
             ["shuffleOptions", "Shuffle the options"],
+            ["showScoreOnSubmit", "Show the computer-marked score on hand-in"],
           ] as const
         ).map(([name, label]) => (
           <Controller
