@@ -43,6 +43,10 @@ describe("roles", () => {
     expect(canEnter("/admissions/apply", [])).toBe(true);
     expect(canEnter("/portal", ["Student"])).toBe(true);
     expect(canEnter("/portal/results", ["Bursar"])).toBe(false);
+    expect(canEnter("/exam/abc", ["Student"])).toBe(true);
+    expect(canEnter("/exam/abc", ["Parent"])).toBe(false);
+    expect(canEnter("/exam/abc", ["Teacher"])).toBe(false);
+    expect(canEnter("/examples", ["Parent"])).toBe(true);
     expect(canEnter("/administrator", ["Parent"])).toBe(true);
     expect(canEnter("/change-password", ["Parent"])).toBe(true);
   });

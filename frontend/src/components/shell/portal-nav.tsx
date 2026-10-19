@@ -44,7 +44,7 @@ export function PortalNav({ items, variant }: { items: NavItem[]; variant: "bott
 
   return (
     <nav aria-label="Portal" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
-      <ul className="grid grid-cols-5">
+      <ul className={cn("grid", items.length > 5 ? "grid-cols-6" : "grid-cols-5")}>
         {items.map((item) => (
           <li key={item.href}>
             {item.ready ? (

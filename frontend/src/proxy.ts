@@ -4,7 +4,7 @@ import {
 } from "@/lib/auth/cookies";
 import { forwardingHeaders } from "@/lib/auth/forwarding";
 import { refreshSession, sessionIsDead } from "@/lib/auth/refresh";
-import { canEnter, homeFor, isPublicAdmissionsPath } from "@/lib/auth/roles";
+import { canEnter, homeFor, isExamPath, isPublicAdmissionsPath } from "@/lib/auth/roles";
 import { jwtExpiry, needsRefresh } from "@/lib/auth/token";
 import { publicUrl } from "@/lib/http/redirect";
 
@@ -13,7 +13,7 @@ const PATH_HEADER = "x-maydel-path";
 function isProtected(pathname: string): boolean {
   return (
     pathname === "/admin" || pathname.startsWith("/admin/") ||
-    pathname === "/portal" || pathname.startsWith("/portal/") ||
+    pathname === "/portal" || pathname.startsWith("/portal/") || isExamPath(pathname) ||
     ((pathname === "/admissions" || pathname.startsWith("/admissions/")) && !isPublicAdmissionsPath(pathname)) ||
     pathname === "/change-password"
   );
