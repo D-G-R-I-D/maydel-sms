@@ -637,6 +637,7 @@ internal sealed class AdmissionSettingsConfig : IEntityTypeConfiguration<Admissi
         b.HasIndex(x => x.SessionId).IsUnique();
         b.Property(x => x.FormFee).HasPrecision(14, 2);
         b.Property(x => x.CutOffMark).HasPrecision(5, 2);
+        b.HasOne<Term>().WithMany().HasForeignKey(x => x.EntryTermId).OnDelete(DeleteBehavior.SetNull);
         b.Property(x => x.Instructions).HasMaxLength(2000);
         b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Cascade);
     }

@@ -28,8 +28,11 @@ internal sealed class ListMyTestsHandler(IAppDbContext db, Attempts attempts) : 
                 : used.Count > 0 ? StudentTestState.Done
                 : StudentTestState.Missed;
             var best = t.ResultsReleasedAt is null ? null : Attempts.Best(used);
+            var handedIn = used.Where(a => a.Status == AttemptStatus.Submitted).OrderByDescending(a => Attempts.EarlyScore(a)).FirstOrDefault();
+            var early = best is null && t.ShowScoreOnSubmit && handedIn is not null;
             return new StudentTestDto(t.Id, t.Title, subjects[t.SubjectId], t.Instructions, t.DurationMinutes, t.OpensAt, t.ClosesAt, t.QuestionCount, t.TotalMarks,
-                t.MaxAttempts, used.Count, state, active?.Id, t.ResultsReleasedAt is not null, best?.TotalScore, best?.Id ?? used.LastOrDefault()?.Id);
+                t.MaxAttempts, used.Count, state, active?.Id, t.ResultsReleasedAt is not null, best?.TotalScore ?? (early ? Attempts.EarlyScore(handedIn!) : null),
+                best?.Id ?? used.LastOrDefault()?.Id, early && handedIn!.NeedsMarking > 0);
         })
         .OrderBy(t => t.State switch { StudentTestState.InProgress => 0, StudentTestState.Open => 1, StudentTestState.Upcoming => 2, _ => 3 })
         .ThenBy(t => t.OpensAt)

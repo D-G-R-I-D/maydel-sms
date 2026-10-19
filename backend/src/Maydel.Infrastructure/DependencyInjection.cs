@@ -70,7 +70,10 @@ public static class DependencyInjection
         services.AddSingleton<IAdmissionFormRenderer, Reports.QuestPdfAdmissionFormRenderer>();
         services.AddSingleton<IAdmissionLetterRenderer, Reports.QuestPdfAdmissionLetterRenderer>();
         services.AddOptions<Ai.AiOptions>().BindConfiguration(Ai.AiOptions.Section);
-        services.AddSingleton<IQuestionGenerator, Ai.ClaudeQuestionGenerator>();
+        services.AddSingleton<Ai.ClaudeQuestionGenerator>();
+        services.AddSingleton<Ai.GeminiQuestionGenerator>();
+        services.AddHttpClient(Ai.GeminiQuestionGenerator.HttpClientName, c => c.Timeout = TimeSpan.FromMinutes(3));
+        services.AddSingleton<IQuestionGenerator, Ai.AiRouter>();
 
         // E12.3 email outbox. The provider is configuration; secrets come from the environment.
         services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.Section)

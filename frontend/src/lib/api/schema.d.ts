@@ -1572,6 +1572,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/admissions/register/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RegisterApplicantWithGoogle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/admissions/blank-form.pdf": {
         parameters: {
             query?: never;
@@ -3049,6 +3065,11 @@ export interface components {
             instructions: null | string;
             /** Format: double */
             cutOffMark: null | number;
+            /** Format: uuid */
+            entryTermId: null | string;
+            entryTerm: null | string;
+            /** Format: date */
+            entryStartsOn: null | string;
         };
         AdmissionsInfo: {
             /** Format: uuid */
@@ -3307,6 +3328,7 @@ export interface components {
             score: null | number;
             /** Format: double */
             totalMarks: number;
+            scoreIsProvisional: boolean;
         };
         AttemptReview: {
             /** Format: uuid */
@@ -3792,10 +3814,14 @@ export interface components {
             studentId: string;
             admissionNumber: string;
             application: components["schemas"]["ApplicationDetail"];
+            parentLogin: components["schemas"]["ParentLoginOutcome"];
+            message: null | string;
         };
         EnrolRequest: {
             /** Format: uuid */
             classRoomId: null | string;
+            /** Format: uuid */
+            entryTermId?: null | string;
         };
         EventDto: {
             /** Format: uuid */
@@ -3975,6 +4001,10 @@ export interface components {
         GenerationStatus: "Ready" | "Failed";
         GoogleLoginCommand: {
             idToken: string;
+        };
+        GoogleRegistration: {
+            session: components["schemas"]["AuthResponse"];
+            application: components["schemas"]["ApplicationDto"];
         };
         GradableClass: {
             /** Format: uuid */
@@ -4346,6 +4376,8 @@ export interface components {
         NotifyResult: {
             /** Format: int32 */
             queued: number;
+            /** Format: int32 */
+            alreadyNotified: number;
         };
         NotifyStageOnePassesCommand: {
             /** Format: uuid */
@@ -4588,6 +4620,8 @@ export interface components {
             /** Format: double */
             marksPerQuestion: number;
         };
+        /** @enum {unknown} */
+        ParentLoginOutcome: "Linked" | "PhoneBelongsToAnotherAccount" | "NoGuardian";
         PaymentDto: {
             /** Format: uuid */
             id: string;
@@ -5014,6 +5048,20 @@ export interface components {
             status: components["schemas"]["AttendanceStatus"];
             note: null | string;
         };
+        RegisterWithGoogleCommand: {
+            idToken: string;
+            parentName: string;
+            phone: string;
+            childFirstName: string;
+            childLastName: string;
+            /** Format: date */
+            childDateOfBirth: null | string;
+            /** Format: uuid */
+            classLevelId: string;
+            /** Format: uuid */
+            sessionId: string;
+            website?: null | string;
+        };
         ReportCard: {
             /** Format: uuid */
             studentId: string;
@@ -5156,6 +5204,8 @@ export interface components {
             /** Format: int32 */
             examWindowDays: number;
             instructions: null | string;
+            /** Format: uuid */
+            entryTermId?: null | string;
         };
         SaveAiSettingsCommand: {
             enabled: boolean;
@@ -5576,6 +5626,7 @@ export interface components {
             score: null | number;
             /** Format: uuid */
             resultAttemptId: null | string;
+            scoreIsProvisional: boolean;
         };
         /** @enum {unknown} */
         StudentTestState: "Upcoming" | "Open" | "InProgress" | "Done" | "Missed";
@@ -5678,6 +5729,7 @@ export interface components {
             maxAttempts: number;
             shuffleQuestions: boolean;
             shuffleOptions: boolean;
+            showScoreOnSubmit: boolean;
             status: components["schemas"]["TestStatus"];
             /** Format: date-time */
             publishedAt: null | string;
@@ -5721,6 +5773,7 @@ export interface components {
             shuffleQuestions: boolean;
             /** @default true */
             shuffleOptions: boolean;
+            showScoreOnSubmit?: null | boolean;
         };
         /** @enum {unknown} */
         TestStatus: "Draft" | "Published";
@@ -12582,6 +12635,84 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RegisterApplicantWithGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterWithGoogleCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleRegistration"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
             /** @description Not Found */

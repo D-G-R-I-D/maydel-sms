@@ -10,7 +10,9 @@ public sealed record ClassLevelOption(Guid Id, string Name);
 public sealed record AdmissionsInfo(Guid SessionId, string Session, bool IsOpen, decimal FormFee, int ExamWindowDays, string? Instructions,
     IReadOnlyList<ClassLevelOption> ClassLevels);
 
-public sealed record AdmissionSettingsDto(Guid SessionId, string Session, bool IsOpen, decimal FormFee, int ExamWindowDays, string? Instructions, decimal? CutOffMark);
+/// <summary><c>EntryTermId</c>/<c>EntryTerm</c>: the term new admits start (the first term unless set).</summary>
+public sealed record AdmissionSettingsDto(Guid SessionId, string Session, bool IsOpen, decimal FormFee, int ExamWindowDays, string? Instructions, decimal? CutOffMark,
+    Guid? EntryTermId, string? EntryTerm, DateOnly? EntryStartsOn);
 
 /// <summary>An application as the family and staff see it. <c>ExamWindowEndsOn</c> is set once the form is paid for.</summary>
 public sealed record ApplicationDto(
@@ -76,6 +78,14 @@ public static class AdmissionErrors
 
 internal static class AdmissionQueries
 {
+    /// <summary>The term new admits of a session start in: the configured entry term, else the session's first term.</summary>
+    public static async Task<Domain.Academics.Term?> EntryTermAsync(this IAppDbContext db, Guid sessionId, Guid? overrideTermId, CancellationToken ct)
+    {
+        var configured = overrideTermId ?? await db.AdmissionSettings.Where(s => s.SessionId == sessionId).Select(s => s.EntryTermId).FirstOrDefaultAsync(ct);
+        var terms = db.Terms.AsNoTracking().Include(t => t.Session).Where(t => t.SessionId == sessionId);
+        return (configured is { } id ? await terms.FirstOrDefaultAsync(t => t.Id == id, ct) : null) ?? await terms.OrderBy(t => t.StartsOn).FirstOrDefaultAsync(ct);
+    }
+
     /// <summary>The family's own application (tracked), or null.</summary>
     public static Task<AdmissionApplication?> MineAsync(this IAppDbContext db, Guid id, Guid? userId, CancellationToken ct) =>
         db.Applications.FirstOrDefaultAsync(a => a.Id == id && a.ApplicantUserId == userId, ct);

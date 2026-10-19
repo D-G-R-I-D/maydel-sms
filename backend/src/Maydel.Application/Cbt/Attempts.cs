@@ -46,8 +46,9 @@ public sealed class Attempts(IAppDbContext db, ICurrentUser me, ISchoolClock clo
         var test = await db.CbtTests.AsNoTracking().FirstAsync(t => t.Id == attempt.TestId, ct);
         var questions = await QuestionsAsync(attempt, ct);
         var sectionIndex = test.Sections.OrderBy(s => s.Order).Select((s, i) => (s.Id, i)).ToDictionary(x => x.Id, x => x.i);
-        // Scores and comments only once the teacher releases the results (E16.6).
+        // Scores and comments only once the teacher releases the results (E16.6), unless the test shows the computer's marks on hand-in.
         var released = test.ResultsReleasedAt is not null && attempt.Status == AttemptStatus.Submitted;
+        var early = !released && test.ShowScoreOnSubmit && attempt.Status == AttemptStatus.Submitted;
         var items = attempt.Items.OrderBy(i => i.Order).Select(i =>
         {
             var q = questions[i.QuestionId];
@@ -56,16 +57,19 @@ public sealed class Attempts(IAppDbContext db, ICurrentUser me, ISchoolClock clo
                 q.ImagePath is null ? null : $"/api/student/attempts/{attempt.Id}/items/{i.Id}/image", i.Marks,
                 [.. i.OptionOrder.Where(options.ContainsKey).Select(o => new PaperOption(o, options[o]))],
                 i.AnswerOptionIds, i.AnswerTrueFalse, i.AnswerText, i.AnsweredAt is not null,
-                released ? i.Score : null, released ? i.TeacherComment : null);
+                released ? i.Score : early ? i.AutoScore : null, released ? i.TeacherComment : null);
         }).ToList();
         var now = Now;
         var remaining = attempt.Status == AttemptStatus.InProgress ? Math.Max(0, (int)(attempt.DeadlineAt - now).TotalSeconds) : 0;
         return new AttemptPaper(attempt.Id, test.Id, test.Title, test.Instructions, attempt.Status, attempt.StartedAt, attempt.DeadlineAt, now, remaining,
             includeToken && attempt.Status == AttemptStatus.InProgress ? attempt.SessionToken : null,
             [.. test.Sections.OrderBy(s => s.Order).Select((s, i) => new PaperSection(i, s.Title, s.Instructions, s.Kind, s.MarksPerQuestion))],
-            items, items.Count(i => i.Answered), attempt.SubmittedAt, attempt.AutoSubmitted, released, released ? attempt.TotalScore : null,
-            attempt.Items.Sum(i => i.Marks));
+            items, items.Count(i => i.Answered), attempt.SubmittedAt, attempt.AutoSubmitted, released,
+            released ? attempt.TotalScore : early ? EarlyScore(attempt) : null, attempt.Items.Sum(i => i.Marks), early && attempt.NeedsMarking > 0);
     }
+
+    /// <summary>The computer-marked total (teacher-marked parts count as 0 until marked).</summary>
+    public static decimal EarlyScore(TestAttempt attempt) => attempt.Items.Sum(i => i.Score ?? 0);
 
     /// <summary>A student's best fully-marked attempt at a test (ties: the earlier one), or null.</summary>
     public static TestAttempt? Best(IEnumerable<TestAttempt> attempts) =>

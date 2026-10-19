@@ -405,6 +405,9 @@ public class AdmissionSettings : Entity
     /// <summary>The pass mark for the entrance exam (percentage); null until the admin sets it (E11.7).</summary>
     public decimal? CutOffMark { get; set; }
 
+    /// <summary>The term new admits start in (2nd/3rd-term intakes); null = the session's first term.</summary>
+    public Guid? EntryTermId { get; set; }
+
     public Guid SessionId { get; set; }
     public bool IsOpen { get; set; }
     public decimal FormFee { get; set; }

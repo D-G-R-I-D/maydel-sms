@@ -29,8 +29,11 @@ internal static class AdmissionsKit
     {
         var admin = await Api.ClientAsync(Roles.Admin);
         var y = year ?? Interlocked.Increment(ref _year);
-        var session = (await (await admin.PostAsJsonAsync("/api/academics/sessions", new { name = $"{y}/{y + 1}", startsOn = $"{y}-09-13", endsOn = $"{y + 1}-07-23" }))
-            .Content.ReadFromJsonAsync<SessionDto>(Json.Options))!;
+        var created = await admin.PostAsJsonAsync("/api/academics/sessions", new { name = $"{y}/{y + 1}", startsOn = $"{y}-09-13", endsOn = $"{y + 1}-07-23" });
+        // A fixed year (e.g. 2027, near the fake clock) may already exist from another test: reuse it.
+        var session = created.IsSuccessStatusCode
+            ? (await created.Content.ReadFromJsonAsync<SessionDto>(Json.Options))!
+            : (await admin.GetFromJsonAsync<List<SessionDto>>("/api/academics/sessions", Json.Options))!.Single(x => x.Name == $"{y}/{y + 1}");
         (await admin.PutAsJsonAsync("/api/admissions/settings", new { sessionId = session.Id, isOpen = true, formFee = 5000, examWindowDays = 5 })).EnsureSuccessStatusCode();
         return session.Id;
     }
