@@ -118,6 +118,6 @@ public sealed class Tests(IAppDbContext db, AccessRules access)
         test.ClassRoomIds = [.. (input.ClassRoomIds ?? []).Distinct()];
         (test.DurationMinutes, test.OpensAt, test.ClosesAt, test.MaxAttempts, test.ShuffleQuestions, test.ShuffleOptions, test.ShowScoreOnSubmit) =
             (input.DurationMinutes, input.OpensAt.ToUniversalTime(), input.ClosesAt.ToUniversalTime(), input.MaxAttempts, input.ShuffleQuestions, input.ShuffleOptions,
-                input.ShowScoreOnSubmit);
+                input.ShowScoreOnSubmit ?? false);
     }
 }

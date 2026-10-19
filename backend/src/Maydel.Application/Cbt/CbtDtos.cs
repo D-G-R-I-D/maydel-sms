@@ -26,7 +26,7 @@ public sealed record AuthoringScope(Guid SubjectId, string Subject, Guid ClassLe
 public sealed record TestInput(
     string Title, string? Instructions, Guid SubjectId, Guid ClassLevelId, Guid TermId, Guid? ComponentId, IReadOnlyList<Guid> ClassRoomIds,
     int DurationMinutes, DateTimeOffset OpensAt, DateTimeOffset ClosesAt, int MaxAttempts = 1, bool ShuffleQuestions = true, bool ShuffleOptions = true,
-    bool ShowScoreOnSubmit = false);
+    bool? ShowScoreOnSubmit = null);
 
 /// <summary>A section: one kind of question, marks per question, and fixed questions or a random draw from the bank.</summary>
 public sealed record SectionInput(

@@ -26643,8 +26643,10 @@
             "default": true
           },
           "showScoreOnSubmit": {
-            "type": "boolean",
-            "default": false
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },

@@ -5773,8 +5773,7 @@ export interface components {
             shuffleQuestions: boolean;
             /** @default true */
             shuffleOptions: boolean;
-            /** @default false */
-            showScoreOnSubmit: boolean;
+            showScoreOnSubmit?: null | boolean;
         };
         /** @enum {unknown} */
         TestStatus: "Draft" | "Published";
