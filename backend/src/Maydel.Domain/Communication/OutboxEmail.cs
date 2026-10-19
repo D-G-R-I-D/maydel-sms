@@ -21,6 +21,9 @@ public enum EmailKind
 
     /// <summary>An admission offer: the admission letter PDF is attached at send time, while the offer stands.</summary>
     AdmissionOffer,
+
+    /// <summary>A website contact form message, forwarded to the school's address.</summary>
+    ContactForm,
 }
 
 public enum EmailStatus

@@ -13,10 +13,17 @@ public enum Audience
     Everyone = Public | Parents | Students | Staff,
 }
 
-/// <summary>News / notices. Public ones also appear on the website's news section.</summary>
-public class Announcement : Entity
+/// <summary>
+/// News and notices (E7.3, E7.9, E7.10, E12.1). Public ones appear on the website: in the news section, the envelope of notices
+/// (inside their date window), the homepage carousel and the ticker. Drafts until published.
+/// </summary>
+public partial class Announcement : Entity
 {
     public required string Title { get; set; }
+
+    /// <summary>The web address part, e.g. "inter-house-sports-2026"; fixed once published so links keep working.</summary>
+    public string Slug { get; set; } = "";
+    public string? Summary { get; set; }
     public required string Body { get; set; }
     public string? Category { get; set; }
     public string? ImagePath { get; set; }
@@ -24,10 +31,60 @@ public class Announcement : Entity
     public bool IsPinned { get; set; }
     public DateTimeOffset? PublishedAt { get; set; }
     public Guid? AuthorUserId { get; set; }
+
+    /// <summary>Notice window: shown in the envelope (and pops up when featured) from/until these days; null = no limit.</summary>
+    public DateOnly? ShowFrom { get; set; }
+    public DateOnly? ShowUntil { get; set; }
+
+    /// <summary>Pops up once per visitor (until edited) as a dismissible message (E7.10).</summary>
+    public bool IsFeatured { get; set; }
+    public string? LinkUrl { get; set; }
+    public string? LinkText { get; set; }
+    public bool InTicker { get; set; }
+    public bool InCarousel { get; set; }
+
+    public bool IsPublic => PublishedAt is not null && Audience.HasFlag(Audience.Public);
+
+    public bool IsShowingOn(DateOnly today) => (ShowFrom is null || ShowFrom <= today) && (ShowUntil is null || ShowUntil >= today);
+
+    [System.Text.RegularExpressions.GeneratedRegex("[^a-z0-9]+")]
+    private static partial System.Text.RegularExpressions.Regex NonSlug();
+
+    /// <summary>"Inter-House Sports 2026!" → "inter-house-sports-2026".</summary>
+    public static string SlugFor(string title)
+    {
+        var slug = NonSlug().Replace(title.Trim().ToLowerInvariant(), "-").Trim('-');
+        if (slug.Length > 80) slug = slug[..80].TrimEnd('-');
+        return slug.Length == 0 ? "post" : slug;
+    }
+
+    public DomainError? Check()
+    {
+        Title = Title.Trim();
+        if (Title.Length is 0 or > 200) return new("news.title", "Give it a title (up to 200 characters).", "title");
+        if (string.IsNullOrWhiteSpace(Body)) return new("news.body", "Write the content.", "body");
+        if (Audience == Audience.None) return new("news.audience", "Choose who sees it.", "audience");
+        if (ShowFrom is { } from && ShowUntil is { } until && until < from) return new("news.window", "The end date must be on or after the start date.", "showUntil");
+        if (LinkUrl is { } url && !(Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Scheme is "https" or "http") && !url.StartsWith('/'))
+            return new("news.link", "The link must be a web address (https://…) or a page on the site (/admissions).", "linkUrl");
+        if (LinkUrl is not null && string.IsNullOrWhiteSpace(LinkText)) LinkText = "Learn more";
+        if ((InCarousel || InTicker || IsFeatured) && !Audience.HasFlag(Audience.Public))
+            return new("news.public", "Only public posts can appear on the website's carousel, ticker or pop-up.", "audience");
+        return null;
+    }
 }
 
 public class SchoolEvent : Entity
 {
+    public DomainError? Check()
+    {
+        Title = Title.Trim();
+        if (Title.Length is 0 or > 200) return new("event.title", "Give the event a title (up to 200 characters).", "title");
+        if (EndsAt is { } end && end < StartsAt) return new("event.end", "The event must end after it starts.", "endsAt");
+        if (Audience == Audience.None) return new("event.audience", "Choose who sees it.", "audience");
+        return null;
+    }
+
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset StartsAt { get; set; }

@@ -92,18 +92,18 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 Rebuild the existing design in Next.js with improved IA, performance and accessibility — not a copy.
 - **E7.1** Pages: Home, About (story, vision/mission, values, founder), Academics/Programmes (Creche → SSS, curriculum), Admissions (process, apply form, fees guide, calendar), Parents (hours, transport, CCTV/security, uniform, meals, clubs, policies, FAQ), Staff, Gallery, News & Events, Contact (form, map, WhatsApp).
 - **E7.2** Apply form → creates Admission Application (E11) with reference number shown to the parent. AC: spam protection (rate limit + honeypot; Turnstile if abused).
-- **E7.3** News, events, gallery, staff profiles managed in admin (no code changes to publish).
+- **E7.3** ✅ *API 2026-10-19 (posts with drafts/slugs/pictures, events, gallery albums, staff on site, contact inbox).* News, events, gallery, staff profiles managed in admin (no code changes to publish).
 - **E7.4** SEO: per-page metadata, Open Graph, `sitemap.xml`, `robots.txt`, JSON-LD `School` schema, canonical URLs.
 - **E7.5** Accessibility WCAG 2.2 AA: keyboard nav, focus states, contrast, alt text, reduced-motion. AC: axe has zero serious violations.
 - **E7.6** Light/dark theme respecting system preference.
 - **E7.7** Performance: images via `next/image` (AVIF/WebP, responsive), fonts self-hosted via `next/font`. AC: Lighthouse mobile ≥ 90.
 - **E7.8** *(added 2026-10-17)* **Main site + portal on one domain.** Public website on `www.<domain>`, the portal (staff console + parents/students) on `portal.<domain>`. One Next.js app, routing by host in middleware, so there's one deploy, shared design and one BFF. Auth cookies are scoped to the portal host only, and the public site never sees them. AC: `www` serves only public pages; `portal` serves sign-in and the app; canonical URLs and sitemaps per host; a "Portal" button on the website.
-- **E7.9** *(added 2026-10-17)* **Homepage highlights.**
+- **E7.9** ✅ *API 2026-10-19 (highlights endpoint: carousel slides + ticker).* *(added 2026-10-17)* **Homepage highlights.**
   - An auto-advancing carousel of featured news and gallery photos chosen in admin (right-to-left slide, about 6 s).
   - Pauses on hover, focus or touch; swipe and arrow keys; visible dots; **no autoplay when the user prefers reduced motion**.
   - Plus a slim scrolling news ticker for short notices.
   - AC: keyboard-operable; doesn't shift layout; images optimised.
-- **E7.10** *(added 2026-10-17)* **Public notices envelope.**
+- **E7.10** ✅ *API 2026-10-19 (notices with window, pop-up flag, version for once-per-visitor).* *(added 2026-10-17)* **Public notices envelope.**
   - An envelope icon in the website header with a badge counting **unread** notices. Unread is stored per browser, so no account is needed.
   - Notices marked *featured* pop up once as a dismissible message, with an optional call-to-action link (e.g. "Admission forms now on sale → Buy form").
   - Admin sets title, body, link, start/end dates and audience *Public* (E12.1).
