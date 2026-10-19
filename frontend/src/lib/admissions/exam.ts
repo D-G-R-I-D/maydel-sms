@@ -1,4 +1,7 @@
 import type { components } from "@/lib/api/schema";
+import { lagosIso } from "@/lib/time/lagos";
+
+export { lagosIso, toLagosParts } from "@/lib/time/lagos";
 
 /** E11.6–E11.8: entrance exam sittings, scores, results and offers. Times are UTC from the API, shown in Lagos time. */
 
@@ -24,18 +27,6 @@ export function formatSlotRange(startIso: string, endIso: string): string {
 }
 
 export const modeLabel: Record<ExamMode, string> = { Paper: "Paper", Cbt: "Computer-based (CBT)" };
-
-/** Lagos is UTC+1 all year (no DST), so a local date + time → ISO with +01:00. */
-export function lagosIso(date: string, time: string): string {
-  return `${date}T${time}:00+01:00`;
-}
-
-/** The Lagos date ("2026-10-24") and time ("09:00") of a UTC instant, for prefilling the sitting form. */
-export function toLagosParts(iso: string): { date: string; time: string } {
-  const shifted = new Date(new Date(iso).getTime() + 60 * 60 * 1000);
-  const s = shifted.toISOString();
-  return { date: s.slice(0, 10), time: s.slice(11, 16) };
-}
 
 export type SlotInput = { date: string; time: string; durationMinutes: string; venue: string; mode: ExamMode; capacity: string; notes: string };
 export type SlotErrors = Partial<Record<keyof SlotInput, string>>;

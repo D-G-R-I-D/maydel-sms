@@ -38,6 +38,8 @@ const pages = [
   "/admin/admissions/exams",
   "/admin/admissions/results",
   "/admin/cbt",
+  "/admin/tests",
+  "/admin/tests/new",
   "/admin/audit",
 ];
 
