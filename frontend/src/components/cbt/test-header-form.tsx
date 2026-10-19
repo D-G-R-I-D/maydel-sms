@@ -38,7 +38,7 @@ const serverField: Record<string, FieldPath<Values>> = {
 
 /**
  * E16.2 header step: what the test is, who sits it and when. `test` = editing a draft's details;
- * subject and class are fixed once it has sections. Times are entered in Lagos time.
+ * subject and class are fixed once it has sections. Times are entered in Abuja time (WAT).
  */
 export function TestHeaderForm({
   test,
@@ -203,7 +203,7 @@ export function TestHeaderForm({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-1.5 text-sm font-medium">Window (Lagos time)</legend>
+        <legend className="mb-1.5 text-sm font-medium">Window (Abuja time, WAT)</legend>
         <p className="mb-2 text-xs text-muted">Students can start any time in the window; it must be at least as long as the sitting.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid grid-cols-2 gap-2">

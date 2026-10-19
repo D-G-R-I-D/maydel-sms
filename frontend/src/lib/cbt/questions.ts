@@ -57,7 +57,9 @@ export function firstLine(text: string, max = 140): string {
   return line.length > max ? `${line.slice(0, max - 1).trimEnd()}…` : line;
 }
 
-const option = z.object({ id: z.string().nullable(), text: z.string(), isCorrect: z.boolean() });
+// Tolerant of partial rows (a removed field-array row can linger in a restored draft as { text: "" }),
+// so a kind without options never fails on them; they're normalised before sending.
+const option = z.object({ id: z.string().nullable().default(null), text: z.string().default(""), isCorrect: z.boolean().default(false) });
 
 export const questionSchema = z
   .object({
@@ -121,7 +123,7 @@ export function toInput(v: QuestionFormValues, scope: { subjectId: string; class
     classLevelId: scope.classLevelId,
     kind: v.kind,
     text: v.text.trim(),
-    options: hasOptions(v.kind) ? v.options.map((o) => ({ id: o.id, text: o.text.trim(), isCorrect: o.isCorrect })) : null,
+    options: hasOptions(v.kind) ? v.options.map((o) => ({ id: o.id ?? null, text: (o.text ?? "").trim(), isCorrect: o.isCorrect ?? false })) : null,
     trueFalseAnswer: v.kind === "TrueFalse" ? v.trueFalseAnswer === "true" : null,
     acceptedAnswers: hasAnswers(v.kind) ? v.acceptedAnswers : null,
     markingGuide: hasGuide(v.kind) && v.markingGuide.trim() !== "" ? v.markingGuide.trim() : null,

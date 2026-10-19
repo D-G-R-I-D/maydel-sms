@@ -61,7 +61,7 @@ function SlotForm({ sessionId, slot, close }: { sessionId: string; slot?: ExamSl
         <Field id="slot-date" label="Date" error={errors.date}>
           <Input {...describedBy("slot-date", errors.date)} type="date" value={v.date} onChange={(e) => set({ date: e.target.value })} />
         </Field>
-        <Field id="slot-time" label="Starts at (Lagos time)" error={errors.time}>
+        <Field id="slot-time" label="Starts at (Abuja time, WAT)" error={errors.time}>
           <Input {...describedBy("slot-time", errors.time)} type="time" value={v.time} onChange={(e) => set({ time: e.target.value })} />
         </Field>
         <Field id="slot-duration" label="Duration (minutes)" error={errors.durationMinutes}>

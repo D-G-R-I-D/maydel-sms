@@ -62,7 +62,7 @@ export default async function TestPage({ params }: { params: Promise<{ id: strin
           <p className="font-medium">{t.classRooms.map((c) => c.name).join(", ") || "None chosen"}</p>
         </div>
         <div>
-          <p className="text-muted">Window (Lagos time)</p>
+          <p className="text-muted">Window (Abuja time, WAT)</p>
           <p>
             {formatLagos(t.opensAt)} to {formatLagos(t.closesAt)}
           </p>

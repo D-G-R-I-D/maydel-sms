@@ -142,6 +142,12 @@ export default async function StaffApplicationPage({ params }: { params: Promise
         </div>
       </Card>
 
+      {/* Persistent, because enrolling re-renders the page and closes the Enrol dialog. */}
+      {a.status === "Enrolled" && a.admissionNumber && (
+        <Alert tone="success" title={`${childName} is enrolled as ${a.admissionNumber}`} className="mb-5">
+          The family can sign in to the parent portal with the same account. New-intake fees are billed when you next generate invoices.
+        </Alert>
+      )}
       {!submitted ? (
         <Alert tone="info" title="Not submitted yet" className="mb-5">
           The family is still filling in the form. You&apos;ll see it here once they submit.

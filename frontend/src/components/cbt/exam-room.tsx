@@ -65,6 +65,8 @@ export function ExamRoom({ test }: { test: StudentTest }) {
   const [announcement, setAnnouncement] = useState("");
   const [takenOver, setTakenOver] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
+  // After "Hand in" shows unanswered questions, they stay highlighted in the navigator.
+  const [flagUnanswered, setFlagUnanswered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ autoSubmitted: boolean; problem?: Problem } | null>(null);
 
@@ -425,7 +427,10 @@ export function ExamRoom({ test }: { test: StudentTest }) {
                 <ArrowRight className="size-4" aria-hidden />
               </Button>
             ) : (
-              <Button onClick={() => setConfirmSubmit(true)}>
+              <Button onClick={() => {
+                setConfirmSubmit(true);
+                setFlagUnanswered(true);
+              }}>
                 <Send className="size-4" aria-hidden />
                 Hand in
               </Button>
@@ -447,7 +452,7 @@ export function ExamRoom({ test }: { test: StudentTest }) {
                       aria-label={`Question ${i + 1}, ${done ? "answered" : "not answered"}`}
                       className={cn(
                         "tabular flex size-10 items-center justify-center rounded-input border text-sm",
-                        done ? "border-brand bg-brand text-on-brand" : "border-border bg-surface",
+                        done ? "border-brand bg-brand text-on-brand" : flagUnanswered ? "border-warning bg-warning/15 font-semibold text-warning" : "border-border bg-surface",
                         i === current && "outline-2 outline-offset-2 outline-brand",
                       )}
                     >
@@ -458,7 +463,10 @@ export function ExamRoom({ test }: { test: StudentTest }) {
               })}
             </ol>
           </nav>
-          <Button className="w-full" variant={current === items.length - 1 ? "secondary" : "primary"} onClick={() => setConfirmSubmit(true)}>
+          <Button className="w-full" variant={current === items.length - 1 ? "secondary" : "primary"} onClick={() => {
+                setConfirmSubmit(true);
+                setFlagUnanswered(true);
+              }}>
             <Send className="size-4" aria-hidden />
             Hand in
           </Button>
@@ -467,7 +475,11 @@ export function ExamRoom({ test }: { test: StudentTest }) {
 
       <ConfirmDialog
         open={confirmSubmit}
-        onOpenChange={setConfirmSubmit}
+        onOpenChange={(v) => {
+          setConfirmSubmit(v);
+          if (v) setFlagUnanswered(true);
+        }}
+        cancelLabel={left.length > 0 ? "Go back" : "Cancel"}
         title="Hand in your test?"
         confirmLabel="Hand in"
         pendingLabel="Handing in…"
@@ -480,7 +492,10 @@ export function ExamRoom({ test }: { test: StudentTest }) {
           <p>You&apos;ve answered every question. You can&apos;t change your answers after handing in.</p>
         ) : (
           <p>
-            {left.length === 1 ? "Question" : "Questions"} {listNumbers(left)} {left.length === 1 ? "isn't" : "aren't"} answered yet. You can&apos;t change your answers after handing in.
+            <span className="font-medium text-text">
+              {left.length} unanswered: {listNumbers(left)}.
+            </span>{" "}
+            Go back to answer {left.length === 1 ? "it" : "them"} (they&apos;re highlighted), or hand in now. You can&apos;t change your answers after handing in.
           </p>
         )}
       </ConfirmDialog>

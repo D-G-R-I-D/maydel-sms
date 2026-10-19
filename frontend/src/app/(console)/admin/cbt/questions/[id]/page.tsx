@@ -16,8 +16,9 @@ export const metadata: Metadata = { title: "Question" };
 const timeFormat = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Africa/Lagos" });
 
 /** E16.1: edit one question (or archive it). Others get 404, so they can't tell it exists. */
-export default async function QuestionPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuestionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params;
+  const fromNew = (await searchParams).from === "new";
   const user = await requireSessionUser();
   if (!hasAnyRole(user.roles, ["Admin", "Teacher"])) {
     return (
@@ -48,10 +49,21 @@ export default async function QuestionPage({ params }: { params: Promise<{ id: s
 
   return (
     <>
-      <Link href={bankHref(q.subjectId, q.classLevelId)} className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-brand hover:underline">
-        <ArrowLeft className="size-4" aria-hidden />
-        {q.subject} · {q.classLevel}
-      </Link>
+      {fromNew ? (
+        <Link
+          data-keeps-draft
+          href={`/admin/cbt/questions/new?${new URLSearchParams({ subjectId: q.subjectId, classLevelId: q.classLevelId }).toString()}`}
+          className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-brand hover:underline"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          Back to the question you were writing
+        </Link>
+      ) : (
+        <Link href={bankHref(q.subjectId, q.classLevelId)} className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-brand hover:underline">
+          <ArrowLeft className="size-4" aria-hidden />
+          {q.subject} · {q.classLevel}
+        </Link>
+      )}
       <PageHeader
         title="Edit question"
         description={

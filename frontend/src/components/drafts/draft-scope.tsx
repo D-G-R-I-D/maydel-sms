@@ -26,6 +26,8 @@ export function DraftScope({ userId, children }: { userId: string; children: Rea
       if (!hasUnsaved() || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = (e.target as Element | null)?.closest?.("a[href]");
       if (!(a instanceof HTMLAnchorElement) || a.target === "_blank" || a.hasAttribute("download")) return;
+      // In-app links that come back to the draft (e.g. "check an earlier question") keep it without asking.
+      if (a.hasAttribute("data-keeps-draft")) return;
       const url = new URL(a.href, location.href);
       if (url.origin !== location.origin || (url.pathname === location.pathname && url.search === location.search)) return;
       if (!window.confirm(LEAVE_MESSAGE)) {

@@ -36,6 +36,11 @@ describe("question rules", () => {
     expect(errorsOf({ ...emptyValues(), kind: "ShortAnswer", text: "Name a planet." })).toEqual({});
   });
 
+  it("ignores a partial option row left in a restored draft when the kind has no options", () => {
+    const v = { ...emptyValues(), kind: "FillInTheGap" as const, text: "The capital is ___.", acceptedAnswers: ["Abuja"], options: [...emptyValues().options, { text: "" } as never] };
+    expect(errorsOf(v)).toEqual({});
+  });
+
   it("sends only what the kind uses, keeping option ids", () => {
     const v: QuestionFormValues = { ...emptyValues(), text: " Q ", topic: " ", options: [{ id: "a", text: " A ", isCorrect: true }, { id: null, text: "B", isCorrect: false }], acceptedAnswers: ["stale"], markingGuide: "stale" };
     expect(toInput(v, scope)).toEqual({ ...scope, kind: "Objective", text: "Q", options: [{ id: "a", text: "A", isCorrect: true }, { id: null, text: "B", isCorrect: false }], trueFalseAnswer: null, acceptedAnswers: null, markingGuide: null, topic: null, difficulty: "Medium" });

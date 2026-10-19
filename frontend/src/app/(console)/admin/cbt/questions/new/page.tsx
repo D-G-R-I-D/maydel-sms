@@ -6,7 +6,7 @@ import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { GUID } from "@/lib/media/binary-proxy";
-import { bankHref } from "@/lib/cbt/questions";
+import { bankHref, firstLine, kindLabel } from "@/lib/cbt/questions";
 import { Card, PageHeader } from "@/components/ui/primitives";
 import { AccessDenied, ProblemState } from "@/components/ui/states";
 import { QuestionEditor } from "@/components/cbt/question-editor";
@@ -39,9 +39,10 @@ export default async function NewQuestionPage({ searchParams }: { searchParams: 
       </>
     );
   }
-  const [scopes, topics] = await Promise.all([
+  const [scopes, topics, recent] = await Promise.all([
     load((api) => api.GET("/api/cbt/scopes")),
     load((api) => api.GET("/api/cbt/topics", { params: { query: { subjectId, classLevelId } } })),
+    load((api) => api.GET("/api/cbt/questions", { params: { query: { subjectId, classLevelId, page: 1, pageSize: 8 } } })),
   ]);
   if (!scopes.ok) {
     return (
@@ -71,7 +72,30 @@ export default async function NewQuestionPage({ searchParams }: { searchParams: 
     <>
       {back}
       <PageHeader title="Add question" description={`${scope.subject} · ${scope.classLevel}`} />
-      <QuestionEditor scope={scope} question={null} topics={topics.ok ? topics.data : []} />
+      <div className="grid gap-5 lg:grid-cols-[1fr_17rem] lg:items-start">
+        <QuestionEditor scope={scope} question={null} topics={topics.ok ? topics.data : []} />
+        {/* Earlier questions open in the editor; the one being written here is kept as a draft and restored on return. */}
+        {recent.ok && recent.data.items.length > 0 && (
+          <aside className="lg:sticky lg:top-4" aria-labelledby="recent-title">
+            <Card className="p-4">
+              <h2 id="recent-title" className="font-display font-semibold">
+                Recently added
+              </h2>
+              <p className="mt-0.5 text-xs text-muted">Open one to check or fix it. The question you&apos;re writing is kept.</p>
+              <ol className="mt-3 space-y-1">
+                {recent.data.items.map((q) => (
+                  <li key={q.id}>
+                    <Link href={`/admin/cbt/questions/${q.id}?from=new`} data-keeps-draft className="block rounded-input px-2 py-1.5 text-sm hover:bg-surface-2 hover:text-brand">
+                      <span className="line-clamp-2 break-words">{firstLine(q.text, 90)}</span>
+                      <span className="text-xs text-muted">{kindLabel[q.kind]}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          </aside>
+        )}
+      </div>
     </>
   );
 }
