@@ -522,6 +522,9 @@ internal sealed class TestAttemptConfig : IEntityTypeConfiguration<Domain.Cbt.Te
         b.HasIndex(x => new { x.TestId, x.StudentId, x.Number }).IsUnique();
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(12);
         b.Property(x => x.SessionToken).HasMaxLength(64);
+        b.Ignore(x => x.IsFullyMarked);
+        b.Ignore(x => x.TotalScore);
+        b.Ignore(x => x.NeedsMarking);
         b.HasOne<Domain.Cbt.CbtTest>().WithMany().HasForeignKey(x => x.TestId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
         b.OwnsMany(x => x.Items, i =>
@@ -532,6 +535,9 @@ internal sealed class TestAttemptConfig : IEntityTypeConfiguration<Domain.Cbt.Te
             i.Property(x => x.Id).ValueGeneratedNever();
             i.Property(x => x.Marks).HasPrecision(6, 2);
             i.Property(x => x.AutoScore).HasPrecision(6, 2);
+            i.Property(x => x.TeacherScore).HasPrecision(6, 2);
+            i.Property(x => x.TeacherComment).HasMaxLength(1000);
+            i.Ignore(x => x.Score);
             i.Property(x => x.AnswerText).HasMaxLength(5000);
         });
         b.OwnsMany(x => x.Events, e =>

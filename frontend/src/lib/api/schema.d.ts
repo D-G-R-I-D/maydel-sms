@@ -996,6 +996,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/children/{studentId}/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListChildTests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/children/{studentId}/results": {
         parameters: {
             query?: never;
@@ -2324,6 +2340,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cbt/tests/{id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListCbtTestAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/tests/{id}/questions/{questionId}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListCbtQuestionResponses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/attempts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetCbtAttemptReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/attempts/{id}/items/{itemId}/mark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MarkCbtAnswer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/tests/{id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReleaseCbtResults"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/tests/{id}/gradebook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PreviewCbtGradebookPush"];
+        put?: never;
+        post: operations["PushCbtToGradebook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/tests/{id}/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetCbtTestAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/student/tests": {
         parameters: {
             query?: never;
@@ -2598,7 +2726,83 @@ export interface components {
             /** Format: date-time */
             submittedAt: null | string;
             autoSubmitted: boolean;
+            released: boolean;
+            /** Format: double */
+            score: null | number;
+            /** Format: double */
+            totalMarks: number;
         };
+        AttemptReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            testId: string;
+            /** Format: uuid */
+            studentId: string;
+            studentName: string;
+            admissionNumber: string;
+            /** Format: int32 */
+            number: number;
+            status: components["schemas"]["AttemptStatus"];
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            deadlineAt: string;
+            /** Format: date-time */
+            submittedAt: null | string;
+            autoSubmitted: boolean;
+            events: components["schemas"]["IntegrityEventDto"][];
+            items: components["schemas"]["ReviewItem"][];
+            /** Format: double */
+            totalMarks: number;
+            /** Format: double */
+            score: null | number;
+            /** Format: int32 */
+            needsMarking: number;
+            canMark: boolean;
+        };
+        AttemptRow: {
+            /** Format: uuid */
+            studentId: string;
+            name: string;
+            admissionNumber: string;
+            classRoom: null | string;
+            /** Format: uuid */
+            attemptId: null | string;
+            /** Format: int32 */
+            attempts: number;
+            state: components["schemas"]["AttemptRowState"];
+            /** Format: date-time */
+            startedAt: null | string;
+            /** Format: date-time */
+            submittedAt: null | string;
+            autoSubmitted: boolean;
+            /** Format: int32 */
+            blurs: number;
+            /** Format: int32 */
+            takeOvers: number;
+            /** Format: double */
+            autoScore: null | number;
+            /** Format: double */
+            score: null | number;
+            /** Format: int32 */
+            needsMarking: number;
+        };
+        AttemptRows: {
+            /** Format: uuid */
+            testId: string;
+            /** Format: double */
+            totalMarks: number;
+            /** Format: date-time */
+            resultsReleasedAt: null | string;
+            /** Format: int32 */
+            sitting: number;
+            /** Format: int32 */
+            needsMarking: number;
+            students: components["schemas"]["AttemptRow"][];
+        };
+        /** @enum {unknown} */
+        AttemptRowState: "NotStarted" | "InProgress" | "Submitted";
         /** @enum {unknown} */
         AttemptStatus: "InProgress" | "Submitted";
         AttendanceEntry: {
@@ -2674,6 +2878,20 @@ export interface components {
         ChangePasswordCommand: {
             currentPassword: string;
             newPassword: string;
+        };
+        ChildTestResult: {
+            /** Format: uuid */
+            testId: string;
+            title: string;
+            subject: string;
+            /** Format: date-time */
+            submittedAt: null | string;
+            /** Format: double */
+            score: number;
+            /** Format: double */
+            totalMarks: number;
+            /** Format: double */
+            percent: number;
         };
         ClassAttendanceSummary: {
             /** Format: uuid */
@@ -2765,6 +2983,13 @@ export interface components {
             rows: components["schemas"]["ClassReportRow"][];
             /** Format: date-time */
             lastPublishedAt: null | string;
+        };
+        ClassResult: {
+            classRoom: string;
+            /** Format: int32 */
+            students: number;
+            /** Format: double */
+            mean: number;
         };
         ClassRoomBrief: {
             /** Format: uuid */
@@ -3116,6 +3341,29 @@ export interface components {
             maxScore: number;
             remark: string;
         };
+        GradebookPreview: {
+            /** Format: uuid */
+            testId: string;
+            component: string;
+            /** Format: double */
+            componentMax: number;
+            /** Format: double */
+            totalMarks: number;
+            rows: components["schemas"]["GradebookRow"][];
+        };
+        GradebookRow: {
+            /** Format: uuid */
+            studentId: string;
+            name: string;
+            classRoom: null | string;
+            /** Format: double */
+            raw: number;
+            /** Format: double */
+            scaled: number;
+            /** Format: double */
+            current: null | number;
+            state: components["schemas"]["PushState"];
+        };
         GradeSheet: {
             /** Format: uuid */
             classRoomId: string;
@@ -3275,6 +3523,11 @@ export interface components {
             enabled: boolean;
             instalments: components["schemas"]["InstalmentDto"][];
         };
+        IntegrityEventDto: {
+            kind: components["schemas"]["IntegrityEventKind"];
+            /** Format: date-time */
+            at: string;
+        };
         /** @enum {unknown} */
         IntegrityEventKind: "Blur" | "Focus" | "TakeOver";
         InvoiceDetail: {
@@ -3363,6 +3616,22 @@ export interface components {
             amountPaid: number;
             issuedTo: null | string;
         };
+        ItemAnalysis: {
+            /** Format: uuid */
+            questionId: string;
+            kind: components["schemas"]["QuestionKind"];
+            text: string;
+            section: string;
+            /** Format: double */
+            marks: number;
+            /** Format: int32 */
+            responses: number;
+            /** Format: int32 */
+            answered: number;
+            /** Format: double */
+            facility: null | number;
+            options: components["schemas"]["OptionPicks"][];
+        };
         JsonElement: unknown;
         LoginCommand: {
             userName: string;
@@ -3370,6 +3639,11 @@ export interface components {
         };
         LogoutCommand: {
             refreshToken: string;
+        };
+        MarkInput: {
+            /** Format: double */
+            score: number;
+            comment: null | string;
         };
         MeResponse: {
             /** Format: uuid */
@@ -3457,6 +3731,14 @@ export interface components {
             id: null | string;
             text: string;
             isCorrect: boolean;
+        };
+        OptionPicks: {
+            /** Format: uuid */
+            optionId: string;
+            text: string;
+            isCorrect: boolean;
+            /** Format: int32 */
+            picks: number;
         };
         Outcome: {
             reference: string;
@@ -3572,6 +3854,9 @@ export interface components {
             answerTrueFalse: null | boolean;
             answerText: null | string;
             answered: boolean;
+            /** Format: double */
+            score: null | number;
+            comment: null | string;
         };
         PaperOption: {
             /** Format: uuid */
@@ -3766,6 +4051,16 @@ export interface components {
             /** Format: int32 */
             alreadyPublished: number;
         };
+        PushInput: {
+            studentIds: null | string[];
+        };
+        PushResult: {
+            /** Format: int32 */
+            pushed: number;
+            skipped: components["schemas"]["GradebookRow"][];
+        };
+        /** @enum {unknown} */
+        PushState: "Ready" | "ReportPublished" | "NotInClass" | "NotYourClass";
         QuestionBrief: {
             /** Format: uuid */
             id: string;
@@ -3818,6 +4113,31 @@ export interface components {
         };
         /** @enum {unknown} */
         QuestionKind: "Objective" | "MultiSelect" | "TrueFalse" | "FillInTheGap" | "ShortAnswer" | "Theory";
+        QuestionResponse: {
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            itemId: string;
+            studentName: string;
+            /** Format: double */
+            marks: number;
+            answerText: null | string;
+            answered: boolean;
+            /** Format: double */
+            autoScore: null | number;
+            /** Format: double */
+            score: null | number;
+            comment: null | string;
+        };
+        QuestionResponses: {
+            /** Format: uuid */
+            questionId: string;
+            kind: components["schemas"]["QuestionKind"];
+            text: string;
+            markingGuide: null | string;
+            acceptedAnswers: string[];
+            responses: components["schemas"]["QuestionResponse"][];
+        };
         /** @enum {unknown} */
         QuestionSource: "Manual" | "Ai";
         RatingKeyEntry: {
@@ -3978,6 +4298,41 @@ export interface components {
             changeFromLastTerm: null | number;
             trend: null | components["schemas"]["Trend"];
         };
+        ReviewItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            order: number;
+            section: string;
+            kind: components["schemas"]["QuestionKind"];
+            /** Format: uuid */
+            questionId: string;
+            text: string;
+            hasImage: boolean;
+            /** Format: double */
+            marks: number;
+            options: components["schemas"]["ReviewOption"][];
+            correctTrueFalse: null | boolean;
+            acceptedAnswers: string[];
+            markingGuide: null | string;
+            answerTrueFalse: null | boolean;
+            answerText: null | string;
+            answered: boolean;
+            /** Format: double */
+            autoScore: null | number;
+            /** Format: double */
+            teacherScore: null | number;
+            /** Format: double */
+            score: null | number;
+            comment: null | string;
+        };
+        ReviewOption: {
+            /** Format: uuid */
+            id: string;
+            text: string;
+            isCorrect: boolean;
+            chosen: boolean;
+        };
         /** @enum {unknown} */
         Role: "Admin" | "Teacher" | "Bursar" | "Parent" | "Student" | "Applicant";
         SaveAdmissionSettingsCommand: {
@@ -4079,6 +4434,14 @@ export interface components {
         };
         /** @enum {unknown} */
         SchoolSection: "Creche" | "Nursery" | "Primary" | "JuniorSecondary" | "SeniorSecondary";
+        ScoreBand: {
+            /** Format: int32 */
+            fromPercent: number;
+            /** Format: int32 */
+            toPercent: number;
+            /** Format: int32 */
+            students: number;
+        };
         ScoreRequest: {
             /** Format: double */
             score: number;
@@ -4365,6 +4728,11 @@ export interface components {
             state: components["schemas"]["StudentTestState"];
             /** Format: uuid */
             activeAttemptId: null | string;
+            resultsReleased: boolean;
+            /** Format: double */
+            score: null | number;
+            /** Format: uuid */
+            resultAttemptId: null | string;
         };
         /** @enum {unknown} */
         StudentTestState: "Upcoming" | "Open" | "InProgress" | "Done" | "Missed";
@@ -4421,6 +4789,25 @@ export interface components {
             /** Format: date */
             midTermEndsOn: null | string;
         };
+        TestAnalytics: {
+            /** Format: uuid */
+            testId: string;
+            /** Format: double */
+            totalMarks: number;
+            /** Format: int32 */
+            students: number;
+            /** Format: double */
+            mean: null | number;
+            /** Format: double */
+            median: null | number;
+            /** Format: double */
+            highest: null | number;
+            /** Format: double */
+            lowest: null | number;
+            distribution: components["schemas"]["ScoreBand"][];
+            byClass: components["schemas"]["ClassResult"][];
+            items: components["schemas"]["ItemAnalysis"][];
+        };
         TestDetail: {
             /** Format: uuid */
             id: string;
@@ -4459,6 +4846,10 @@ export interface components {
             scaling: null | components["schemas"]["ScalingPreview"];
             problems: string[];
             canEdit: boolean;
+            /** Format: date-time */
+            resultsReleasedAt: null | string;
+            /** Format: date-time */
+            gradebookPushedAt: null | string;
         };
         TestInput: {
             title: string;
@@ -8853,6 +9244,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OnlinePaymentResult"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListChildTests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                studentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChildTestResult"][];
                 };
             };
             /** @description Unauthorized */
@@ -14722,6 +15162,453 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListCbtTestAttempts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptRows"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListCbtQuestionResponses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                questionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionResponses"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetCbtAttemptReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptReview"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    MarkCbtAnswer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptReview"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ReleaseCbtResults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestDetail"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PreviewCbtGradebookPush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GradebookPreview"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PushCbtToGradebook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushResult"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetCbtTestAnalytics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestAnalytics"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

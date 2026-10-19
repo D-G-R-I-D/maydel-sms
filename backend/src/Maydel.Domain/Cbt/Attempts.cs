@@ -43,6 +43,27 @@ public class TestAttempt : Entity
 
     public static string NewToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
+    /// <summary>Handed in and every question has a score (computer or teacher).</summary>
+    public bool IsFullyMarked => Status == AttemptStatus.Submitted && Items.All(i => i.Score is not null);
+    public decimal? TotalScore => IsFullyMarked ? Items.Sum(i => i.Score!.Value) : null;
+    public int NeedsMarking => Status == AttemptStatus.Submitted ? Items.Count(i => i.Score is null) : 0;
+
+    /// <summary>
+    /// The teacher marks (or re-marks, overriding the computer) one answer (E16.4). Allowed until results are released.
+    /// </summary>
+    public DomainError? Mark(Guid itemId, decimal score, string? comment, Guid? markedBy, DateTimeOffset now)
+    {
+        if (Status != AttemptStatus.Submitted) return new("attempt.not_submitted", "This attempt hasn't been handed in yet.");
+        var item = Items.FirstOrDefault(i => i.Id == itemId);
+        if (item is null) return new("attempt.item", "That question isn't in this attempt.", "itemId");
+        if (score < 0 || score > item.Marks || decimal.Round(score, 2) != score)
+            return new("attempt.score", $"Give between 0 and {item.Marks:0.##} marks (at most 2 decimal places).", "score");
+        if (comment is { Length: > 1000 }) return new("attempt.comment", "Keep the comment under 1000 characters.", "comment");
+        (item.TeacherScore, item.TeacherComment, item.MarkedAt, item.MarkedByUserId) =
+            (score, string.IsNullOrWhiteSpace(comment) ? null : comment.Trim(), now, markedBy);
+        return null;
+    }
+
     public bool IsOverdue(DateTimeOffset now) => Status == AttemptStatus.InProgress && now > DeadlineAt.AddSeconds(GraceSeconds);
 
     /// <summary>Opens the attempt on this device; any other device's token stops working.</summary>
@@ -114,6 +135,14 @@ public class AttemptItem
 
     /// <summary>Marks earned when the computer marks it; null for teacher-marked questions (E16.4).</summary>
     public decimal? AutoScore { get; set; }
+
+    /// <summary>The teacher's mark: for theory, or to override the computer.</summary>
+    public decimal? TeacherScore { get; set; }
+    public string? TeacherComment { get; set; }
+    public DateTimeOffset? MarkedAt { get; set; }
+    public Guid? MarkedByUserId { get; set; }
+
+    public decimal? Score => TeacherScore ?? AutoScore;
 
     public QuestionAnswer? ToAnswer() => AnsweredAt is null ? null : new QuestionAnswer(AnswerOptionIds, AnswerTrueFalse, AnswerText);
 }
