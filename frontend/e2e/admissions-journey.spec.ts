@@ -133,6 +133,10 @@ test("a family goes from form to enrolment", async ({ page, request }) => {
   await page.goto(`/admin/admissions/exams?sessionId=${sessionId}`);
   await page.getByRole("link").filter({ hasText: `E2E Hall ${suffix}` }).click();
   await page.waitForURL(/\/admin\/admissions\/exams\/[0-9a-f-]+/);
+  // The printable sheet lists the booked child (window.print is stubbed in the test browser).
+  await page.evaluate(() => (window.print = () => {}));
+  await page.getByRole("button", { name: "Print attendance sheet" }).click();
+  await expect(page.getByTestId("attendance-sheet")).toContainText(`Zuri E2E${suffix}`);
   const scoreBox = page.getByLabel(`Score for Zuri E2E${suffix}`, { exact: true });
   await expect(async () => {
     await scoreBox.fill("78.5");

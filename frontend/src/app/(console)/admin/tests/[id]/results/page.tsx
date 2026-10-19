@@ -38,7 +38,13 @@ export default async function TestResultsPage({ params }: { params: Promise<{ id
   const blocker = rows.ok
     ? releaseBlocker({ released: Boolean(t.resultsReleasedAt), closesAt: t.closesAt, now, sitting: rows.data.sitting, needsMarking: rows.data.needsMarking, submitted })
     : "Couldn't load the attempts.";
-  const toMark = analytics.ok ? analytics.data.items.filter((i) => TEACHER_MARKED.has(i.kind) && i.answered > 0) : [];
+  // Teacher-marked questions: the fixed ones from the paper, plus any drawn at random (from analytics).
+  // Analytics only counts fully marked attempts, so it can't be the only source.
+  const toMark = new Map<string, { questionId: string; kind: (typeof t.sections)[number]["kind"]; text: string; section: string; answered: number | null }>();
+  for (const sec of t.sections)
+    for (const q of sec.questions) if (TEACHER_MARKED.has(q.kind)) toMark.set(q.id, { questionId: q.id, kind: q.kind, text: q.text, section: sec.title, answered: null });
+  for (const i of analytics.ok ? analytics.data.items : [])
+    if (TEACHER_MARKED.has(i.kind)) toMark.set(i.questionId, { questionId: i.questionId, kind: i.kind, text: i.text, section: i.section, answered: i.answered });
 
   return (
     <>
@@ -53,7 +59,7 @@ export default async function TestResultsPage({ params }: { params: Promise<{ id
             {(
               [
                 ["Students", students.length],
-                ["Sitting now", rows.data.sitting],
+                ["Still sitting", rows.data.sitting],
                 ["Handed in", submitted],
                 ["Answers to mark", rows.data.needsMarking],
               ] as const
@@ -77,18 +83,19 @@ export default async function TestResultsPage({ params }: { params: Promise<{ id
             {!t.resultsReleasedAt && <ReleaseButton testId={t.id} disabledReason={blocker} students={submitted} />}
           </Card>
 
-          {toMark.length > 0 && (
+          {toMark.size > 0 && submitted > 0 && (
             <Card className="p-5">
               <h2 className="font-display text-lg font-semibold">Mark by question</h2>
               <p className="text-sm text-muted">Mark one question for everyone at a time, so marking stays consistent. Unmarked answers come first.</p>
               <ul className="mt-3 divide-y divide-border">
-                {toMark.map((q) => (
+                {[...toMark.values()].map((q) => (
                   <li key={q.questionId}>
                     <Link href={`/admin/tests/${t.id}/questions/${q.questionId}`} className="group flex flex-wrap items-center gap-2 py-2.5">
                       <span className="min-w-0 flex-1 text-sm break-words group-hover:text-brand">{firstLine(q.text, 120)}</span>
                       <Badge>{kindLabel[q.kind]}</Badge>
                       <span className="tabular text-xs text-muted">
-                        {q.section} · {q.answered} {q.answered === 1 ? "answer" : "answers"}
+                        {q.section}
+                        {q.answered !== null ? ` · ${q.answered} ${q.answered === 1 ? "answer" : "answers"}` : ""}
                       </span>
                     </Link>
                   </li>
@@ -129,7 +136,10 @@ export default async function TestResultsPage({ params }: { params: Promise<{ id
                           </span>
                         </td>
                         <td className="px-3 py-2.5">
-                          <Badge tone={rowStateTone[s.state]}>{rowStateLabel[s.state]}</Badge>
+                          <span className="flex flex-wrap gap-1">
+                            <Badge tone={rowStateTone[s.state]}>{rowStateLabel[s.state]}</Badge>
+                            {s.needsMarking > 0 && <Badge tone="warning">Needs marking ({s.needsMarking})</Badge>}
+                          </span>
                           {s.attempts > 1 && <span className="block text-xs text-muted">{s.attempts} attempts</span>}
                         </td>
                         <td className="px-3 py-2.5 whitespace-nowrap">
@@ -160,13 +170,7 @@ export default async function TestResultsPage({ params }: { params: Promise<{ id
                         <td className="px-4 py-2.5 text-right whitespace-nowrap">
                           {s.attemptId && s.state === "Submitted" && (
                             <Link href={`/admin/tests/${t.id}/attempts/${s.attemptId}`} className="inline-flex items-center gap-2 text-brand hover:underline">
-                              {s.needsMarking > 0 ? (
-                                <>
-                                  Mark <Badge tone="warning">{s.needsMarking} to mark</Badge>
-                                </>
-                              ) : (
-                                "Review"
-                              )}
+                              {s.needsMarking > 0 ? "Mark answers" : "Review"}
                             </Link>
                           )}
                         </td>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, FileQuestion, Plus } from "lucide-react";
+import { ArrowLeft, FileQuestion, Plus, Sparkles } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
@@ -68,10 +68,16 @@ export default async function BankPage({ searchParams }: { searchParams: Promise
     return `/admin/cbt/bank?${q.toString()}`;
   };
   const addButton = (
-    <Link href={`/admin/cbt/questions/new?${scopeQuery}`} className={buttonClasses("primary")}>
-      <Plus className="size-4" aria-hidden />
-      Add question
-    </Link>
+    <span className="flex flex-wrap gap-2">
+      <Link href={`/admin/cbt/ai?${scopeQuery}`} className={buttonClasses("secondary")}>
+        <Sparkles className="size-4" aria-hidden />
+        Write with AI
+      </Link>
+      <Link href={`/admin/cbt/questions/new?${scopeQuery}`} className={buttonClasses("primary")}>
+        <Plus className="size-4" aria-hidden />
+        Add question
+      </Link>
+    </span>
   );
 
   return (

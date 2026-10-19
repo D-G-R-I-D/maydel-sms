@@ -105,7 +105,7 @@ test("a teacher marks, releases and reviews; the student and parent see the resu
   await page.waitForURL(/\/results$/);
   const row = page.getByRole("row").filter({ hasText: STUDENT });
   await expect(row).toContainText("Handed in");
-  await expect(row).toContainText("1 to mark");
+  await expect(row).toContainText("Needs marking (1)");
   await expect(page.getByRole("button", { name: "Release results" })).toBeDisabled();
   await expect(page.getByText(/still open|need marking/).first()).toBeVisible();
 
@@ -122,7 +122,7 @@ test("a teacher marks, releases and reviews; the student and parent see the resu
   await expect(page.getByText(/^Mark saved for /).first()).toBeVisible({ timeout: 30_000 });
 
   await page.goto(`/admin/tests/${testId}/results`);
-  await expect(row).not.toContainText("to mark", { timeout: 30_000 });
+  await expect(row).not.toContainText("Needs marking", { timeout: 30_000 });
   await row.getByRole("link", { name: "Review" }).click();
   await page.waitForURL(/\/attempts\/[0-9a-f-]+$/);
   await expect(page.getByTestId("attempt-score")).toHaveText("5 / 6");

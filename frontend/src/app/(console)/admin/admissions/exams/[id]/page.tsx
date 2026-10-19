@@ -52,7 +52,7 @@ export default async function ExamSittingPage({ params, searchParams }: { params
       <PageHeader
         title={slot ? formatSlotStart(slot.startsAt) : "Exam sitting"}
         description={slot ? `${slot.durationMinutes} min · ${slot.venue} · ${modeLabel[slot.mode]} · ${slot.booked} of ${slot.capacity} booked` : undefined}
-        actions={<PrintButton />}
+        actions={<PrintButton title={slot ? formatSlotStart(slot.startsAt) : "Exam sitting"} subtitle={slot ? `${slot.venue} · ${modeLabel[slot.mode]}` : undefined} candidates={candidates.ok ? candidates.data : []} />}
       />
       <Card className="overflow-hidden">
         {!candidates.ok ? (
