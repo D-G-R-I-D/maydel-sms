@@ -87,6 +87,7 @@ export function ConfirmDialog({
   title,
   children,
   confirmLabel,
+  cancelLabel = "Cancel",
   pendingLabel = "Working…",
   tone = "primary",
   onConfirm,
@@ -99,6 +100,8 @@ export function ConfirmDialog({
   title: string;
   children: ReactNode;
   confirmLabel: string;
+  /** The safe choice, e.g. "Go back". */
+  cancelLabel?: string;
   /** Shown with the crest loader while onConfirm runs, e.g. "Publishing…". */
   pendingLabel?: string;
   tone?: "primary" | "destructive";
@@ -131,7 +134,7 @@ export function ConfirmDialog({
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Dialog.Close asChild>
               <Button variant="secondary" data-cancel disabled={busy}>
-                Cancel
+                {cancelLabel}
               </Button>
             </Dialog.Close>
             <Button

@@ -56,11 +56,16 @@ test("a family goes from form to enrolment", async ({ page, request }) => {
   // Setup through the API (part 1's UI has its own test): register, then pay with a school form code.
   const suffix = `${Date.now() % 1_000_000}`;
   const email = `e2e+j${suffix}@maydel.test`;
+  // Guardians are matched by phone (one guardian per number), so every run needs its own numbers or
+  // enrolment links an earlier run's guardian and won't give this login the Parent role.
+  const digits = () => String(Math.floor(Math.random() * 1e7)).padStart(7, "0");
+  const parentPhone = `0803 ${digits()}`;
+  const fatherPhone = `0805 ${digits()}`;
   const password = `E2e#Journey${suffix}`;
   const info = await admin.get<{ sessionId: string; isOpen: boolean; classLevels: { id: string; name: string }[] }[]>("/api/public/admissions");
   const level = info.find((s) => s.sessionId === sessionId)!.classLevels[0];
   const reg = await request.post(`${API}/api/public/admissions/register`, {
-    data: { parentName: `E2E Journey ${suffix}`, email, phone: "0803 000 0002", password, childFirstName: "Zuri", childLastName: `E2E${suffix}`, childDateOfBirth: null, classLevelId: level.id, sessionId, website: "" },
+    data: { parentName: `E2E Journey ${suffix}`, email, phone: parentPhone, password, childFirstName: "Zuri", childLastName: `E2E${suffix}`, childDateOfBirth: null, classLevelId: level.id, sessionId, website: "" },
   });
   expect(reg.ok()).toBeTruthy();
   const appId: string = (await reg.json()).id;
@@ -85,7 +90,7 @@ test("a family goes from form to enrolment", async ({ page, request }) => {
   await field("Sex").selectOption("Female");
   await field("Home address").fill("E2E: 12 Test Road, Abuja");
   await page.getByLabel("Full name", { exact: true }).first().fill(`E2E Father ${suffix}`);
-  await page.getByLabel("Phone", { exact: true }).first().fill("0803 000 0003");
+  await page.getByLabel("Phone", { exact: true }).first().fill(fatherPhone);
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByText("Draft saved").first()).toBeVisible({ timeout: 30_000 });
   await page.reload();
@@ -110,7 +115,7 @@ test("a family goes from form to enrolment", async ({ page, request }) => {
   const tomorrow = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos" }).format(new Date(Date.now() + 24 * 3600 * 1000));
   const slotDialog = page.getByRole("dialog");
   await slotDialog.getByLabel("Date").fill(tomorrow);
-  await slotDialog.getByLabel("Starts at (Lagos time)").fill("09:00");
+  await slotDialog.getByLabel("Starts at (Abuja time, WAT)").fill("09:00");
   await slotDialog.getByLabel("Venue").fill(`E2E Hall ${suffix}`);
   await slotDialog.getByLabel("Seats").fill("5");
   await slotDialog.getByRole("button", { name: "Add sitting" }).click();
@@ -155,7 +160,7 @@ test("a family goes from form to enrolment", async ({ page, request }) => {
   await expect(page.getByText("Ticked for an offer").first()).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Publish decisions" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Publish decisions" }).click();
-  await expect(page.getByText(/^Published: \d+ offered/).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/^Offer letters sent to \d+ famil/).first()).toBeVisible({ timeout: 60_000 });
 
   // 5. The family accepts the offer.
   await signIn(page, email, password);
@@ -175,7 +180,8 @@ test("a family goes from form to enrolment", async ({ page, request }) => {
   }).toPass({ timeout: 60_000 });
   await page.getByRole("dialog").getByLabel("Class").selectOption("");
   await page.getByRole("dialog").getByRole("button", { name: "Enrol" }).click();
-  await expect(page.getByText(/^Admission number /).first()).toBeVisible({ timeout: 60_000 });
+  // The page's own "enrolled" alert (the info card already showed the number from the offer).
+  await expect(page.getByRole("status").filter({ hasText: /is enrolled as MSS\// })).toBeVisible({ timeout: 60_000 });
   const detail = await admin.get<{ application: { studentId: string | null } }>(`/api/admissions/applications/${appId}/detail`);
   restore.studentId = detail.application.studentId ?? undefined;
 

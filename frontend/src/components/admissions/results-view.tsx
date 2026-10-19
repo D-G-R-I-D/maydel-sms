@@ -6,7 +6,7 @@ import { CheckCheck, Download, MailCheck, Send } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import { cutOffError, type ExamCandidate, type ExamResults } from "@/lib/admissions/exam";
 import { applicationStatusLabel } from "@/lib/admissions/rules";
-import { notifyPassed, publishDecisions, setCutOff, setDecisions } from "@/lib/admissions/actions";
+import { loadExamResults, notifyPassed, publishDecisions, setCutOff, setDecisions } from "@/lib/admissions/actions";
 import { runAction } from "@/lib/client/action";
 import { Badge, Button, Card, Input, buttonClasses, cn } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/states";
@@ -37,6 +37,13 @@ export function ResultsView({ sessionId, initial, csvHref }: { sessionId: string
     const byId = new Map(updated.map((c) => [c.applicationId, c]));
     const fix = (list: ExamCandidate[]) => list.map((c) => byId.get(c.applicationId) ?? c);
     setResults((r) => ({ ...r, taken: fix(r.taken), passed: fix(r.passed), failed: fix(r.failed) }));
+  };
+
+  // Refetch after notify/publish so the rows show "Emailed" and new statuses without a reload.
+  const reload = async () => {
+    const r = await loadExamResults(sessionId).catch(() => null);
+    if (r?.ok) setResults(r.data);
+    startTransition(() => router.refresh());
   };
 
   const decide = async (ids: string[], decision: "Offer" | "Decline" | null, key: string) => {
@@ -197,8 +204,12 @@ export function ResultsView({ sessionId, initial, csvHref }: { sessionId: string
         confirmLabel="Send emails"
         pendingLabel="Queuing…"
         onConfirm={async () => {
-          const r = await runAction(() => notifyPassed(sessionId), { success: (x) => `${x.queued} ${x.queued === 1 ? "email" : "emails"} queued`, onProblem: showError("Couldn't send the emails") });
-          if (r) startTransition(() => router.refresh());
+          const r = await runAction(() => notifyPassed(sessionId), {
+            success: (x) =>
+              x.queued === 0 ? "Everyone who passed has already been emailed." : `Emailed ${x.queued} ${x.queued === 1 ? "family" : "families"}. They'll arrive within a few minutes.`,
+            onProblem: showError("Couldn't send the emails"),
+          });
+          if (r) await reload();
           return r !== null;
         }}
       >
@@ -213,10 +224,11 @@ export function ResultsView({ sessionId, initial, csvHref }: { sessionId: string
         pendingLabel="Publishing…"
         onConfirm={async () => {
           const r = await runAction(() => publishDecisions(sessionId), {
-            success: (x) => `Published: ${x.offered} offered, ${x.notOffered} not offered`,
+            success: (x) =>
+              `Offer letters sent to ${x.offered} ${x.offered === 1 ? "family" : "families"}; ${x.notOffered} regret ${x.notOffered === 1 ? "email" : "emails"} sent. They'll arrive within a few minutes.`,
             onProblem: showError("Couldn't publish decisions"),
           });
-          if (r) startTransition(() => router.refresh());
+          if (r) await reload();
           return r !== null;
         }}
       >

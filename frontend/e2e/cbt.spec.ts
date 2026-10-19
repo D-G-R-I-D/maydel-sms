@@ -77,6 +77,17 @@ test("a teacher builds, previews, edits and archives questions", async ({ page, 
   await page.getByRole("button", { name: "Save and add another" }).click();
   await expect(page.getByText("Write the marking guide for this question.")).toBeVisible();
 
+  // 2a. Check an earlier question mid-draft; the draft comes back afterwards.
+  await page.waitForTimeout(1_000);
+  await page.getByRole("complementary", { name: "Recently added" }).getByRole("link", { name: new RegExp(`${tag}: 2 \\+ 2`) }).click();
+  await page.waitForURL(/from=new/);
+  await expect(page.getByLabel("Option B is correct")).toBeChecked();
+  await page.getByRole("link", { name: "Back to the question you were writing" }).click();
+  await page.waitForURL(/\/admin\/cbt\/questions\/new/);
+  await expect(page.getByText(/Restored your unsaved changes/)).toBeVisible();
+  await expect(page.getByLabel("Kind")).toHaveValue("Theory");
+  await expect(text).toHaveValue(`${tag}: Explain why the sky looks blue.`);
+
   // 3. Fill in the gap: gap button, answer chips, student preview, then save back to the bank.
   await page.getByLabel("Kind").selectOption("FillInTheGap");
   await page.getByLabel("Sentence").fill(`${tag}: The capital of Nigeria is `);

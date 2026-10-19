@@ -125,6 +125,11 @@ export async function setDecisions(applicationIds: string[], decision: "Offer" |
   return staff(await load((api) => api.PUT("/api/admissions/decisions", { body: { applicationIds, decision } })));
 }
 
+/** The results lists again (after notify/publish), so "Emailed" chips and statuses show straight away. */
+export async function loadExamResults(sessionId: string) {
+  return load((api) => api.GET("/api/admissions/results", { params: { query: { sessionId } } }));
+}
+
 export async function publishDecisions(sessionId: string) {
   return staff(await load((api) => api.POST("/api/admissions/decisions/publish", { body: { sessionId } })));
 }

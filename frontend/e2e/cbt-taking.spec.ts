@@ -105,6 +105,12 @@ test("a student sits a test: answers save, resume, takeover, hand in", async ({ 
   await page.getByRole("button", { name: "Start the test" }).click();
   await expect(page.getByRole("timer")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("0 of 5 answered")).toBeVisible();
+  // Hand in isn't blocked by unanswered questions; it lists them and offers to go back.
+  await page.getByRole("button", { name: "Hand in" }).last().click();
+  const early = page.getByRole("alertdialog", { name: "Hand in your test?" });
+  await expect(early).toContainText("5 unanswered: 1, 2, 3, 4 and 5.");
+  await early.getByRole("button", { name: "Go back" }).click();
+  await expect(early).toBeHidden();
   // The paper fits a phone.
   await page.setViewportSize({ width: 360, height: 760 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
