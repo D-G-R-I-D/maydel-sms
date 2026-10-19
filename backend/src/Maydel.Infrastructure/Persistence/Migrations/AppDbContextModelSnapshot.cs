@@ -1098,6 +1098,115 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Cbt.AiAllowance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MonthlyGenerations")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("AiAllowances");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Cbt.AiGeneration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AssessmentType")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<Guid>("ClassLevelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Easy")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Guidance")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("Hard")
+                        .HasColumnType("integer");
+
+                    b.Property<List<string>>("Kinds")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("Medium")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TermId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassLevelId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("AiGenerations");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Cbt.AiSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DefaultMonthlyGenerations")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SchoolMonthlyGenerations")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AiSettings");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Cbt.CbtTest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2689,6 +2798,106 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Cbt.AiGeneration", b =>
+                {
+                    b.HasOne("Maydel.Domain.Academics.ClassLevel", null)
+                        .WithMany()
+                        .HasForeignKey("ClassLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Academics.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsMany("Maydel.Domain.Cbt.AiSourceFile", "Files", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ContentType")
+                                .IsRequired()
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)");
+
+                            b1.Property<string>("FilePath")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.Property<Guid>("GenerationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("GenerationId");
+
+                            b1.ToTable("AiSourceFiles", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("GenerationId");
+                        });
+
+                    b.OwnsMany("Maydel.Domain.Cbt.AiVersion", "Versions", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTimeOffset>("CreatedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<Guid>("GenerationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<long>("InputTokens")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Message")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<string>("Model")
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)");
+
+                            b1.Property<int>("Number")
+                                .HasColumnType("integer");
+
+                            b1.Property<long>("OutputTokens")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("QuestionsJson")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("jsonb");
+
+                            b1.Property<string>("Status")
+                                .IsRequired()
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("GenerationId");
+
+                            b1.ToTable("AiVersions", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("GenerationId");
+                        });
+
+                    b.Navigation("Files");
+
+                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Cbt.CbtTest", b =>

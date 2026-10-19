@@ -15,9 +15,9 @@ internal sealed class SaveTestSectionsHandler(IAppDbContext db, Tests tests) : I
         if (c.Sections.Any(s => !Enum.IsDefined(s.Kind) || !Enum.IsDefined(s.Mode)))
             return Error.Validation("sections", "Each section needs a question kind and how its questions are chosen.");
 
-        var sections = c.Sections.Select(s => new TestSection
+        var sections = c.Sections.Select((s, i) => new TestSection
         {
-            Title = s.Title ?? "", Instructions = string.IsNullOrWhiteSpace(s.Instructions) ? null : s.Instructions.Trim(), Kind = s.Kind,
+            Order = i, Title = s.Title ?? "", Instructions = string.IsNullOrWhiteSpace(s.Instructions) ? null : s.Instructions.Trim(), Kind = s.Kind,
             MarksPerQuestion = s.MarksPerQuestion, Mode = s.Mode, QuestionIds = [.. s.QuestionIds ?? []], RandomCount = s.RandomCount, Topic = s.Topic,
             Difficulty = s.Difficulty,
         }).ToList();

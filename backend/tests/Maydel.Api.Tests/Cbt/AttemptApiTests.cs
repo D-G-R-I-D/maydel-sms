@@ -232,6 +232,7 @@ public sealed class AttemptApiTests(PostgresFixture fixture)
             },
         })).EnsureSuccessStatusCode();
         var published = await AdmissionsKit.ReadAsync<TestDetail>(await t.PostAsync($"/api/cbt/tests/{test.Id}/publish", null));
+        Assert.Equal(["Objective", "Gap", "Theory"], published.Sections.Select(x => x.Title)); // publishing keeps the teacher's order
         return (s, published, new[] { objective, gap, theory }.ToDictionary(q => q.Text));
     }
 

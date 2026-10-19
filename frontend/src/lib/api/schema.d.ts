@@ -2452,6 +2452,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cbt/ai/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAiQuota"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListAiGenerations"];
+        put?: never;
+        post: operations["GenerateQuestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/generations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAiGeneration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/generations/{id}/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RegenerateQuestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/generations/{id}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SaveAiQuestions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAiSettings"];
+        put: operations["SaveAiSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/allowances/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetAiAllowance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cbt/ai/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAiUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/student/tests": {
         parameters: {
             query?: never;
@@ -2598,6 +2726,116 @@ export interface components {
             instructions: null | string;
             classLevels: components["schemas"]["ClassLevelOption"][];
         };
+        AiGenerationDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            subjectId: string;
+            subject: string;
+            /** Format: uuid */
+            classLevelId: string;
+            classLevel: string;
+            assessmentType: components["schemas"]["AssessmentType"];
+            kinds: components["schemas"]["QuestionKind"][];
+            /** Format: int32 */
+            count: number;
+            /** Format: int32 */
+            easy: number;
+            /** Format: int32 */
+            medium: number;
+            /** Format: int32 */
+            hard: number;
+            guidance: null | string;
+            files: string[];
+            versions: components["schemas"]["AiVersionDto"][];
+            /** Format: int32 */
+            regenerations: number;
+            canRegenerate: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            quota: components["schemas"]["AiQuotaDto"];
+        };
+        AiGenerationSummary: {
+            /** Format: uuid */
+            id: string;
+            subject: string;
+            classLevel: string;
+            assessmentType: components["schemas"]["AssessmentType"];
+            /** Format: int32 */
+            count: number;
+            /** Format: int32 */
+            versions: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AiQuotaDto: {
+            available: boolean;
+            enabled: boolean;
+            /** Format: int32 */
+            allowance: number;
+            /** Format: int32 */
+            used: number;
+            /** Format: int32 */
+            remaining: number;
+            /** Format: int32 */
+            schoolCap: number;
+            /** Format: int32 */
+            schoolUsed: number;
+            /** Format: date-time */
+            resetsAt: string;
+        };
+        AiSettingsDto: {
+            available: boolean;
+            enabled: boolean;
+            /** Format: int32 */
+            defaultMonthlyGenerations: number;
+            /** Format: int32 */
+            schoolMonthlyGenerations: number;
+        };
+        AiUsage: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            /** Format: int32 */
+            schoolCap: number;
+            /** Format: int32 */
+            schoolUsed: number;
+            /** Format: int64 */
+            inputTokens: number;
+            /** Format: int64 */
+            outputTokens: number;
+            teachers: components["schemas"]["AiUsageRow"][];
+        };
+        AiUsageRow: {
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            /** Format: int32 */
+            allowance: number;
+            customAllowance: boolean;
+            /** Format: int32 */
+            used: number;
+            /** Format: int64 */
+            inputTokens: number;
+            /** Format: int64 */
+            outputTokens: number;
+        };
+        AiVersionDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            /** Format: date-time */
+            createdAt: string;
+            status: components["schemas"]["GenerationStatus"];
+            message: null | string;
+            questions: components["schemas"]["DraftQuestion"][];
+        };
+        AllowanceInput: {
+            /** Format: int32 */
+            monthlyGenerations: null | number;
+        };
         AnswerInput: {
             sessionToken: string;
             optionIds: null | string[];
@@ -2702,6 +2940,8 @@ export interface components {
             components: components["schemas"]["ComponentDto"][];
             bands: components["schemas"]["GradeBandDto"][];
         };
+        /** @enum {unknown} */
+        AssessmentType: "Test" | "Cat" | "Exam";
         AttemptPaper: {
             /** Format: uuid */
             id: string;
@@ -3172,6 +3412,22 @@ export interface components {
         Difficulty: "Easy" | "Medium" | "Hard";
         /** @enum {unknown} */
         DocumentKind: "PassportPhoto" | "BirthCertificate" | "LastReportCard" | "Other";
+        DraftInput: {
+            kind: components["schemas"]["QuestionKind"];
+            text: string;
+            options: null | components["schemas"]["OptionInput"][];
+            trueFalseAnswer: null | boolean;
+            acceptedAnswers: null | string[];
+            markingGuide: null | string;
+            topic: null | string;
+            difficulty?: components["schemas"]["Difficulty"];
+        };
+        DraftQuestion: {
+            /** Format: int32 */
+            index: number;
+            question: components["schemas"]["GeneratedQuestion"];
+            problem: null | string;
+        };
         /** @enum {unknown} */
         EmailStatus: "Pending" | "Sent" | "Failed" | "Skipped";
         EnrolmentResult: {
@@ -3303,6 +3559,20 @@ export interface components {
         FormPaymentMethod: "Online" | "SchoolCode" | null;
         /** @enum {unknown} */
         FormPaymentStatus: "Pending" | "Succeeded" | "Failed" | "NeedsReview";
+        GeneratedOption: {
+            text: string;
+            isCorrect: boolean;
+        };
+        GeneratedQuestion: {
+            kind: components["schemas"]["QuestionKind"];
+            text: string;
+            options: components["schemas"]["GeneratedOption"][];
+            trueFalseAnswer: null | boolean;
+            acceptedAnswers: string[];
+            markingGuide: null | string;
+            topic: null | string;
+            difficulty: components["schemas"]["Difficulty"];
+        };
         GenerateInvoicesCommand: {
             /** Format: uuid */
             termId: string;
@@ -3319,6 +3589,8 @@ export interface components {
             /** Format: double */
             totalBilled: number;
         };
+        /** @enum {unknown} */
+        GenerationStatus: "Ready" | "Failed";
         GoogleLoginCommand: {
             idToken: string;
         };
@@ -3502,6 +3774,7 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
+        IFormFileCollection: components["schemas"]["IFormFile"][];
         InstalmentDto: {
             /** Format: int32 */
             order: number;
@@ -4345,6 +4618,13 @@ export interface components {
             examWindowDays: number;
             instructions: null | string;
         };
+        SaveAiSettingsCommand: {
+            enabled: boolean;
+            /** Format: int32 */
+            defaultMonthlyGenerations: number;
+            /** Format: int32 */
+            schoolMonthlyGenerations: number;
+        };
         SaveAssessmentSettingsCommand: {
             components: components["schemas"]["ComponentInput"][];
             bands: components["schemas"]["GradeBandDto"][];
@@ -4360,6 +4640,9 @@ export interface components {
         };
         SaveBehaviourSettingsCommand: {
             traits: components["schemas"]["TraitInput"][];
+        };
+        SaveDraftsInput: {
+            questions: components["schemas"]["DraftInput"][];
         };
         SaveFeeSettingsCommand: {
             siblingMode: components["schemas"]["SiblingDiscountMode"];
@@ -15609,6 +15892,503 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAiQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiQuotaDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListAiGenerations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiGenerationSummary"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GenerateQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["IFormFileCollection"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiGenerationDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAiGeneration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiGenerationDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RegenerateQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiGenerationDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveAiQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveDraftsInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionDto"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAiSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveAiSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAiSettingsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SetAiAllowance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllowanceInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUsageRow"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAiUsage: {
+        parameters: {
+            query?: {
+                year?: number;
+                month?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUsage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

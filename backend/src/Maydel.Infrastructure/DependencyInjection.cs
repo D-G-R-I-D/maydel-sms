@@ -69,6 +69,8 @@ public static class DependencyInjection
         services.AddSingleton<IFinanceDocumentRenderer, Reports.QuestPdfFinanceRenderer>();
         services.AddSingleton<IAdmissionFormRenderer, Reports.QuestPdfAdmissionFormRenderer>();
         services.AddSingleton<IAdmissionLetterRenderer, Reports.QuestPdfAdmissionLetterRenderer>();
+        services.AddOptions<Ai.AiOptions>().BindConfiguration(Ai.AiOptions.Section);
+        services.AddSingleton<IQuestionGenerator, Ai.ClaudeQuestionGenerator>();
 
         // E12.3 email outbox. The provider is configuration; secrets come from the environment.
         services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.Section)

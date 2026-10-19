@@ -80,6 +80,9 @@ public class CbtTest : Entity
     public DomainError? CheckSections()
     {
         if (Sections.Count > MaxSections) return new("test.sections", $"Use at most {MaxSections} sections.", "sections");
+        // Sections loaded from the database come back in storage order: sort by the saved order (stable, so a new list sent with
+        // Order set to its position keeps it) before renumbering 0..n-1.
+        Sections = [.. Sections.OrderBy(s => s.Order)];
         for (var i = 0; i < Sections.Count; i++)
         {
             var s = Sections[i];

@@ -60,6 +60,9 @@ public interface IAppDbContext
     DbSet<Domain.Cbt.Question> Questions { get; }
     DbSet<Domain.Cbt.CbtTest> CbtTests { get; }
     DbSet<Domain.Cbt.TestAttempt> TestAttempts { get; }
+    DbSet<Domain.Cbt.AiGeneration> AiGenerations { get; }
+    DbSet<Domain.Cbt.AiSettings> AiSettings { get; }
+    DbSet<Domain.Cbt.AiAllowance> AiAllowances { get; }
     DbSet<FormCode> FormCodes { get; }
     DbSet<FormPayment> FormPayments { get; }
     DbSet<ContactMessage> ContactMessages { get; }

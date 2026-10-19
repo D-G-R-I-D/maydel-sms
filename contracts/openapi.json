@@ -13542,6 +13542,610 @@
         }
       }
     },
+    "/api/cbt/ai/quota": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GetAiQuota",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiQuotaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/generations": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "ListAiGenerations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiGenerationSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GenerateQuestions",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/IFormFileCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiGenerationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/generations/{id}": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GetAiGeneration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiGenerationDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/generations/{id}/regenerate": {
+      "post": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "RegenerateQuestions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiGenerationDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/generations/{id}/save": {
+      "post": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "SaveAiQuestions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDraftsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/settings": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GetAiSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "SaveAiSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAiSettingsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/allowances/{userId}": {
+      "put": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "SetAiAllowance",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllowanceInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiUsageRow"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cbt/ai/usage": {
+      "get": {
+        "tags": [
+          "CBT"
+        ],
+        "operationId": "GetAiUsage",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiUsage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/student/tests": {
       "get": {
         "tags": [
@@ -14190,6 +14794,354 @@
           }
         }
       },
+      "AiGenerationDto": {
+        "required": [
+          "id",
+          "subjectId",
+          "subject",
+          "classLevelId",
+          "classLevel",
+          "assessmentType",
+          "kinds",
+          "count",
+          "easy",
+          "medium",
+          "hard",
+          "guidance",
+          "files",
+          "versions",
+          "regenerations",
+          "canRegenerate",
+          "createdAt",
+          "quota"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "classLevelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classLevel": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "$ref": "#/components/schemas/AssessmentType"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionKind"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "easy": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "medium": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hard": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "guidance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiVersionDto"
+            }
+          },
+          "regenerations": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "canRegenerate": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/AiQuotaDto"
+          }
+        }
+      },
+      "AiGenerationSummary": {
+        "required": [
+          "id",
+          "subject",
+          "classLevel",
+          "assessmentType",
+          "count",
+          "versions",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "classLevel": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "$ref": "#/components/schemas/AssessmentType"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "versions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AiQuotaDto": {
+        "required": [
+          "available",
+          "enabled",
+          "allowance",
+          "used",
+          "remaining",
+          "schoolCap",
+          "schoolUsed",
+          "resetsAt"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "allowance": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "used": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "remaining": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schoolCap": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schoolUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "resetsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AiSettingsDto": {
+        "required": [
+          "available",
+          "enabled",
+          "defaultMonthlyGenerations",
+          "schoolMonthlyGenerations"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "defaultMonthlyGenerations": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schoolMonthlyGenerations": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AiUsage": {
+        "required": [
+          "from",
+          "to",
+          "schoolCap",
+          "schoolUsed",
+          "inputTokens",
+          "outputTokens",
+          "teachers"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schoolCap": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schoolUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inputTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "outputTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "teachers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiUsageRow"
+            }
+          }
+        }
+      },
+      "AiUsageRow": {
+        "required": [
+          "userId",
+          "name",
+          "allowance",
+          "customAllowance",
+          "used",
+          "inputTokens",
+          "outputTokens"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "allowance": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "customAllowance": {
+            "type": "boolean"
+          },
+          "used": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inputTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "outputTokens": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AiVersionDto": {
+        "required": [
+          "id",
+          "number",
+          "createdAt",
+          "status",
+          "message",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GenerationStatus"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DraftQuestion"
+            }
+          }
+        }
+      },
+      "AllowanceInput": {
+        "required": [
+          "monthlyGenerations"
+        ],
+        "type": "object",
+        "properties": {
+          "monthlyGenerations": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "AnswerInput": {
         "required": [
           "sessionToken",
@@ -14651,6 +15603,13 @@
             }
           }
         }
+      },
+      "AssessmentType": {
+        "enum": [
+          "Test",
+          "Cat",
+          "Exam"
+        ]
       },
       "AttemptPaper": {
         "required": [
@@ -16309,6 +17268,88 @@
           "Other"
         ]
       },
+      "DraftInput": {
+        "required": [
+          "kind",
+          "text",
+          "options",
+          "trueFalseAnswer",
+          "acceptedAnswers",
+          "markingGuide",
+          "topic"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "text": {
+            "type": "string"
+          },
+          "options": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/OptionInput"
+            }
+          },
+          "trueFalseAnswer": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "acceptedAnswers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "markingGuide": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "topic": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
+          }
+        }
+      },
+      "DraftQuestion": {
+        "required": [
+          "index",
+          "question",
+          "problem"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "question": {
+            "$ref": "#/components/schemas/GeneratedQuestion"
+          },
+          "problem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "EmailStatus": {
         "enum": [
           "Pending",
@@ -16759,6 +17800,75 @@
           "NeedsReview"
         ]
       },
+      "GeneratedOption": {
+        "required": [
+          "text",
+          "isCorrect"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GeneratedQuestion": {
+        "required": [
+          "kind",
+          "text",
+          "options",
+          "trueFalseAnswer",
+          "acceptedAnswers",
+          "markingGuide",
+          "topic",
+          "difficulty"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "text": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedOption"
+            }
+          },
+          "trueFalseAnswer": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "acceptedAnswers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "markingGuide": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "topic": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Difficulty"
+          }
+        }
+      },
       "GenerateInvoicesCommand": {
         "required": [
           "termId",
@@ -16805,6 +17915,12 @@
             "format": "double"
           }
         }
+      },
+      "GenerationStatus": {
+        "enum": [
+          "Ready",
+          "Failed"
+        ]
       },
       "GoogleLoginCommand": {
         "required": [
@@ -17513,6 +18629,12 @@
       "IFormFile": {
         "type": "string",
         "format": "binary"
+      },
+      "IFormFileCollection": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/IFormFile"
+        }
       },
       "InstalmentDto": {
         "required": [
@@ -20632,6 +21754,27 @@
           }
         }
       },
+      "SaveAiSettingsCommand": {
+        "required": [
+          "enabled",
+          "defaultMonthlyGenerations",
+          "schoolMonthlyGenerations"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "defaultMonthlyGenerations": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schoolMonthlyGenerations": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "SaveAssessmentSettingsCommand": {
         "required": [
           "components",
@@ -20692,6 +21835,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TraitInput"
+            }
+          }
+        }
+      },
+      "SaveDraftsInput": {
+        "required": [
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DraftInput"
             }
           }
         }
