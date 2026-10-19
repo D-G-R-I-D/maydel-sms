@@ -21,6 +21,9 @@ export function hasAnyRole(roles: readonly string[], allowed: readonly Role[]): 
 export const isStaff = (roles: readonly string[]) => hasAnyRole(roles, staffRoles);
 export const isPortalUser = (roles: readonly string[]) => hasAnyRole(roles, portalRoles);
 export const isAdmissionsUser = (roles: readonly string[]) => hasAnyRole(roles, admissionsRoles);
+/** Sitting a computer-based test (E16.3) is for student accounts only; parents can't sit for a child. */
+export const isStudent = (roles: readonly string[]) => hasAnyRole(roles, ["Student"]);
+export const isExamPath = (pathname: string) => pathname === "/exam" || pathname.startsWith("/exam/");
 
 /** The public "Buy admission form" page; the rest of /admissions needs an applicant or parent account. */
 export const isPublicAdmissionsPath = (pathname: string) => pathname === "/admissions/apply" || pathname.startsWith("/admissions/apply/");
@@ -37,6 +40,7 @@ export function homeFor(roles: readonly string[]): string {
 export function canEnter(pathname: string, roles: readonly string[]): boolean {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return isStaff(roles);
   if (pathname === "/portal" || pathname.startsWith("/portal/")) return isPortalUser(roles);
+  if (isExamPath(pathname)) return isStudent(roles);
   if ((pathname === "/admissions" || pathname.startsWith("/admissions/")) && !isPublicAdmissionsPath(pathname)) return isAdmissionsUser(roles);
   return true;
 }
