@@ -1124,6 +1124,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/school/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetPublicSchoolProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/register": {
         parameters: {
             query?: never;
@@ -4846,6 +4862,21 @@ export interface components {
             category: string;
             imageUrl: string;
         };
+        PublicSchoolProfile: {
+            name: string;
+            motto: null | string;
+            address: string;
+            phone: null | string;
+            email: null | string;
+            website: null | string;
+            whatsApp: null | string;
+            whatsAppUrl: null | string;
+            mapUrl: null | string;
+            facebookUrl: null | string;
+            instagramUrl: null | string;
+            officeHours: null | string;
+            logoUrl: null | string;
+        };
         PublicStaff: {
             /** Format: uuid */
             id: string;
@@ -5303,6 +5334,11 @@ export interface components {
             principalName: null | string;
             logoVersion: null | string;
             signatureVersion: null | string;
+            whatsApp: null | string;
+            mapUrl: null | string;
+            facebookUrl: null | string;
+            instagramUrl: null | string;
+            officeHours: null | string;
         };
         /** @enum {unknown} */
         SchoolSection: "Creche" | "Nursery" | "Primary" | "JuniorSecondary" | "SeniorSecondary";
@@ -5850,6 +5886,11 @@ export interface components {
             email: null | string;
             website: null | string;
             principalName: null | string;
+            whatsApp?: null | string;
+            mapUrl?: null | string;
+            facebookUrl?: null | string;
+            instagramUrl?: null | string;
+            officeHours?: null | string;
         };
     };
     responses: never;
@@ -10716,6 +10757,26 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetPublicSchoolProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicSchoolProfile"];
                 };
             };
         };

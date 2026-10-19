@@ -6134,6 +6134,26 @@
         }
       }
     },
+    "/api/public/school/profile": {
+      "get": {
+        "tags": [
+          "School"
+        ],
+        "operationId": "GetPublicSchoolProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSchoolProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/attendance/register": {
       "get": {
         "tags": [
@@ -23061,6 +23081,98 @@
           }
         }
       },
+      "PublicSchoolProfile": {
+        "required": [
+          "name",
+          "motto",
+          "address",
+          "phone",
+          "email",
+          "website",
+          "whatsApp",
+          "whatsAppUrl",
+          "mapUrl",
+          "facebookUrl",
+          "instagramUrl",
+          "officeHours",
+          "logoUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "motto": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "website": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "whatsApp": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "whatsAppUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mapUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "facebookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instagramUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "officeHours": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PublicStaff": {
         "required": [
           "id",
@@ -24788,7 +24900,12 @@
           "website",
           "principalName",
           "logoVersion",
-          "signatureVersion"
+          "signatureVersion",
+          "whatsApp",
+          "mapUrl",
+          "facebookUrl",
+          "instagramUrl",
+          "officeHours"
         ],
         "type": "object",
         "properties": {
@@ -24835,6 +24952,36 @@
             ]
           },
           "signatureVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "whatsApp": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mapUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "facebookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instagramUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "officeHours": {
             "type": [
               "null",
               "string"
@@ -26928,6 +27075,36 @@
             ]
           },
           "principalName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "whatsApp": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mapUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "facebookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instagramUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "officeHours": {
             "type": [
               "null",
               "string"

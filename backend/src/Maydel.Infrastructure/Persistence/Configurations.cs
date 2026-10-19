@@ -203,6 +203,11 @@ internal sealed class SchoolProfileConfig : IEntityTypeConfiguration<Domain.Sett
         b.Property(x => x.Phone).HasMaxLength(40);
         b.Property(x => x.Email).HasMaxLength(120);
         b.Property(x => x.Website).HasMaxLength(120);
+        b.Property(x => x.WhatsApp).HasMaxLength(40);
+        b.Property(x => x.MapUrl).HasMaxLength(500);
+        b.Property(x => x.FacebookUrl).HasMaxLength(300);
+        b.Property(x => x.InstagramUrl).HasMaxLength(300);
+        b.Property(x => x.OfficeHours).HasMaxLength(120);
         b.Property(x => x.PrincipalName).HasMaxLength(80);
         b.Property(x => x.LogoPath).HasMaxLength(200);
         b.Property(x => x.SignaturePath).HasMaxLength(200);
