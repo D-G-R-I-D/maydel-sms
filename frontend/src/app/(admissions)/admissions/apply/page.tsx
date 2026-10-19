@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Download, DoorClosed, FileText } from "lucide-react";
 import { load } from "@/lib/api/server";
+import { googleClientId } from "@/lib/api/config";
 import { getSessionUser } from "@/lib/auth/session";
 import { formatNaira } from "@/lib/finance/rules";
 import { Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
@@ -58,7 +59,7 @@ export default async function ApplyPage() {
       {header}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="p-5 sm:p-6">
-          <ApplyForm sessions={open} />
+          <ApplyForm sessions={open} googleClientId={googleClientId()} />
         </Card>
         <aside className="space-y-4">
           <Card className="p-5">

@@ -68,7 +68,7 @@ export function ExamRoom({ test }: { test: StudentTest }) {
   // After "Hand in" shows unanswered questions, they stay highlighted in the navigator.
   const [flagUnanswered, setFlagUnanswered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ autoSubmitted: boolean; problem?: Problem } | null>(null);
+  const [result, setResult] = useState<{ autoSubmitted: boolean; problem?: Problem; score?: { value: number; total: number; provisional: boolean } } | null>(null);
 
   const token = useRef<string | null>(null);
   const answersRef = useRef(answers);
@@ -81,11 +81,13 @@ export function ExamRoom({ test }: { test: StudentTest }) {
   const handInRef = useRef<(auto: boolean) => Promise<void>>(async () => {});
   const runSaveRef = useRef<(itemId: string) => Promise<void>>(async () => {});
 
-  const finish = useCallback((autoSubmitted: boolean, problem?: Problem) => {
+  const finish = useCallback((autoSubmitted: boolean, problem?: Problem, handedIn?: AttemptPaper) => {
     stopped.current = true;
     for (const t of timers.current.values()) clearTimeout(t);
     timers.current.clear();
-    setResult({ autoSubmitted, problem });
+    // Tests set to "show score on hand-in" return the computer-marked total straight away.
+    const score = handedIn && handedIn.score !== null ? { value: handedIn.score, total: handedIn.totalMarks, provisional: handedIn.scoreIsProvisional } : undefined;
+    setResult({ autoSubmitted, problem, score });
     setPhase("done");
   }, []);
 
@@ -203,7 +205,7 @@ export function ExamRoom({ test }: { test: StudentTest }) {
     }
     const r = await call(() => submitAttempt(paper.id, token.current ?? ""));
     setSubmitting(false);
-    if (r.ok) return finish(r.data.autoSubmitted || auto);
+    if (r.ok) return finish(r.data.autoSubmitted || auto, undefined, r.data);
     const p = r.problem;
     if (p.code === "attempt.submitted") return finish(true);
     if (p.code === "attempt.other_session") {
@@ -284,7 +286,17 @@ export function ExamRoom({ test }: { test: StudentTest }) {
         <Card className="space-y-4 p-6 text-center">
           <CheckCircle2 className="mx-auto size-12 text-success" aria-hidden />
           <h1 className="font-display text-2xl font-semibold">Handed in</h1>
-          <p>Your teacher will release the results.</p>
+          {result?.score ? (
+            <p className="text-lg">
+              {result.score.provisional ? "Score so far" : "Your score"}:{" "}
+              <span className="tabular font-semibold">
+                {formatMarks(result.score.value)} / {formatMarks(result.score.total)}
+              </span>
+              {result.score.provisional && <span className="block text-sm text-muted">Your teacher is still marking the written answers.</span>}
+            </p>
+          ) : (
+            <p>Your teacher will release the results.</p>
+          )}
           {result?.autoSubmitted && <p className="text-sm text-muted">Time ran out, so your answers were handed in automatically.</p>}
           {result?.problem && (
             <Alert tone="warning" title="We couldn't confirm the hand-in">

@@ -84,6 +84,7 @@ test("a student sits a test: answers save, resume, takeover, hand in", async ({ 
     maxAttempts: 1,
     shuffleQuestions: false,
     shuffleOptions: false,
+    showScoreOnSubmit: true,
   });
   expect(created.ok()).toBeTruthy();
   const testId: string = (await created.json()).id;
@@ -165,8 +166,13 @@ test("a student sits a test: answers save, resume, takeover, hand in", async ({ 
   await expect(confirm).toContainText("answered every question");
   await confirm.getByRole("button", { name: "Hand in" }).click();
   await expect(page.getByRole("heading", { name: "Handed in" })).toBeVisible({ timeout: 30_000 });
+  // "Show score on hand-in": the computer-marked part now, flagged provisional while theory waits.
+  await expect(page.getByText(/^Score so far:/)).toContainText("/ 5");
+  await expect(page.getByText("Your teacher is still marking the written answers.")).toBeVisible();
   await page.getByRole("link", { name: "Back to tests" }).click();
-  await expect(page.getByRole("listitem").filter({ hasText: `${tag} sitting` })).toContainText("Handed in");
+  const doneCard = page.getByRole("listitem").filter({ hasText: `${tag} sitting` });
+  await expect(doneCard).toContainText("Handed in");
+  await expect(doneCard).toContainText("(theory still being marked)");
 });
 
 test("parents see results but don't sit tests", async ({ page }) => {

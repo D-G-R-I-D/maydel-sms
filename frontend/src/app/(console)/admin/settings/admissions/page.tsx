@@ -11,6 +11,8 @@ import { AdmissionSettingsForm } from "@/components/admissions/admission-setting
 
 export const metadata: Metadata = { title: "Admissions settings" };
 
+const TERM_ORDER = { First: 1, Second: 2, Third: 3 } as const;
+
 /** E11.4: open/close admissions per session, the form fee, the exam window and instructions. */
 export default async function AdmissionSettingsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await requireSessionUser();
@@ -44,7 +46,12 @@ export default async function AdmissionSettingsPage({ searchParams }: { searchPa
       </>
     );
   }
-  const settings = await load((api) => api.GET("/api/admissions/settings", { params: { query: { sessionId: selected.id } } }));
+  const [settings, calendar] = await Promise.all([
+    load((api) => api.GET("/api/admissions/settings", { params: { query: { sessionId: selected.id } } })),
+    load((api) => api.GET("/api/academics/sessions")),
+  ]);
+  // Terms in order, for "New pupils start in" (2nd/3rd-term intakes).
+  const terms = calendar.ok ? [...(calendar.data.find((x) => x.id === selected.id)?.terms ?? [])].sort((a, b) => TERM_ORDER[a.number] - TERM_ORDER[b.number]).map((t) => ({ id: t.id, label: `${t.number} Term` })) : [];
   return (
     <>
       {header}
@@ -55,7 +62,7 @@ export default async function AdmissionSettingsPage({ searchParams }: { searchPa
         </p>
       )}
       {settings.ok ? (
-        <AdmissionSettingsForm key={selected.id} initial={settings.data} canEdit={isAdmin} />
+        <AdmissionSettingsForm key={selected.id} initial={settings.data} canEdit={isAdmin} terms={terms} />
       ) : (
         <Card>
           <ProblemState problem={settings.problem} />

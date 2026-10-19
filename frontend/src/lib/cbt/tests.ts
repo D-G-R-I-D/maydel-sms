@@ -38,6 +38,7 @@ export const testHeaderSchema = z
     maxAttempts: intIn(1, 5, "Allow between 1 and 5 attempts."),
     shuffleQuestions: z.boolean(),
     shuffleOptions: z.boolean(),
+    showScoreOnSubmit: z.boolean(),
   })
   .superRefine((v, ctx) => {
     const opens = Date.parse(lagosIso(v.opensDate, v.opensTime));
@@ -73,6 +74,7 @@ export function newHeaderValues(termId: string, now: Date = new Date()): TestHea
     maxAttempts: "1",
     shuffleQuestions: true,
     shuffleOptions: true,
+    showScoreOnSubmit: false,
   };
 }
 
@@ -94,6 +96,7 @@ export function headerValues(t: TestDetail): TestHeaderValues {
     maxAttempts: String(t.maxAttempts),
     shuffleQuestions: t.shuffleQuestions,
     shuffleOptions: t.shuffleOptions,
+    showScoreOnSubmit: t.showScoreOnSubmit,
   };
 }
 
@@ -111,6 +114,7 @@ export function toTestInput(v: TestHeaderValues): TestInput {
     maxAttempts: Number(v.maxAttempts),
     shuffleQuestions: v.shuffleQuestions,
     shuffleOptions: v.shuffleOptions,
+    showScoreOnSubmit: v.showScoreOnSubmit,
   };
 }
 

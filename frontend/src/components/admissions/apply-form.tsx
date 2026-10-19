@@ -9,21 +9,32 @@ import type { AdmissionsInfo, MeResponse } from "@/lib/api/types";
 import { registerSchema, type RegisterFormValues, type RegisterPayload } from "@/lib/admissions/rules";
 import { formatNaira } from "@/lib/finance/rules";
 import { applyFieldErrors, postJson } from "@/lib/client/bff";
-import { Button, Field, Input, Select, describedBy } from "@/components/ui/primitives";
+import { Button, Field, Input, Select, cn, describedBy } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { PasswordInput } from "@/components/ui/password-input";
+import { GoogleButton } from "@/app/(auth)/login/google-button";
 
 const fields = ["parentName", "email", "phone", "password", "childFirstName", "childLastName", "childDateOfBirth", "classLevelId", "sessionId"] as const;
 
-/** E11.4: buy an admission form. Creates the family's account and signs it in (BFF /api/auth/register). */
-export function ApplyForm({ sessions }: { sessions: AdmissionsInfo[] }) {
+/** Everything but email and password: with Google, the verified Google email is the account. */
+const googleFields = ["parentName", "phone", "childFirstName", "childLastName", "childDateOfBirth", "classLevelId", "sessionId"] as const;
+
+/**
+ * E11.4: buy an admission form. Creates the family's account and signs it in: with an email and
+ * password (BFF /api/auth/register), or with Google (BFF /api/auth/register/google).
+ */
+export function ApplyForm({ sessions, googleClientId = "" }: { sessions: AdmissionsInfo[]; googleClientId?: string }) {
   const [problem, setProblem] = useState<Problem | null>(null);
   const [emailInUse, setEmailInUse] = useState(false);
+  const [method, setMethod] = useState<"password" | "google">(googleClientId ? "google" : "password");
+  const [googleBusy, setGoogleBusy] = useState(false);
   const {
     register,
     handleSubmit,
     setError,
     control,
+    trigger,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues, unknown, RegisterPayload>({
     resolver: zodResolver(registerSchema),
@@ -42,6 +53,26 @@ export function ApplyForm({ sessions }: { sessions: AdmissionsInfo[] }) {
   });
   const sessionId = useWatch({ control, name: "sessionId" });
   const session = sessions.find((s) => s.sessionId === sessionId) ?? sessions[0];
+
+  const onGoogle = async (credential: string) => {
+    setProblem(null);
+    setEmailInUse(false);
+    if (!(await trigger([...googleFields], { shouldFocus: true }))) return;
+    setGoogleBusy(true);
+    const result = await postJson<{ user: MeResponse; redirectTo: string }>("/api/auth/register/google", { ...getValues(), credential });
+    setGoogleBusy(false);
+    if (result.ok) {
+      window.location.assign(result.data.redirectTo);
+      return;
+    }
+    const p = result.problem;
+    if (p.code === "admission.email_in_use") {
+      setEmailInUse(true);
+      return;
+    }
+    if (applyFieldErrors(p, fields, setError)) return;
+    setProblem(p);
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     setProblem(null);
@@ -121,20 +152,46 @@ export function ApplyForm({ sessions }: { sessions: AdmissionsInfo[] }) {
       <section className="space-y-4">
         <h2 className="font-display text-lg font-semibold">Your account</h2>
         <p className="-mt-2 text-sm text-muted">You&apos;ll use this to fill in the form, book the entrance exam and see the outcome. If your child is admitted, it becomes your parent portal login.</p>
+        {googleClientId && (
+          <div className="inline-flex rounded-input bg-surface-2 p-1" role="radiogroup" aria-label="How to create your account">
+            {(
+              [
+                ["google", "With Google"],
+                ["password", "With email and password"],
+              ] as const
+            ).map(([m, label]) => (
+              <label key={m} className={cn("inline-flex min-h-9 cursor-pointer items-center rounded-[6px] px-3 text-sm", method === m ? "bg-surface font-medium shadow-low" : "text-muted")}>
+                <input type="radio" className="sr-only" name="apply-method" checked={method === m} onChange={() => setMethod(m)} />
+                {label}
+              </label>
+            ))}
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="apply-parent" label="Your full name" error={errors.parentName?.message} className="sm:col-span-2">
             <Input {...describedBy("apply-parent", errors.parentName?.message)} {...register("parentName")} autoComplete="name" />
           </Field>
-          <Field id="apply-email" label="Email" error={errors.email?.message}>
-            <Input {...describedBy("apply-email", errors.email?.message)} {...register("email")} type="email" autoComplete="email" spellCheck={false} />
-          </Field>
+          {method === "password" && (
+            <Field id="apply-email" label="Email" error={errors.email?.message}>
+              <Input {...describedBy("apply-email", errors.email?.message)} {...register("email")} type="email" autoComplete="email" spellCheck={false} />
+            </Field>
+          )}
           <Field id="apply-phone" label="Phone" error={errors.phone?.message}>
             <Input {...describedBy("apply-phone", errors.phone?.message)} {...register("phone")} type="tel" inputMode="tel" autoComplete="tel" placeholder="+234 803 123 4567" />
           </Field>
-          <Field id="apply-password" label="Password" error={errors.password?.message} hint="At least 10 characters with upper- and lower-case letters and a number." className="sm:col-span-2">
-            <PasswordInput {...describedBy("apply-password", errors.password?.message, true)} {...register("password")} autoComplete="new-password" />
-          </Field>
+          {method === "password" && (
+            <Field id="apply-password" label="Password" error={errors.password?.message} hint="At least 10 characters with upper- and lower-case letters and a number." className="sm:col-span-2">
+              <PasswordInput {...describedBy("apply-password", errors.password?.message, true)} {...register("password")} autoComplete="new-password" />
+            </Field>
+          )}
         </div>
+        {method === "google" && (
+          <div className="space-y-2">
+            <p className="text-sm text-muted">Fill in the details above, then continue with Google. Your Google email becomes your login, with no password to remember.</p>
+            <GoogleButton clientId={googleClientId} onCredential={(c) => void onGoogle(c)} disabled={googleBusy} />
+            {googleBusy && <p className="text-center text-sm text-muted">Creating your account…</p>}
+          </div>
+        )}
       </section>
 
       <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -147,9 +204,11 @@ export function ApplyForm({ sessions }: { sessions: AdmissionsInfo[] }) {
             "There's no form fee this session."
           )}
         </p>
-        <Button type="submit" size="lg" loading={isSubmitting} loadingText="Creating your account…">
-          Create account and continue
-        </Button>
+        {method === "password" && (
+          <Button type="submit" size="lg" loading={isSubmitting} loadingText="Creating your account…">
+            Create account and continue
+          </Button>
+        )}
       </div>
     </form>
   );

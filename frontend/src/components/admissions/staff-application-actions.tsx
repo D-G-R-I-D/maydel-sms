@@ -9,6 +9,7 @@ import { runAction } from "@/lib/client/action";
 import { Button, Field, Select, buttonClasses } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { CancelButton, ConfirmDialog, DialogActions, FormDialog } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/toast";
 
 /** Admin: give a family who missed the exam a new window (E11.6). They're emailed. */
 export function ReopenButton({ applicationId, childName }: { applicationId: string; childName: string }) {
@@ -34,8 +35,23 @@ export function ReopenButton({ applicationId, childName }: { applicationId: stri
 }
 
 /** Admin: enrol an accepted applicant (E11.8): creates the student and guardians; the login becomes a parent login. */
-export function EnrolButton({ applicationId, childName, classrooms }: { applicationId: string; childName: string; classrooms: { id: string; name: string; full: boolean }[] }) {
+export function EnrolButton({
+  applicationId,
+  childName,
+  classrooms,
+  terms = [],
+  defaultTerm,
+}: {
+  applicationId: string;
+  childName: string;
+  classrooms: { id: string; name: string; full: boolean }[];
+  /** Terms of the application's session, to admit from a later term for this child only. */
+  terms?: { id: string; label: string }[];
+  /** The admissions settings' entry term, e.g. "Second Term 2026/2027"; null = the first term. */
+  defaultTerm?: string | null;
+}) {
   const [classRoomId, setClassRoomId] = useState(classrooms.find((c) => !c.full)?.id ?? "");
+  const [entryTermId, setEntryTermId] = useState("");
   const [problem, setProblem] = useState<Problem | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ studentId: string; admissionNumber: string } | null>(null);
@@ -85,6 +101,18 @@ export function EnrolButton({ applicationId, childName, classrooms }: { applicat
                 ))}
               </Select>
             </Field>
+            {terms.length > 1 && (
+              <Field id="enrol-term" label="Admitted from" hint="Leave as the default unless this child starts in a later term.">
+                <Select id="enrol-term" value={entryTermId} onChange={(e) => setEntryTermId(e.target.value)} aria-describedby="enrol-term-hint">
+                  <option value="">Default{defaultTerm ? ` (${defaultTerm})` : " (first term)"}</option>
+                  {terms.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
             <DialogActions>
               <CancelButton />
               <Button
@@ -93,9 +121,17 @@ export function EnrolButton({ applicationId, childName, classrooms }: { applicat
                 onClick={async () => {
                   setProblem(null);
                   setBusy(true);
-                  const r = await runAction(() => enrolApplicant(applicationId, classRoomId || null), { success: (x) => `${childName} enrolled as ${x.admissionNumber}`, onProblem: setProblem });
+                  const r = await runAction(() => enrolApplicant(applicationId, classRoomId || null, entryTermId || null), { success: (x) => `${childName} enrolled as ${x.admissionNumber}`, onProblem: setProblem });
                   setBusy(false);
-                  if (r) setDone({ studentId: r.studentId, admissionNumber: r.admissionNumber });
+                  if (!r) return;
+                  // The page refreshes and closes this dialog, so a login problem goes out as a lasting toast.
+                  if (r.parentLogin !== "Linked")
+                    toast.warning("The family's login isn't linked to the parent yet", {
+                      description: r.message ?? "Link this family from Students → Guardians.",
+                      duration: 30_000,
+                      action: { label: "Open guardians", onClick: () => window.location.assign("/admin/guardians") },
+                    });
+                  setDone({ studentId: r.studentId, admissionNumber: r.admissionNumber });
                 }}
               >
                 <UserPlus className="size-4" aria-hidden />

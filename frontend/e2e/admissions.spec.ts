@@ -26,7 +26,7 @@ async function adminApi(request: APIRequestContext) {
   };
 }
 
-type Settings = { sessionId: string; isOpen: boolean; formFee: number; examWindowDays: number; instructions: string | null };
+type Settings = { sessionId: string; isOpen: boolean; formFee: number; examWindowDays: number; instructions: string | null; entryTermId: string | null };
 let restore: Settings | null = null;
 
 test.afterAll(async ({ request }) => {
@@ -41,7 +41,7 @@ test("a family buys the form with a school form code", async ({ page, request })
   const sessionId = (sessions.find((s) => s.isCurrent) ?? sessions[0]).id;
   const settings = await api.get<Settings>(`/api/admissions/settings?sessionId=${sessionId}`);
   if (!settings.isOpen || settings.formFee <= 0) {
-    restore = { sessionId, isOpen: settings.isOpen, formFee: settings.formFee, examWindowDays: settings.examWindowDays, instructions: settings.instructions };
+    restore = { sessionId, isOpen: settings.isOpen, formFee: settings.formFee, examWindowDays: settings.examWindowDays, instructions: settings.instructions, entryTermId: settings.entryTermId ?? null };
     expect((await api.put("/api/admissions/settings", { ...restore, isOpen: true, formFee: settings.formFee > 0 ? settings.formFee : 5000 })).ok()).toBeTruthy();
   }
 
@@ -61,6 +61,7 @@ test("a family buys the form with a school form code", async ({ page, request })
   await page.getByLabel("Surname").fill(`E2E${suffix}`);
   await page.getByLabel("Class applying for").selectOption({ index: 1 });
   await page.getByLabel("Your full name").fill(`E2E Parent ${suffix}`);
+  if (await page.getByText("With email and password").count()) await page.getByText("With email and password").click();
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Phone").fill("0803 000 0001");
   await page.getByLabel("Password", { exact: true }).fill("weak");
@@ -126,6 +127,7 @@ test("a family buys the form with a school form code", async ({ page, request })
   await page.getByLabel("Surname").fill(`E2E${suffix}`);
   await page.getByLabel("Class applying for").selectOption({ index: 1 });
   await page.getByLabel("Your full name").fill(`E2E Parent ${suffix}`);
+  if (await page.getByText("With email and password").count()) await page.getByText("With email and password").click();
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Phone").fill("0803 000 0001");
   await page.getByLabel("Password", { exact: true }).fill(password);

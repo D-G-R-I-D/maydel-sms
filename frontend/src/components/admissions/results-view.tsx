@@ -206,7 +206,9 @@ export function ResultsView({ sessionId, initial, csvHref }: { sessionId: string
         onConfirm={async () => {
           const r = await runAction(() => notifyPassed(sessionId), {
             success: (x) =>
-              x.queued === 0 ? "Everyone who passed has already been emailed." : `Emailed ${x.queued} ${x.queued === 1 ? "family" : "families"}. They'll arrive within a few minutes.`,
+              x.queued === 0
+                ? `Everyone who passed (${x.alreadyNotified}) has already been emailed.`
+                : `Emailed ${x.queued} ${x.queued === 1 ? "family" : "families"}. They'll arrive within a few minutes.${x.alreadyNotified > 0 ? ` ${x.alreadyNotified} already had theirs.` : ""}`,
             onProblem: showError("Couldn't send the emails"),
           });
           if (r) await reload();

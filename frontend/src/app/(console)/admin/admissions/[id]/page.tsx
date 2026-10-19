@@ -64,12 +64,19 @@ export default async function StaffApplicationPage({ params }: { params: Promise
   const hasLetter = ["Offered", "Accepted", "Enrolled"].includes(a.status);
   const childName = `${a.childFirstName} ${a.childLastName}`;
   // Class arms at the applied-for level, for enrolment (E11.8).
-  const classrooms =
-    isAdmin && a.status === "Accepted"
-      ? await load((api) => api.GET("/api/academics/classrooms")).then((r) =>
+  const enrolling = isAdmin && a.status === "Accepted";
+  const [classrooms, terms, settings] = enrolling
+    ? await Promise.all([
+        load((api) => api.GET("/api/academics/classrooms")).then((r) =>
           r.ok ? r.data.filter((c) => c.classLevelId === a.classLevelId).map((c) => ({ id: c.id, name: c.name, full: c.studentCount >= c.capacity })) : [],
-        )
-      : [];
+        ),
+        // The application's session terms, to admit one child from a later term (E11 entry term).
+        load((api) => api.GET("/api/academics/sessions")).then((r) =>
+          r.ok ? (r.data.find((x) => x.id === a.sessionId)?.terms ?? []).map((t) => ({ id: t.id, label: `${t.number} Term` })) : [],
+        ),
+        load((api) => api.GET("/api/admissions/settings", { params: { query: { sessionId: a.sessionId } } })),
+      ])
+    : [[], [], null];
 
   return (
     <>
@@ -92,7 +99,7 @@ export default async function StaffApplicationPage({ params }: { params: Promise
             )}
             {correctable && <CorrectFormButton detail={d} />}
             {isAdmin && a.status === "Missed" && <ReopenButton applicationId={a.id} childName={childName} />}
-            {isAdmin && a.status === "Accepted" && <EnrolButton applicationId={a.id} childName={childName} classrooms={classrooms} />}
+            {enrolling && <EnrolButton applicationId={a.id} childName={childName} classrooms={classrooms} terms={terms} defaultTerm={settings?.ok ? settings.data.entryTerm : null} />}
             {a.status === "Enrolled" && a.studentId && (
               <Link href={`/admin/students/${a.studentId}`} className="text-sm text-brand hover:underline">
                 Student record{a.admissionNumber ? ` (${a.admissionNumber})` : ""}
