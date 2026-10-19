@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { GUID } from "@/lib/media/binary-proxy";
 import { loadTestFormData } from "@/lib/cbt/test-data";
-import { testsHref } from "@/lib/cbt/tests";
 import { formatLagos } from "@/lib/time/lagos";
-import { Badge, Card, PageHeader } from "@/components/ui/primitives";
+import { Card, PageHeader } from "@/components/ui/primitives";
 import { AccessDenied, ProblemState } from "@/components/ui/states";
 import { TestBuilder } from "@/components/cbt/test-builder";
 import { TestActions } from "@/components/cbt/test-actions";
+import { TestHeader } from "@/components/cbt/test-tabs";
 
 export const metadata: Metadata = { title: "Test" };
 
@@ -53,23 +51,10 @@ export default async function TestPage({ params }: { params: Promise<{ id: strin
 
   return (
     <>
-      <Link href={testsHref(t.termId)} className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-brand hover:underline">
-        <ArrowLeft className="size-4" aria-hidden />
-        Tests &amp; exams
-      </Link>
-      <PageHeader
-        title={t.title}
-        description={
-          <>
-            {t.subject} · {t.classLevel} · {t.term}
-          </>
-        }
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={t.status === "Published" ? "success" : "warning"}>{t.status}</Badge>
-            {draft && <TestActions test={t} scopes={form.scopes.ok ? form.scopes.data : []} terms={form.terms} components={form.components} arms={form.arms} />}
-          </div>
-        }
+      <TestHeader
+        test={t}
+        active="build"
+        actions={draft && <TestActions test={t} scopes={form.scopes.ok ? form.scopes.data : []} terms={form.terms} components={form.components} arms={form.arms} />}
       />
       <Card className="mb-5 grid gap-4 p-5 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <div>
