@@ -208,6 +208,7 @@ internal sealed class SchoolProfileConfig : IEntityTypeConfiguration<Domain.Sett
         b.Property(x => x.FacebookUrl).HasMaxLength(300);
         b.Property(x => x.InstagramUrl).HasMaxLength(300);
         b.Property(x => x.OfficeHours).HasMaxLength(120);
+        b.Property(x => x.ShowStatsOnWebsite).HasDefaultValue(true);
         b.Property(x => x.PrincipalName).HasMaxLength(80);
         b.Property(x => x.LogoPath).HasMaxLength(200);
         b.Property(x => x.SignaturePath).HasMaxLength(200);
@@ -226,6 +227,7 @@ internal sealed class OutboxEmailConfig : IEntityTypeConfiguration<Domain.Commun
         b.Property(x => x.Subject).HasMaxLength(200);
         b.Property(x => x.Body).HasMaxLength(4000);
         b.Property(x => x.LastError).HasMaxLength(500);
+        b.Property(x => x.ReplyTo).HasMaxLength(254);
         b.HasIndex(x => new { x.Status, x.NextAttemptAt });
         b.HasIndex(x => new { x.StudentId, x.TermId });
     }
@@ -692,6 +694,16 @@ internal sealed class NewsletterConfig : IEntityTypeConfiguration<NewsletterSubs
     {
         b.HasIndex(x => x.Email).IsUnique();
         b.Property(x => x.Email).HasMaxLength(254);
+    }
+}
+
+internal sealed class NoticeReadConfig : IEntityTypeConfiguration<NoticeRead>
+{
+    public void Configure(EntityTypeBuilder<NoticeRead> b)
+    {
+        b.HasKey(x => new { x.UserId, x.AnnouncementId });
+        b.HasOne<Announcement>().WithMany().HasForeignKey(x => x.AnnouncementId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Application.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 

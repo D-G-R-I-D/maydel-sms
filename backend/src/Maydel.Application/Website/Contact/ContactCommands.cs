@@ -41,10 +41,10 @@ internal sealed class SendContactMessageHandler(IAppDbContext db, TimeProvider t
         if (school?.Email is { } to)
             db.OutboxEmails.Add(new OutboxEmail
             {
-                Kind = EmailKind.ContactForm, ToAddress = to, ToName = school.Name,
+                Kind = EmailKind.ContactForm, ToAddress = to, ToName = school.Name, ReplyTo = message.Email,
                 Subject = $"Website message: {message.Subject ?? "from " + message.Name}"[..Math.Min(200, $"Website message: {message.Subject ?? "from " + message.Name}".Length)],
                 Body = $"From: {message.Name} <{message.Email}>{(message.Phone is null ? "" : $", {message.Phone}")}\n\n{message.Message}\n\n" +
-                       "Reply to the sender's address above. This message is also in the staff console under Website → Messages.",
+                       "Press Reply to answer the sender. This message is also in the staff console under Website → Messages.",
                 NextAttemptAt = time.GetUtcNow(),
             });
         await db.SaveChangesAsync(ct);

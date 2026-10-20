@@ -93,6 +93,14 @@ public class SchoolEvent : Entity
     public Audience Audience { get; set; } = Audience.Everyone;
 }
 
+/// <summary>That a signed-in user has read a notice (E12.1): drives the unread badge.</summary>
+public class NoticeRead
+{
+    public Guid UserId { get; set; }
+    public Guid AnnouncementId { get; set; }
+    public DateTimeOffset ReadAt { get; set; }
+}
+
 /// <summary>A parent's or student's words for the website (E7.1), shown when published, in order.</summary>
 public class Testimonial : Entity
 {

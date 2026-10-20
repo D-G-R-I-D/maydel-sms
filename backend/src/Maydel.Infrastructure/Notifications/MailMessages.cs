@@ -13,14 +13,14 @@ internal static class MailMessages
     {
         var mail = new MailMessage
         {
-            From = new MailAddress(options.FromAddress, options.FromName),
+            From = message.From is { } from ? new MailAddress(from.Address, from.Name) : new MailAddress(options.FromAddress, options.FromName),
             Subject = message.Subject,
             SubjectEncoding = Encoding.UTF8,
             BodyEncoding = Encoding.UTF8,
             Body = message.TextBody,
         };
         mail.To.Add(new MailAddress(message.To, message.ToName));
-        if (!string.IsNullOrWhiteSpace(options.ReplyTo)) mail.ReplyToList.Add(options.ReplyTo);
+        if ((message.ReplyTo ?? options.ReplyTo) is { Length: > 0 } replyTo) mail.ReplyToList.Add(replyTo);
         mail.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(Html(message.TextBody), Encoding.UTF8, MediaTypeNames.Text.Html));
         foreach (var a in message.Attachments)
             mail.Attachments.Add(new Attachment(new MemoryStream(a.Content), a.FileName, a.ContentType));

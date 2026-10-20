@@ -107,6 +107,7 @@ app.MapAdmissionEndpoints();
 app.MapCbtEndpoints();
 app.MapStudentTestEndpoints();
 app.MapWebsiteEndpoints();
+app.MapNoticeEndpoints();
 
 if (!generatingOpenApiDocument && app.Configuration.GetValue("Database:MigrateOnStartup", false))
 {

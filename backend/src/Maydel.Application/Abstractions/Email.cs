@@ -2,7 +2,11 @@ namespace Maydel.Application.Abstractions;
 
 public sealed record EmailAttachment(string FileName, string ContentType, byte[] Content);
 
-public sealed record EmailMessage(string To, string? ToName, string Subject, string TextBody, IReadOnlyList<EmailAttachment> Attachments);
+/// <summary><c>From</c>/<c>ReplyTo</c>: null = the configured defaults (E12.7 picks a department sender per email kind).</summary>
+public sealed record EmailMessage(string To, string? ToName, string Subject, string TextBody, IReadOnlyList<EmailAttachment> Attachments,
+    EmailFrom? From = null, string? ReplyTo = null);
+
+public sealed record EmailFrom(string Address, string Name);
 
 /// <summary>Delivers one email. Throws on failure; the outbox records the error and retries (E12.3).</summary>
 public interface IEmailSender
@@ -25,6 +29,14 @@ public sealed class EmailOptions
     public string FromAddress { get; set; } = "no-reply@maydelspringschools.com";
     public string FromName { get; set; } = "Maydel Spring Schools";
     public string? ReplyTo { get; set; }
+
+    /// <summary>
+    /// Department senders (E12.7), e.g. admissions@ / accounts@ / results@. Each must be verified with the email provider
+    /// (same domain as <see cref="FromAddress"/>). Empty = use <see cref="FromAddress"/>.
+    /// </summary>
+    public string? AdmissionsAddress { get; set; }
+    public string? AccountsAddress { get; set; }
+    public string? ResultsAddress { get; set; }
 
     /// <summary>Link to the parent portal mentioned in result emails, e.g. https://portal.maydelspringschools.com.</summary>
     public string? PortalUrl { get; set; }

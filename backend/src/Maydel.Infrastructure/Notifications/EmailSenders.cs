@@ -59,9 +59,9 @@ internal sealed class ResendEmailSender(HttpClient http, IOptions<EmailOptions> 
         {
             Content = JsonContent.Create(new
             {
-                from = $"{o.FromName} <{o.FromAddress}>",
+                from = message.From is { } f ? $"{f.Name} <{f.Address}>" : $"{o.FromName} <{o.FromAddress}>",
                 to = new[] { message.To },
-                reply_to = o.ReplyTo,
+                reply_to = message.ReplyTo ?? o.ReplyTo,
                 subject = message.Subject,
                 text = message.TextBody,
                 html = MailMessages.Html(message.TextBody),

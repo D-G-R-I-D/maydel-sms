@@ -13,7 +13,7 @@ namespace Maydel.Application.Notifications;
 /// </summary>
 public sealed class EmailDispatcher(
     IAppDbContext db, IEmailSender sender, ReportBuilder reports, ReportPdfs pdfs, Finance.FinanceDocuments finance, Admissions.AdmissionLetters letters,
-    TimeProvider clock, ILogger<EmailDispatcher> logger)
+    Microsoft.Extensions.Options.IOptions<EmailOptions> options, TimeProvider clock, ILogger<EmailDispatcher> logger)
 {
     public const int BatchSize = 10;
 
@@ -73,7 +73,8 @@ public sealed class EmailDispatcher(
                     attachments.Add(new EmailAttachment(letter.FileName, "application/pdf", letter.Content));
                 }
 
-                await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, email.Body, attachments), ct);
+                await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, email.Body, attachments,
+                    Senders.For(email.Kind, options.Value), email.ReplyTo), ct);
                 email.MarkSent(clock.GetUtcNow());
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
