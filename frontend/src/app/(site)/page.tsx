@@ -161,7 +161,7 @@ export default async function HomePage() {
           A fenced, gated campus with CCTV, airy classrooms, a shaded early-years play area, courts and a football pitch.
         </SectionHeading>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:grid-rows-2">
-          {[siteImages.earlyYears, siteImages.coveredPlay, siteImages.aerobics, siteImages.culture, siteImages.pitch].map((img, i) => (
+          {[siteImages.aerobics, siteImages.coveredPlay, siteImages.culture, siteImages.courtyard, siteImages.pitch].map((img, i) => (
             <div key={img.src} className={`relative overflow-hidden rounded-card ${i === 0 ? "col-span-2 row-span-2 aspect-[4/3] lg:aspect-auto" : "aspect-[4/3]"}`}>
               <Image src={img.src} alt={img.alt} fill sizes={i === 0 ? "(min-width: 1024px) 560px, 100vw" : "(min-width: 1024px) 280px, 50vw"} className="object-cover transition-transform duration-500 hover:scale-105 motion-reduce:transition-none" />
             </div>

@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Download } from "lucide-react";
 import { loadSite } from "@/lib/site/api";
-import { admissionSteps, faqs, programmes, siteImages } from "@/lib/site/content";
+import { admissionSteps, faqs, programmes } from "@/lib/site/content";
+import { DriftingCircles } from "@/components/ui/drifting-circles";
 import { formatNaira } from "@/lib/finance/rules";
 import { Card, buttonClasses } from "@/components/ui/primitives";
-import { Alert } from "@/components/ui/states";
 
 export const metadata: Metadata = {
   title: "Admissions",
@@ -38,14 +38,49 @@ export default async function AdmissionsInfoPage() {
             ))}
           </div>
         ) : (
-          <Alert tone="info" title="Admissions aren't open right now">
-            Please check back later, or <Link href="/contact" className="font-medium text-brand hover:underline">contact the school office</Link> about the next intake.
-          </Alert>
+          <p className="text-muted">
+            Admissions aren&apos;t open right now. Check back soon, or{" "}
+            <Link href="/contact" className="font-medium text-brand hover:underline">
+              ask the school office
+            </Link>{" "}
+            about the next intake.
+          </p>
         )}
       </header>
-        <div className="relative hidden aspect-[3/4] overflow-hidden rounded-card lg:block">
-          <Image src={siteImages.signboard.src} alt={siteImages.signboard.alt} fill priority sizes="(min-width: 1024px) 420px, 0px" className="object-cover object-top" />
-        </div>
+        {/* A branded panel rather than a photo: the live admissions status at a glance. */}
+        <aside className="brand-panel relative overflow-hidden rounded-card p-8 text-white" aria-label="Admissions at a glance">
+          <DriftingCircles density="light" />
+          <div className="relative z-10 space-y-5">
+            <span className="inline-flex size-16 items-center justify-center rounded-full bg-white/95 p-2.5 shadow-lg">
+              <Image src="/brand/crest.svg" alt="" width={40} height={50} className="h-auto w-10" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold tracking-[0.18em] text-gold uppercase">{open.length > 0 ? "Now admitting" : "Admissions"}</p>
+              <p className="mt-1 font-display text-3xl font-semibold">{open.length > 0 ? `${open[0].session} session` : "Opening soon"}</p>
+            </div>
+            <ul className="space-y-2 text-sm text-white/90">
+              <li className="flex gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-gold" aria-hidden />
+                Creche and Nursery through Senior Secondary
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-gold" aria-hidden />
+                {open.length > 0 ? (open[0].formFee > 0 ? `Form fee ${formatNaira(open[0].formFee)}, paid online or at school` : "No form fee this session") : "Ask the office about the next intake"}
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-gold" aria-hidden />
+                Apply online and track every step from your family account
+              </li>
+            </ul>
+            <Link
+              href={open.length > 0 ? "/admissions/apply" : "/contact"}
+              className="inline-flex min-h-11 items-center gap-2 rounded-input bg-gold px-5 font-semibold text-[#0f2a44] hover:bg-gold/90"
+            >
+              {open.length > 0 ? "Apply now" : "Contact the office"}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+        </aside>
       </div>
 
       <section aria-labelledby="steps">
