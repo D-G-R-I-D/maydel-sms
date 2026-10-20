@@ -87,6 +87,11 @@ export const siteImages = {
   courtyard: { src: "/site/courtyard.jpg", alt: "The courtyard, with murals on the classroom walls and the court" },
   playArea: { src: "/site/play-area.jpg", alt: "The shaded early-years play area with soft artificial grass" },
   pitch: { src: "/site/sports-pitch.jpg", alt: "The fenced football pitch and courts" },
+  hero: { src: "/site/campus-hero.jpg", alt: "Classroom blocks with red roofs around the school's basketball court" },
+  signboard: { src: "/site/signboard.jpg", alt: "The Maydel Spring Schools signboard by the gate: Early years, Primary, Junior High, Senior High, After-school care" },
+  earlyYears: { src: "/site/early-years-room.jpg", alt: "The early-years room: a “Small hands change the world” door, toys, a play pen and pictures on the wall" },
+  culture: { src: "/site/cultural-heritage.jpg", alt: "The play area set up for the Cultural Heritage celebration" },
+  coveredPlay: { src: "/site/covered-play-area.jpg", alt: "The covered play area with soft artificial grass" },
 } as const;
 
 /** Short reasons to choose the school, scrolled in a band on the homepage. */
@@ -110,6 +115,9 @@ export const testimonials = [
 ] as const;
 
 export const anniversary = { years: 5, when: "March 2027" } as const;
+
+// Website photos never show identifiable children unless the school confirms parents' consent for
+// website use (e.g. the old site's assembly crowd and single-child close-up are deliberately left out).
 
 /** The parents' guide (the previous site's "For Parents" page). */
 export const parentGuide = [

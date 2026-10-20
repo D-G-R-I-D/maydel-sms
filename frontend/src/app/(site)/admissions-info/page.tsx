@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Download } from "lucide-react";
 import { loadSite } from "@/lib/site/api";
-import { admissionSteps, faqs, programmes } from "@/lib/site/content";
+import { admissionSteps, faqs, programmes, siteImages } from "@/lib/site/content";
 import { formatNaira } from "@/lib/finance/rules";
 import { Card, buttonClasses } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
@@ -19,6 +20,7 @@ export default async function AdmissionsInfoPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-4 py-10 sm:px-6">
+      <div className="grid gap-8 lg:grid-cols-[3fr_2fr] lg:items-center">
       <header className="max-w-3xl space-y-3">
         <p className="text-sm font-semibold tracking-wide text-brand uppercase">Admissions</p>
         <h1 className="font-display text-4xl font-semibold text-balance">Give your child a strong start.</h1>
@@ -41,6 +43,10 @@ export default async function AdmissionsInfoPage() {
           </Alert>
         )}
       </header>
+        <div className="relative hidden aspect-[3/4] overflow-hidden rounded-card lg:block">
+          <Image src={siteImages.signboard.src} alt={siteImages.signboard.alt} fill priority sizes="(min-width: 1024px) 420px, 0px" className="object-cover object-top" />
+        </div>
+      </div>
 
       <section aria-labelledby="steps">
         <h2 id="steps" className="font-display text-2xl font-semibold">

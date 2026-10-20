@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { loadSchoolProfile, telHref } from "@/lib/site/api";
+import { siteImages } from "@/lib/site/content";
 import { ContactForm } from "@/components/site/contact-form";
 import { Card, buttonClasses } from "@/components/ui/primitives";
 
@@ -18,7 +20,11 @@ export default async function ContactPage() {
           <h2 className="mb-4 font-display text-xl font-semibold">Send us a message</h2>
           <ContactForm />
         </Card>
-        <Card className="space-y-4 p-5">
+        <Card className="space-y-4 overflow-hidden p-0">
+          <div className="relative aspect-[4/3]">
+            <Image src={siteImages.signboard.src} alt={siteImages.signboard.alt} fill sizes="(min-width: 1024px) 380px, 100vw" className="object-cover object-[50%_30%]" />
+          </div>
+          <div className="space-y-4 px-5 pb-5">
           <h2 className="font-display text-xl font-semibold">School information</h2>
           <address className="space-y-3 text-sm not-italic">
             {p.address && (
@@ -65,6 +71,7 @@ export default async function ContactPage() {
             )}
           </div>
           {!p.address && !p.phone && !p.email && <p className="text-sm text-muted">Use the form and the school office will get back to you.</p>}
+          </div>
         </Card>
       </div>
     </div>
