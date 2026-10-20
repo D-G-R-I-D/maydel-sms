@@ -688,7 +688,20 @@ internal sealed class ContactMessageConfig : IEntityTypeConfiguration<ContactMes
 
 internal sealed class NewsletterConfig : IEntityTypeConfiguration<NewsletterSubscriber>
 {
-    public void Configure(EntityTypeBuilder<NewsletterSubscriber> b) => b.HasIndex(x => x.Email).IsUnique();
+    public void Configure(EntityTypeBuilder<NewsletterSubscriber> b)
+    {
+        b.HasIndex(x => x.Email).IsUnique();
+        b.Property(x => x.Email).HasMaxLength(254);
+    }
+}
+
+internal sealed class TestimonialConfig : IEntityTypeConfiguration<Testimonial>
+{
+    public void Configure(EntityTypeBuilder<Testimonial> b)
+    {
+        b.Property(x => x.Quote).HasMaxLength(1000);
+        b.Property(x => x.Attribution).HasMaxLength(120);
+    }
 }
 
 internal sealed class AuditLogConfig : IEntityTypeConfiguration<AuditLog>

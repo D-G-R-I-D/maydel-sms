@@ -93,6 +93,17 @@ public class SchoolEvent : Entity
     public Audience Audience { get; set; } = Audience.Everyone;
 }
 
+/// <summary>A parent's or student's words for the website (E7.1), shown when published, in order.</summary>
+public class Testimonial : Entity
+{
+    public required string Quote { get; set; }
+
+    /// <summary>Who said it, without identifying a child, e.g. "Parent of a Year 3 pupil".</summary>
+    public required string Attribution { get; set; }
+    public int Order { get; set; }
+    public bool IsPublished { get; set; } = true;
+}
+
 public class GalleryPhoto : Entity
 {
     public required string Title { get; set; }

@@ -780,8 +780,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -1671,6 +1671,38 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("Events");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Communication.Testimonial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Attribution")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Quote")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Testimonials");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Finance.FeeItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2292,6 +2324,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<int?>("FoundedYear")
+                        .HasColumnType("integer");
+
                     b.Property<string>("InstagramUrl")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
@@ -2324,6 +2359,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<string>("PrincipalName")
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
+
+                    b.Property<bool>("ShowStatsOnWebsite")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SignaturePath")
                         .HasMaxLength(200)

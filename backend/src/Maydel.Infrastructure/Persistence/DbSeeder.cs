@@ -135,12 +135,22 @@ public sealed class DbSeeder(
     /// <summary>The first start-up copies the <c>School</c> configuration into the editable profile (E2.6); after that the admin owns it.</summary>
     private async Task SeedSchoolProfileAsync(CancellationToken ct)
     {
-        if (await db.SchoolProfiles.AnyAsync(ct)) return;
         var defaults = school.Value;
+        if (await db.SchoolProfiles.OrderBy(p => p.CreatedAt).FirstOrDefaultAsync(ct) is { } existing)
+        {
+            // Demo installs only: fill website contact fields added later, never overwriting what an admin set.
+            if (_options.DemoData && existing.WhatsApp is null && existing.OfficeHours is null && existing.InstagramUrl is null)
+            {
+                (existing.WhatsApp, existing.OfficeHours, existing.InstagramUrl) = (defaults.WhatsApp, defaults.OfficeHours, defaults.InstagramUrl);
+                await db.SaveChangesAsync(ct);
+            }
+            return;
+        }
         db.SchoolProfiles.Add(new Domain.Settings.SchoolProfile
         {
             Name = defaults.Name, Motto = defaults.Motto, Address = defaults.Address, Phone = defaults.Phone,
             Email = defaults.Email, Website = defaults.Website, PrincipalName = defaults.PrincipalName,
+            WhatsApp = defaults.WhatsApp, OfficeHours = defaults.OfficeHours, InstagramUrl = defaults.InstagramUrl,
         });
         await db.SaveChangesAsync(ct);
     }

@@ -3,6 +3,8 @@ using Maydel.Application.Common;
 using Maydel.Application.Common.Messaging;
 using Maydel.Application.Photos;
 using Maydel.Application.Website;
+using System.Text;
+using Maydel.Application.Website.Cms;
 using Maydel.Application.Website.Contact;
 using Maydel.Application.Website.Events;
 using Maydel.Application.Website.Gallery;
@@ -43,6 +45,13 @@ public static class WebsiteEndpoints
         cms.MapGet("/messages", Messages).WithName("ListContactMessages").ProducesProblems(401, 403);
         cms.MapPut("/messages/{id:guid}/status", MessageStatusSet).WithName("SetContactMessageStatus").ProducesProblems(400, 401, 403, 404);
         cms.MapPut("/staff/{id:guid}", StaffProfile).WithName("SetStaffWebsiteProfile").ProducesProblems(400, 401, 403, 404);
+        cms.MapGet("/testimonials", Testimonials).WithName("ListTestimonials").ProducesProblems(401, 403);
+        cms.MapPost("/testimonials", CreateTestimonial).WithName("CreateTestimonial").ProducesProblems(400, 401, 403);
+        cms.MapPut("/testimonials/{id:guid}", UpdateTestimonial).WithName("UpdateTestimonial").ProducesProblems(400, 401, 403, 404);
+        cms.MapDelete("/testimonials/{id:guid}", DeleteTestimonial).WithName("DeleteTestimonial").ProducesProblems(401, 403, 404);
+        cms.MapGet("/subscribers", Subscribers).WithName("ListSubscribers").ProducesProblems(401, 403);
+        cms.MapGet("/subscribers.csv", SubscribersCsv).WithName("ExportSubscribersCsv").Produces(StatusCodes.Status200OK, contentType: "text/csv").ProducesProblems(401, 403);
+        cms.MapDelete("/subscribers/{id:guid}", Unsubscribe).WithName("Unsubscribe").ProducesProblems(401, 403, 404);
 
         var site = app.MapGroup("/api/public/site").WithTags("Website").AllowAnonymous();
         site.MapGet("/news", News).WithName("ListPublicNews").ProducesProblems(400);
@@ -52,6 +61,10 @@ public static class WebsiteEndpoints
         site.MapGet("/events", PublicEvents).WithName("ListPublicEvents");
         site.MapGet("/gallery", Gallery).WithName("GetPublicGallery");
         site.MapGet("/staff", Staff).WithName("ListPublicStaff");
+        site.MapGet("/calendar", Calendar).WithName("GetPublicCalendar");
+        site.MapGet("/stats", Stats).WithName("GetPublicStats");
+        site.MapGet("/testimonials", PublicTestimonials).WithName("ListPublicTestimonials");
+        site.MapPost("/subscribe", Subscribe).WithName("Subscribe").RequireRateLimiting(RateLimits.PublicForms).ProducesProblems(400, 429);
         site.MapPost("/contact", Contact).WithName("SendContactMessage").RequireRateLimiting(RateLimits.PublicForms).ProducesProblems(400, 429);
         site.MapGet("/images/{kind}/{id:guid}", Image).WithName("GetPublicImage").ProducesProblems(404).PublicCache();
     }
@@ -69,6 +82,35 @@ public static class WebsiteEndpoints
     });
 
     public sealed record StatusInput(MessageStatus Status);
+
+    private static async Task<Results<Ok<IReadOnlyList<TestimonialDto>>, ProblemHttpResult>> Testimonials(IQueryHandler<ListTestimonialsQuery, IReadOnlyList<TestimonialDto>> h, CancellationToken ct) =>
+        (await h.Handle(new ListTestimonialsQuery(), ct)).ToHttpResult();
+    private static async Task<Results<Ok<TestimonialDto>, ProblemHttpResult>> CreateTestimonial(TestimonialInput body, ICommandHandler<SaveTestimonialCommand, TestimonialDto> h, CancellationToken ct) =>
+        (await h.Handle(new SaveTestimonialCommand(null, body), ct)).ToHttpResult();
+    private static async Task<Results<Ok<TestimonialDto>, ProblemHttpResult>> UpdateTestimonial(Guid id, TestimonialInput body, ICommandHandler<SaveTestimonialCommand, TestimonialDto> h, CancellationToken ct) =>
+        (await h.Handle(new SaveTestimonialCommand(id, body), ct)).ToHttpResult();
+    private static async Task<Results<NoContent, ProblemHttpResult>> DeleteTestimonial(Guid id, ICommandHandler<DeleteTestimonialCommand> h, CancellationToken ct) =>
+        (await h.Handle(new DeleteTestimonialCommand(id), ct)).ToHttpResult();
+    private static async Task<Results<Ok<PagedResult<SubscriberDto>>, ProblemHttpResult>> Subscribers([AsParameters] ListSubscribersQuery q, IQueryHandler<ListSubscribersQuery, PagedResult<SubscriberDto>> h, CancellationToken ct) =>
+        (await h.Handle(q, ct)).ToHttpResult();
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> SubscribersCsv(IQueryHandler<ListSubscribersQuery, PagedResult<SubscriberDto>> h, CancellationToken ct)
+    {
+        var result = await h.Handle(new ListSubscribersQuery(true, 1, 10000), ct);
+        if (result.IsFailure) return result.Error!.ToProblem();
+        var csv = new StringBuilder("Email,Subscribed\r\n");
+        foreach (var s in result.Value.Items) csv.Append(Csv.Cell(s.Email)).Append(',').Append(s.CreatedAt.ToString("yyyy-MM-dd")).Append("\r\n");
+        return TypedResults.File(Csv.Bytes(csv), "text/csv", "Newsletter subscribers.csv");
+    }
+    private static async Task<Results<NoContent, ProblemHttpResult>> Unsubscribe(Guid id, ICommandHandler<UnsubscribeCommand> h, CancellationToken ct) =>
+        (await h.Handle(new UnsubscribeCommand(id), ct)).ToHttpResult();
+    private static async Task<Results<Ok<IReadOnlyList<CalendarSession>>, ProblemHttpResult>> Calendar(IQueryHandler<GetPublicCalendarQuery, IReadOnlyList<CalendarSession>> h, CancellationToken ct) =>
+        (await h.Handle(new GetPublicCalendarQuery(), ct)).ToHttpResult();
+    private static async Task<Results<Ok<PublicStats>, ProblemHttpResult>> Stats(IQueryHandler<GetPublicStatsQuery, PublicStats> h, CancellationToken ct) =>
+        (await h.Handle(new GetPublicStatsQuery(), ct)).ToHttpResult();
+    private static async Task<Results<Ok<IReadOnlyList<PublicTestimonial>>, ProblemHttpResult>> PublicTestimonials(IQueryHandler<ListPublicTestimonialsQuery, IReadOnlyList<PublicTestimonial>> h, CancellationToken ct) =>
+        (await h.Handle(new ListPublicTestimonialsQuery(), ct)).ToHttpResult();
+    private static async Task<Results<NoContent, ProblemHttpResult>> Subscribe(SubscribeInput body, ICommandHandler<SubscribeCommand> h, CancellationToken ct) =>
+        (await h.Handle(new SubscribeCommand(body), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<PagedResult<PostDto>>, ProblemHttpResult>> ListPosts([AsParameters] ListPostsQuery q, IQueryHandler<ListPostsQuery, PagedResult<PostDto>> h, CancellationToken ct) =>
         (await h.Handle(q, ct)).ToHttpResult();

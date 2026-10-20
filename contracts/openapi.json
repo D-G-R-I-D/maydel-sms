@@ -16174,6 +16174,393 @@
         }
       }
     },
+    "/api/cms/testimonials": {
+      "get": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "ListTestimonials",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TestimonialDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "CreateTestimonial",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestimonialInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestimonialDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cms/testimonials/{id}": {
+      "put": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "UpdateTestimonial",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestimonialInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestimonialDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "DeleteTestimonial",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cms/subscribers": {
+      "get": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "ListSubscribers",
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfSubscriberDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cms/subscribers.csv": {
+      "get": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "ExportSubscribersCsv",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cms/subscribers/{id}": {
+      "delete": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "Unsubscribe",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/site/news": {
       "get": {
         "tags": [
@@ -16390,6 +16777,115 @@
                   "items": {
                     "$ref": "#/components/schemas/PublicStaff"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/site/calendar": {
+      "get": {
+        "tags": [
+          "Website"
+        ],
+        "operationId": "GetPublicCalendar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarSession"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/site/stats": {
+      "get": {
+        "tags": [
+          "Website"
+        ],
+        "operationId": "GetPublicStats",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/site/testimonials": {
+      "get": {
+        "tags": [
+          "Website"
+        ],
+        "operationId": "ListPublicTestimonials",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicTestimonial"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/site/subscribe": {
+      "post": {
+        "tags": [
+          "Website"
+        ],
+        "operationId": "Subscribe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -18056,6 +18552,70 @@
           "slotId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "CalendarSession": {
+        "required": [
+          "id",
+          "session",
+          "isCurrent",
+          "terms"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "session": {
+            "type": "string"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CalendarTerm"
+            }
+          }
+        }
+      },
+      "CalendarTerm": {
+        "required": [
+          "term",
+          "startsOn",
+          "endsOn",
+          "midTermStartsOn",
+          "midTermEndsOn"
+        ],
+        "type": "object",
+        "properties": {
+          "term": {
+            "type": "string"
+          },
+          "startsOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "endsOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "midTermStartsOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "midTermEndsOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
           }
         }
       },
@@ -22059,6 +22619,35 @@
           }
         }
       },
+      "PagedResultOfSubscriberDto": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriberDto"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PaperItem": {
         "required": [
           "id",
@@ -23207,6 +23796,76 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PublicStats": {
+        "required": [
+          "shown",
+          "students",
+          "studentsLabel",
+          "teachers",
+          "teachersLabel",
+          "levels",
+          "foundedYear",
+          "yearsOfService"
+        ],
+        "type": "object",
+        "properties": {
+          "shown": {
+            "type": "boolean"
+          },
+          "students": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "studentsLabel": {
+            "type": "string"
+          },
+          "teachers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "teachersLabel": {
+            "type": "string"
+          },
+          "levels": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "foundedYear": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "yearsOfService": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PublicTestimonial": {
+        "required": [
+          "id",
+          "quote",
+          "attribution"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "attribution": {
+            "type": "string"
           }
         }
       },
@@ -24905,7 +25564,9 @@
           "mapUrl",
           "facebookUrl",
           "instagramUrl",
-          "officeHours"
+          "officeHours",
+          "foundedYear",
+          "showStatsOnWebsite"
         ],
         "type": "object",
         "properties": {
@@ -24986,6 +25647,16 @@
               "null",
               "string"
             ]
+          },
+          "foundedYear": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "showStatsOnWebsite": {
+            "type": "boolean"
           }
         }
       },
@@ -26343,6 +27014,49 @@
           }
         }
       },
+      "SubscribeInput": {
+        "required": [
+          "email",
+          "website"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "website": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubscriberDto": {
+        "required": [
+          "id",
+          "email",
+          "isActive",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "TermDatesRequest": {
         "required": [
           "startsOn",
@@ -26711,6 +27425,59 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "TestimonialDto": {
+        "required": [
+          "id",
+          "quote",
+          "attribution",
+          "order",
+          "isPublished"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "attribution": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPublished": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TestimonialInput": {
+        "required": [
+          "quote",
+          "attribution",
+          "order",
+          "isPublished"
+        ],
+        "type": "object",
+        "properties": {
+          "quote": {
+            "type": "string"
+          },
+          "attribution": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPublished": {
+            "type": "boolean"
           }
         }
       },
@@ -27108,6 +27875,19 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "foundedYear": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "showStatsOnWebsite": {
+            "type": [
+              "null",
+              "boolean"
             ]
           }
         }
