@@ -33,7 +33,7 @@ export default async function HomePage() {
 
       {/* Full-bleed hero: the campus, a navy wash for legible text, and the drifting circles over it. */}
       <section className="relative isolate overflow-hidden bg-navy text-white" aria-labelledby="hero-title">
-        <Image src={siteImages.campus.src} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[50%_40%]" />
+        <Image src={siteImages.hero.src} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[60%_50%]" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0f2a44]/95 via-[#183754]/80 to-[#183754]/30" aria-hidden />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-[#0f2a44]/70 to-transparent" aria-hidden />
         <DriftingCircles density="light" />
@@ -161,7 +161,7 @@ export default async function HomePage() {
           A fenced, gated campus with CCTV, airy classrooms, a shaded early-years play area, courts and a football pitch.
         </SectionHeading>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:grid-rows-2">
-          {[siteImages.campus, siteImages.playArea, siteImages.aerobics, siteImages.courtyard, siteImages.pitch].map((img, i) => (
+          {[siteImages.assembly, siteImages.earlyYears, siteImages.aerobics, siteImages.coveredPlay, siteImages.pitch].map((img, i) => (
             <div key={img.src} className={`relative overflow-hidden rounded-card ${i === 0 ? "col-span-2 row-span-2 aspect-[4/3] lg:aspect-auto" : "aspect-[4/3]"}`}>
               <Image src={img.src} alt={img.alt} fill sizes={i === 0 ? "(min-width: 1024px) 560px, 100vw" : "(min-width: 1024px) 280px, 50vw"} className="object-cover transition-transform duration-500 hover:scale-105 motion-reduce:transition-none" />
             </div>

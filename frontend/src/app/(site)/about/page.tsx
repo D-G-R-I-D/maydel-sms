@@ -67,7 +67,7 @@ export default function AboutPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2" aria-label="School life">
-        {[siteImages.teaching, siteImages.aerobics].map((img) => (
+        {[siteImages.earlyYears, siteImages.assembly].map((img) => (
           <div key={img.src} className="relative aspect-[4/3] overflow-hidden rounded-card">
             <Image src={img.src} alt={img.alt} fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
           </div>
