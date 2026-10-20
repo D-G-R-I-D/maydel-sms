@@ -46,6 +46,7 @@ public static class PortalEndpoints
         portal.MapGet("/children/{studentId:guid}/proofs", ListProofs).WithName("ListChildProofs").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/proofs/{proofId:guid}/file", ProofFile).WithName("GetChildProofFile").ProducesProblems(401, 403, 404);
         portal.MapGet("/payments/{reference}", GetPayment).WithName("GetOnlinePayment").ProducesProblems(401, 403, 404);
+        portal.MapGet("/children/{studentId:guid}/attendance", Attendance).WithName("GetChildAttendance").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/tests", ListTests).WithName("ListChildTests").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results", ListResults).WithName("ListChildResults").ProducesProblems(401, 403, 404);
         portal.MapGet("/children/{studentId:guid}/results/{termId:guid}", GetResult).WithName("GetChildResult").ProducesProblems(401, 403, 404);
@@ -54,6 +55,11 @@ public static class PortalEndpoints
     }
 
     public sealed record PayRequest(decimal? Amount);
+
+    private static async Task<Results<Ok<Application.Portal.GetChildAttendance.ChildAttendance>, ProblemHttpResult>> Attendance(
+        Guid studentId, Guid? termId, IQueryHandler<Application.Portal.GetChildAttendance.GetChildAttendanceQuery, Application.Portal.GetChildAttendance.ChildAttendance> h,
+        CancellationToken ct) =>
+        (await h.Handle(new Application.Portal.GetChildAttendance.GetChildAttendanceQuery(studentId, termId), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<IReadOnlyList<Application.Cbt.ChildTestResult>>, ProblemHttpResult>> ListTests(
         Guid studentId, IQueryHandler<Application.Portal.ListChildTests.ListChildTestsQuery, IReadOnlyList<Application.Cbt.ChildTestResult>> h, CancellationToken ct) =>
