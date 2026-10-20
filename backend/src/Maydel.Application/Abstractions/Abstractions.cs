@@ -53,6 +53,7 @@ public interface IAppDbContext
     DbSet<Announcement> Announcements { get; }
     DbSet<SchoolEvent> Events { get; }
     DbSet<GalleryPhoto> GalleryPhotos { get; }
+    DbSet<Testimonial> Testimonials { get; }
 
     DbSet<AdmissionApplication> Applications { get; }
     DbSet<AdmissionSettings> AdmissionSettings { get; }

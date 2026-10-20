@@ -16,6 +16,7 @@ internal sealed class UpdateSchoolProfileValidator : AbstractValidator<UpdateSch
         RuleFor(x => x.WhatsApp).MaximumLength(40)
             .Must(v => string.IsNullOrWhiteSpace(v) || Domain.People.Guardian.NormalizePhone(v) is not null).WithMessage("Enter a valid WhatsApp number, e.g. 0803 123 4567.");
         RuleFor(x => x.OfficeHours).MaximumLength(120);
+        RuleFor(x => x.FoundedYear).InclusiveBetween(1900, 2100).When(x => x.FoundedYear is not null);
         foreach (var (get, name, max) in new (Func<UpdateSchoolProfileCommand, string?>, string, int)[]
             { (x => x.MapUrl, "mapUrl", 500), (x => x.FacebookUrl, "facebookUrl", 300), (x => x.InstagramUrl, "instagramUrl", 300) })
             RuleFor(x => get(x)).MaximumLength(max)

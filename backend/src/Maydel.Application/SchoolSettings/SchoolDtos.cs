@@ -11,7 +11,8 @@ namespace Maydel.Application.SchoolSettings;
 /// </summary>
 public sealed record SchoolProfileDto(
     string Name, string? Motto, string Address, string? Phone, string? Email, string? Website, string? PrincipalName,
-    string? LogoVersion, string? SignatureVersion, string? WhatsApp, string? MapUrl, string? FacebookUrl, string? InstagramUrl, string? OfficeHours);
+    string? LogoVersion, string? SignatureVersion, string? WhatsApp, string? MapUrl, string? FacebookUrl, string? InstagramUrl, string? OfficeHours,
+    int? FoundedYear, bool ShowStatsOnWebsite);
 
 /// <summary>What the public website shows about the school (no signature). <c>LogoUrl</c> is versioned for caching.</summary>
 public sealed record PublicSchoolProfile(
@@ -39,7 +40,8 @@ internal static class SchoolProfiles
 
     public static SchoolProfileDto ToDto(this SchoolProfile p) => new(
         p.Name, p.Motto, p.Address, p.Phone, p.Email, p.Website, p.PrincipalName,
-        PhotoStore.VersionOf(p.LogoPath), PhotoStore.VersionOf(p.SignaturePath), p.WhatsApp, p.MapUrl, p.FacebookUrl, p.InstagramUrl, p.OfficeHours);
+        PhotoStore.VersionOf(p.LogoPath), PhotoStore.VersionOf(p.SignaturePath), p.WhatsApp, p.MapUrl, p.FacebookUrl, p.InstagramUrl, p.OfficeHours,
+        p.FoundedYear, p.ShowStatsOnWebsite);
 
     public static PublicSchoolProfile ToPublic(this SchoolProfile p)
     {

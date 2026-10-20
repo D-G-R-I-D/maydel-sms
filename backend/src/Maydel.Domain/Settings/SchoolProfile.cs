@@ -27,5 +27,9 @@ public class SchoolProfile : Entity
     public string? InstagramUrl { get; set; }
     /// <summary>Free text, e.g. "Mon–Fri 7:30am – 4:00pm".</summary>
     public string? OfficeHours { get; set; }
+    public int? FoundedYear { get; set; }
+
+    /// <summary>Show live numbers (students, teachers, levels) on the website (E7.1).</summary>
+    public bool ShowStatsOnWebsite { get; set; } = true;
     public string? SignaturePath { get; set; }
 }

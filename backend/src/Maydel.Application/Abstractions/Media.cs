@@ -47,6 +47,9 @@ public sealed class SchoolProfileOptions
     public string? Phone { get; set; } = "09133595634";
     public string? Email { get; set; } = "admin@maydelspringschools.com";
     public string? Website { get; set; } = "www.maydelspringschools.com";
+    public string? WhatsApp { get; set; } = "09133595634";
+    public string? OfficeHours { get; set; } = "Monday – Friday · 8:00 AM – 4:00 PM";
+    public string? InstagramUrl { get; set; } = "https://www.instagram.com/maydelsprings/";
     /// <summary>Printed under the principal's comment.</summary>
     public string? PrincipalName { get; set; }
 }
