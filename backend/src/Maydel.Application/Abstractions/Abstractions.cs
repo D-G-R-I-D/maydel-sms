@@ -54,6 +54,7 @@ public interface IAppDbContext
     DbSet<SchoolEvent> Events { get; }
     DbSet<GalleryPhoto> GalleryPhotos { get; }
     DbSet<Testimonial> Testimonials { get; }
+    DbSet<NoticeRead> NoticeReads { get; }
 
     DbSet<AdmissionApplication> Applications { get; }
     DbSet<AdmissionSettings> AdmissionSettings { get; }

@@ -57,6 +57,9 @@ public class OutboxEmail : Entity
     public Guid? PaymentId { get; set; }
     public Guid? ApplicationId { get; set; }
 
+    /// <summary>Replies go here instead of the sender (e.g. the visitor who used the contact form).</summary>
+    public string? ReplyTo { get; set; }
+
     public EmailStatus Status { get; set; } = EmailStatus.Pending;
     public int Attempts { get; set; }
     public DateTimeOffset NextAttemptAt { get; set; }

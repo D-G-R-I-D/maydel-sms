@@ -1551,6 +1551,24 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("GalleryPhotos");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Communication.NoticeRead", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AnnouncementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "AnnouncementId");
+
+                    b.HasIndex("AnnouncementId");
+
+                    b.ToTable("NoticeReads");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Communication.OutboxEmail", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1590,6 +1608,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("PaymentId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ReplyTo")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
 
                     b.Property<DateTimeOffset?>("SentAt")
                         .HasColumnType("timestamp with time zone");
@@ -2361,7 +2383,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(80)");
 
                     b.Property<bool>("ShowStatsOnWebsite")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("SignaturePath")
                         .HasMaxLength(200)
@@ -3257,6 +3281,21 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Navigation("Events");
 
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.NoticeRead", b =>
+                {
+                    b.HasOne("Maydel.Domain.Communication.Announcement", null)
+                        .WithMany()
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Application.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Maydel.Domain.Finance.FeeItem", b =>

@@ -16974,6 +16974,112 @@
           }
         }
       }
+    },
+    "/api/notices": {
+      "get": {
+        "tags": [
+          "Notices"
+        ],
+        "operationId": "ListMyNotices",
+        "parameters": [
+          {
+            "name": "unreadOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeInbox"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/{id}/read": {
+      "post": {
+        "tags": [
+          "Notices"
+        ],
+        "operationId": "MarkNoticeRead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/read-all": {
+      "post": {
+        "tags": [
+          "Notices"
+        ],
+        "operationId": "MarkAllNoticesRead",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -21906,6 +22012,25 @@
           }
         }
       },
+      "NoticeInbox": {
+        "required": [
+          "unread",
+          "notices"
+        ],
+        "type": "object",
+        "properties": {
+          "unread": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortalNotice"
+            }
+          }
+        }
+      },
       "NotifyResult": {
         "required": [
           "queued",
@@ -23044,6 +23169,78 @@
             "items": {
               "$ref": "#/components/schemas/InvoiceDetail"
             }
+          }
+        }
+      },
+      "PortalNotice": {
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "body",
+          "category",
+          "imageUrl",
+          "linkUrl",
+          "linkText",
+          "isPinned",
+          "isFeatured",
+          "publishedAt",
+          "isRead"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "body": {
+            "type": "string"
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "linkUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "linkText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isRead": {
+            "type": "boolean"
           }
         }
       },
@@ -27948,6 +28145,9 @@
     },
     {
       "name": "Website"
+    },
+    {
+      "name": "Notices"
     }
   ]
 }
