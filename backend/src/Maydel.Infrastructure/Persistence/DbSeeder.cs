@@ -261,18 +261,7 @@ public sealed class DbSeeder(
             db.Students.Add(student);
         }
 
-        db.Announcements.Add(new Announcement
-        {
-            Title = "New Academic Session Begins",
-            Body = "The 2026/2027 academic session commences with a special orientation programme for all new and returning students.",
-            Category = "Announcement", PublishedAt = DateTimeOffset.UtcNow, Audience = Audience.Everyone, IsPinned = true,
-        });
-        db.Announcements.Add(new Announcement
-        {
-            Title = "WAEC & NECO Approval Confirmed",
-            Body = "Maydel Spring Schools is officially approved as an examination centre for both WAEC and NECO.",
-            Category = "Milestone", PublishedAt = DateTimeOffset.UtcNow.AddDays(-30), Audience = Audience.Everyone,
-        });
+        // Website news comes from the one-time starter content (StarterContent), in every environment.
 
         await db.SaveChangesAsync(ct);
         logger.LogWarning("Demo data seeded. Demo accounts use the password {Password}", demoPassword);
