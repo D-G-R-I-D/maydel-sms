@@ -18,7 +18,7 @@ test("visitors browse the site; Portal leads to sign-in", async ({ page, request
 
   // Contact details and WhatsApp come from Settings → School.
   const profile = await (await request.get(`${API}/api/public/school/profile`)).json();
-  if (profile.phone) await expect(page.getByRole("contentinfo").getByRole("link", { name: profile.phone })).toBeVisible();
+  if (profile.phone) await expect(page.getByRole("contentinfo").getByRole("link", { name: profile.phone, exact: true })).toBeVisible();
   if (profile.whatsAppUrl) await expect(page.getByRole("link", { name: /Chat with the school on WhatsApp/ })).toHaveAttribute("href", profile.whatsAppUrl);
 
   for (const path of pages.slice(1)) {

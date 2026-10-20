@@ -33,8 +33,8 @@ export default async function HomePage() {
 
       {/* Full-bleed hero: the campus, a navy wash for legible text, and the drifting circles over it. */}
       <section className="relative isolate overflow-hidden bg-navy text-white" aria-labelledby="hero-title">
-        <Image src={siteImages.hero.src} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[60%_50%]" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0f2a44]/95 via-[#183754]/80 to-[#183754]/30" aria-hidden />
+        <Image src={siteImages.hero.src} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[50%_40%]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0f2a44]/90 via-[#0f2a44]/55 to-[#0f2a44]/10" aria-hidden />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-[#0f2a44]/70 to-transparent" aria-hidden />
         <DriftingCircles density="light" />
         <div className="relative z-10 mx-auto flex min-h-[32rem] max-w-6xl flex-col justify-center gap-5 px-4 py-16 sm:px-6 lg:min-h-[36rem]">

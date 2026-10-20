@@ -87,7 +87,7 @@ export const siteImages = {
   courtyard: { src: "/site/courtyard.jpg", alt: "The courtyard, with murals on the classroom walls and the court" },
   playArea: { src: "/site/play-area.jpg", alt: "The shaded early-years play area with soft artificial grass" },
   pitch: { src: "/site/sports-pitch.jpg", alt: "The fenced football pitch and courts" },
-  hero: { src: "/site/hero-campus.jpg", alt: "Classroom blocks with red roofs around the school's basketball court" },
+  hero: { src: "/site/campus-hero.jpg", alt: "Classroom blocks with red roofs around the school's basketball court" },
   signboard: { src: "/site/signboard.jpg", alt: "The Maydel Spring Schools signboard by the gate: Early years, Primary, Junior High, Senior High, After-school care" },
   earlyYears: { src: "/site/early-years-room.jpg", alt: "The early-years room: a “Small hands change the world” door, toys, a play pen and pictures on the wall" },
   culture: { src: "/site/cultural-heritage.jpg", alt: "The play area set up for the Cultural Heritage celebration" },
