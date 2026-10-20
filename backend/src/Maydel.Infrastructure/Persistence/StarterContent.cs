@@ -43,7 +43,8 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
                 Title = "WAEC & NECO Approval Confirmed", Slug = "waec-neco-approval-confirmed", Category = "Milestone", Audience = Audience.Everyone, IsPinned = true,
                 Summary = "Maydel Spring Schools is officially approved as an examination centre for both WAEC and NECO.",
                 Body = "Maydel Spring Schools is officially approved as an examination centre for both WAEC and NECO — a major milestone for our growing school.",
-                PublishedAt = new DateTimeOffset(2026, 8, 1, 8, 0, 0, TimeSpan.FromHours(1)).ToUniversalTime(), ImagePath = await Picture("news-waec-neco.jpg", "news"), InCarousel = true,
+                PublishedAt = new DateTimeOffset(2026, 8, 1, 8, 0, 0, TimeSpan.FromHours(1)).ToUniversalTime(), ImagePath = await Picture("news-waec-neco.jpg", "news"),
+                // Logos crop badly full-width: news card only; the carousel leads with real photos.
             },
             new Announcement
             {
@@ -57,7 +58,7 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
         (string File, string Title, string? Caption, string Album, bool Featured)[] gallery =
         [
             ("campus-entrance.jpg", "Our school entrance", "Early Years, Primary, Junior and Senior High School and After School Care", "Campus", false),
-            ("campus-courtyard.jpg", "The courtyard", null, "Campus", false),
+            ("campus-courtyard.jpg", "The courtyard", null, "Campus", true),
             ("campus-classroom-blocks.jpg", "Classroom blocks", null, "Campus", false),
             ("campus-sports-court.jpg", "Sports court", null, "Campus", false),
             ("campus-sports-pitch.jpg", "Sports pitch", null, "Campus", false),
@@ -68,7 +69,7 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
             ("classroom-lesson.jpg", "A lesson in progress", null, "Classroom", false),
             ("classroom-early-years.jpg", "Early years room", "Small hands change the world", "Classroom", false),
             ("sports-aerobics.jpg", "Aerobics", null, "Sports & Movement", true),
-            ("culture-heritage-banner.jpg", "Our Cultural Heritage", null, "Culture", false),
+            ("culture-heritage-banner.jpg", "Our Cultural Heritage", null, "Culture", true),
         ];
         var order = 0;
         foreach (var (file, title, caption, album, featured) in gallery)

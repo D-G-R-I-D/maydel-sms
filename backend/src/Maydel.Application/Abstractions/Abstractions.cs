@@ -18,6 +18,7 @@ public interface IAppDbContext
     DbSet<AppUser> Users { get; }
     DbSet<AppRole> Roles { get; }
     DbSet<Microsoft.AspNetCore.Identity.IdentityUserRole<Guid>> UserRoles { get; }
+    DbSet<Microsoft.AspNetCore.Identity.IdentityUserLogin<Guid>> UserLogins { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
 
     DbSet<AcademicSession> Sessions { get; }
