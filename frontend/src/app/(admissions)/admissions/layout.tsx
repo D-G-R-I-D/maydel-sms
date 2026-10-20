@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { isPortalUser } from "@/lib/auth/roles";
 import { SchoolLogo } from "@/components/school/school-logo";
 import { UserMenu } from "@/components/shell/user-menu";
+import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { buttonClasses } from "@/components/ui/primitives";
 
 export const metadata: Metadata = { title: { default: "Admissions", template: "%s · Maydel admissions" } };
@@ -32,6 +33,7 @@ export default async function AdmissionsLayout({ children }: { children: React.R
                 Parent portal
               </Link>
             )}
+            {!user && <ThemeToggle />}
             {user ? (
               <UserMenu fullName={user.fullName} userName={user.userName} roles={user.roles} />
             ) : (

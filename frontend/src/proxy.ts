@@ -28,7 +28,8 @@ function isProtected(pathname: string): boolean {
  */
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const guarded = isProtected(pathname) || pathname === "/login" || pathname === "/";
+  // "/" and the rest of the public website (E7) are open to everyone, signed in or not.
+  const guarded = isProtected(pathname) || pathname === "/login";
 
   let access = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
@@ -56,11 +57,10 @@ export async function proxy(request: NextRequest) {
   let target: string | null = null;
   if (!signedIn) {
     if (isProtected(pathname)) target = `/login?next=${encodeURIComponent(pathname + search)}`;
-    else if (pathname === "/") target = "/login";
   } else if (user) {
     if (user.mustChangePassword) {
       if (guarded && pathname !== "/change-password") target = "/change-password";
-    } else if (pathname === "/login" || pathname === "/") {
+    } else if (pathname === "/login") {
       target = homeFor(user.roles);
     } else if (!canEnter(pathname, user.roles)) {
       target = homeFor(user.roles);
