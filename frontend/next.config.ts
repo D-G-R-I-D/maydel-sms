@@ -38,6 +38,15 @@ const nextConfig: NextConfig = {
     serverActions: { allowedOrigins: serverActionOrigins() },
   },
   poweredByHeader: false,
+  images: {
+    // Query-free local images only (Next 16 blocks query strings unless listed): brand files, website
+    // photos, and CMS pictures through our proxy, versioned in the path.
+    localPatterns: [
+      { pathname: "/brand/**", search: "" },
+      { pathname: "/site/**", search: "" },
+      { pathname: "/api/site/images/**", search: "" },
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {

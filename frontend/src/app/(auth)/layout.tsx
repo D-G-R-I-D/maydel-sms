@@ -1,5 +1,7 @@
 import { BookOpenCheck, ShieldCheck, Smartphone } from "lucide-react";
 import { SchoolLogo } from "@/components/school/school-logo";
+import { ThemeToggle } from "@/components/shell/theme-toggle";
+import { DriftingCircles } from "@/components/ui/drifting-circles";
 
 const highlights = [
   { icon: BookOpenCheck, text: "Results and report cards the moment they're published" },
@@ -12,14 +14,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <aside className="brand-panel relative hidden overflow-hidden p-12 text-navy-ink lg:flex lg:flex-col lg:justify-between">
-        <div className="animate-fade flex items-center gap-3">
+        <DriftingCircles />
+        <div className="animate-fade relative z-10 flex items-center gap-3">
           <span className="inline-flex size-14 items-center justify-center rounded-full bg-white/95 p-2 shadow-lg">
             <SchoolLogo width={34} height={42} priority />
           </span>
           <span className="font-display text-xl font-semibold">Maydel Spring Schools</span>
         </div>
 
-        <div className="max-w-md">
+        <div className="relative z-10 max-w-md">
           <p className="animate-rise mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-gold">The Well Spring of Knowledge</p>
           <p className="animate-rise delay-1 font-display text-[clamp(2.25rem,3.4vw,3.25rem)] leading-[1.08] font-semibold">
             Every child deserves a <em className="text-gold">strong, joyful start.</em>
@@ -36,10 +39,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </ul>
         </div>
 
-        <p className="text-sm text-navy-ink/60">Abuja, Nigeria · Creche to Senior Secondary</p>
+        <p className="relative z-10 text-sm text-navy-ink/60">Abuja, Nigeria · Creche to Senior Secondary</p>
       </aside>
 
       <main id="main" className="relative flex items-center justify-center px-4 py-10 sm:px-8">
+        <ThemeToggle className="absolute top-3 right-3" />
         <div className="animate-rise w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <SchoolLogo width={36} height={45} priority />
