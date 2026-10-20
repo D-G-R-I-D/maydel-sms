@@ -21,6 +21,9 @@ public sealed class SeedOptions
 
     /// <summary>Adds sample staff, students and guardians. Never enable in production.</summary>
     public bool DemoData { get; set; }
+
+    /// <summary>One-time website starter content (all environments); see <see cref="StarterContent"/>.</summary>
+    public bool StarterContent { get; set; } = true;
 }
 
 /// <summary>Idempotent reference-data seeding. Safe to run on every start-up.</summary>

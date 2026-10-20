@@ -697,6 +697,15 @@ internal sealed class NewsletterConfig : IEntityTypeConfiguration<NewsletterSubs
     }
 }
 
+internal sealed class SeedRunConfig : IEntityTypeConfiguration<SeedRun>
+{
+    public void Configure(EntityTypeBuilder<SeedRun> b)
+    {
+        b.HasKey(x => x.Key);
+        b.Property(x => x.Key).HasMaxLength(60);
+    }
+}
+
 internal sealed class NoticeReadConfig : IEntityTypeConfiguration<NoticeRead>
 {
     public void Configure(EntityTypeBuilder<NoticeRead> b)

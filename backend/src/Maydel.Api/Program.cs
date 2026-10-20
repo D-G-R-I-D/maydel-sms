@@ -114,6 +114,7 @@ if (!generatingOpenApiDocument && app.Configuration.GetValue("Database:MigrateOn
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<DbSeeder>().SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<Maydel.Infrastructure.Persistence.StarterContent>().RunAsync();
 }
 
 await app.RunAsync();

@@ -61,6 +61,8 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             ["RateLimiting:AuthPermitLimit"] = "100000",
             ["RateLimiting:PublicFormsPermitLimit"] = "100000",
             ["Storage:RootPath"] = StorageRoot,
+            // Tests own their data; the starter content has its own test that runs it on purpose.
+            ["Seed:StarterContent"] = "false",
         };
         foreach (var (key, value) in settings ?? new Dictionary<string, string?>()) all[key] = value;
         foreach (var (key, value) in all) builder.UseSetting(key, value);
