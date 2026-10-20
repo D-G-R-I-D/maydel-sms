@@ -2407,6 +2407,20 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("SchoolProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Maydel.Infrastructure.Persistence.SeedRun", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTimeOffset>("RanAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("SeedRuns");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")

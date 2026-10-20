@@ -53,6 +53,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<GalleryPhoto> GalleryPhotos => Set<GalleryPhoto>();
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<NoticeRead> NoticeReads => Set<NoticeRead>();
+    public DbSet<SeedRun> SeedRuns => Set<SeedRun>();
 
     public DbSet<AdmissionApplication> Applications => Set<AdmissionApplication>();
     public DbSet<AdmissionSettings> AdmissionSettings => Set<AdmissionSettings>();

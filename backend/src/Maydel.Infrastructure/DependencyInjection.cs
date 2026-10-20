@@ -54,6 +54,7 @@ public static class DependencyInjection
 
         services.AddOptions<SeedOptions>().BindConfiguration(SeedOptions.Section);
         services.AddScoped<DbSeeder>();
+        services.AddScoped<StarterContent>();
 
         services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.Section)
             .Validate(o => o.Provider is "Local" or "S3", "Storage:Provider must be Local or S3.")

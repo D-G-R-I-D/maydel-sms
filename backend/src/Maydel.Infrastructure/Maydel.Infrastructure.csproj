@@ -25,6 +25,8 @@
   <ItemGroup>
     <!-- School crest for report cards (from the brand assets in ../website). Replaced by the school profile upload in E2.6. -->
     <EmbeddedResource Include="Reports\Assets\maydellogo.png" LogicalName="Maydel.ReportLogo.png" />
+    <!-- Starter website pictures (resized to 1600 px), seeded once into storage. -->
+    <EmbeddedResource Include="Seed\Site\*.jpg" LogicalName="Maydel.Seed.Site.%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>
