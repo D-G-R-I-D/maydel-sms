@@ -79,9 +79,7 @@ export const faqs = [
 ] as const;
 
 export const siteImages = {
-  classroom: { src: "/site/classroom.jpg", alt: "Pupils learning in a Maydel Spring Schools classroom" },
   aerobics: { src: "/site/aerobics.jpg", alt: "Pupils at a morning exercise session" },
-  teaching: { src: "/site/teaching.jpg", alt: "A teacher guiding pupils during a lesson" },
   founder: { src: "/site/founder-photo.jpg", alt: "Lekwot Chiamaka, Proprietress and Founder" },
   campus: { src: "/site/campus.jpg", alt: "The school campus: blue-and-white classroom blocks around the basketball court" },
   courtyard: { src: "/site/courtyard.jpg", alt: "The courtyard, with murals on the classroom walls and the court" },
@@ -89,7 +87,6 @@ export const siteImages = {
   pitch: { src: "/site/sports-pitch.jpg", alt: "The fenced football pitch and courts" },
   hero: { src: "/site/campus-hero.jpg", alt: "Classroom blocks with red roofs around the school's basketball court" },
   signboard: { src: "/site/signboard.jpg", alt: "The Maydel Spring Schools signboard by the gate: Early years, Primary, Junior High, Senior High, After-school care" },
-  earlyYears: { src: "/site/early-years-room.jpg", alt: "The early-years room: a “Small hands change the world” door, toys, a play pen and pictures on the wall" },
   culture: { src: "/site/cultural-heritage.jpg", alt: "The play area set up for the Cultural Heritage celebration" },
   coveredPlay: { src: "/site/covered-play-area.jpg", alt: "The covered play area with soft artificial grass" },
 } as const;
