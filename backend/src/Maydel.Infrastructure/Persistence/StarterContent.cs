@@ -65,9 +65,6 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
             ("campus-covered-play-area.jpg", "Covered play area", null, "Campus", false),
             ("campus-shaded-lawn.jpg", "Shaded play lawn", null, "Campus", false),
             ("campus-play-lawn.jpg", "Play time on the lawn", null, "Campus", false),
-            ("classroom.jpg", "Our classrooms", null, "Classroom", false),
-            ("classroom-lesson.jpg", "A lesson in progress", null, "Classroom", false),
-            ("classroom-early-years.jpg", "Early years room", "Small hands change the world", "Classroom", false),
             ("sports-aerobics.jpg", "Aerobics", null, "Sports & Movement", true),
             ("culture-heritage-banner.jpg", "Our Cultural Heritage", null, "Culture", true),
         ];
