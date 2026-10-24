@@ -8,6 +8,7 @@ import { Card, PageHeader } from "@/components/ui/primitives";
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 import { TermPicker } from "@/components/assessment/term-picker";
 import { InstalmentPlanForm, SiblingDiscountForm } from "@/components/finance/fee-settings";
+import { FeeRemindersForm } from "@/components/finance/fee-reminders";
 
 export const metadata: Metadata = { title: "Fee settings" };
 
@@ -27,16 +28,17 @@ export default async function FeeSettingsPage({ searchParams }: { searchParams: 
   const isAdmin = hasAnyRole(user.roles, ["Admin"]);
   const sp = await searchParams;
   const { terms, selected } = await loadTerms(Array.isArray(sp.termId) ? sp.termId[0] : sp.termId);
-  const [settings, plan] = await Promise.all([
+  const [settings, plan, reminders] = await Promise.all([
     load((api) => api.GET("/api/finance/settings")),
     selected ? load((api) => api.GET("/api/finance/instalment-plan", { params: { query: { termId: selected.id } } })) : Promise.resolve(null),
+    load((api) => api.GET("/api/finance/reminders")),
   ]);
 
   return (
     <>
       <PageHeader
         title="Fees"
-        description="Sibling discount and instalment plans. Changes apply to invoices generated afterwards."
+        description="Sibling discount, instalment plans and overdue reminders. Discount and plan changes apply to invoices generated afterwards."
         actions={selected ? <TermPicker terms={terms} value={selected.id} /> : undefined}
       />
       {!isAdmin && (
@@ -62,6 +64,13 @@ export default async function FeeSettingsPage({ searchParams }: { searchParams: 
         ) : (
           <Card>
             <ProblemState problem={plan.problem} />
+          </Card>
+        )}
+        {reminders.ok ? (
+          <FeeRemindersForm initial={reminders.data} canEdit={isAdmin} />
+        ) : (
+          <Card>
+            <ProblemState problem={reminders.problem} />
           </Card>
         )}
       </div>

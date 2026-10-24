@@ -7,11 +7,14 @@ import { portalNav } from "@/components/shell/nav";
 import { PortalNav } from "@/components/shell/portal-nav";
 import { SchoolLogo } from "@/components/school/school-logo";
 import { UserMenu } from "@/components/shell/user-menu";
+import { NotificationBell } from "@/components/shell/notification-bell";
+import { loadBell } from "@/lib/notifications/actions";
 
 export const metadata: Metadata = { title: { default: "Portal", template: "%s · Maydel portal" } };
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSessionUser();
+  const bell = await loadBell();
   const items = portalNav.filter((i) => i.roles.some((r) => user.roles.includes(r)));
 
   return (
@@ -29,6 +32,7 @@ export default async function PortalLayout({ children }: { children: React.React
                 <CurrentTermChip />
               </Suspense>
             </span>
+            <NotificationBell initial={bell} noticesHref="/portal/notices" />
             <UserMenu fullName={user.fullName} userName={user.userName} roles={user.roles} />
           </div>
         </div>
