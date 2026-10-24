@@ -50,6 +50,15 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSe
 /// <summary>Resend's HTTP API (https://resend.com/docs/api-reference/emails/send-email).</summary>
 internal sealed class ResendEmailSender(HttpClient http, IOptions<EmailOptions> options) : IEmailSender
 {
+    /// <summary>The files, plus the logo as an inline image (<c>content_id</c>) that the branded HTML shows via <c>cid:</c>.</summary>
+    private static IEnumerable<object> Attachments(EmailMessage message)
+    {
+        foreach (var a in message.Attachments)
+            yield return new { filename = a.FileName, content = Convert.ToBase64String(a.Content) };
+        if (message.Brand is not null && MailMessages.Logo(message.Brand) is { } logo)
+            yield return new { filename = "logo.png", content = Convert.ToBase64String(logo.Bytes), content_id = MailMessages.LogoContentId };
+    }
+
     public bool IsEnabled => true;
 
     public async Task SendAsync(EmailMessage message, CancellationToken ct)
@@ -64,8 +73,8 @@ internal sealed class ResendEmailSender(HttpClient http, IOptions<EmailOptions> 
                 reply_to = message.ReplyTo ?? o.ReplyTo,
                 subject = message.Subject,
                 text = message.TextBody,
-                html = MailMessages.Html(message.TextBody),
-                attachments = message.Attachments.Select(a => new { filename = a.FileName, content = Convert.ToBase64String(a.Content) }),
+                html = MailMessages.Html(message.TextBody, message.Brand),
+                attachments = Attachments(message),
             }),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", o.ResendApiKey);
