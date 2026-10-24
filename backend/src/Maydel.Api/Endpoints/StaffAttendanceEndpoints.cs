@@ -23,6 +23,7 @@ public static class StaffAttendanceEndpoints
         var admin = app.MapGroup("/api/clock").WithTags("Staff attendance").RequireAuthorization(Policies.Admin);
         admin.MapGet("/settings", Settings).WithName("GetClockSettings").ProducesProblems(401, 403);
         admin.MapPut("/settings", SaveSettings).WithName("SaveClockSettings").ProducesProblems(400, 401, 403);
+        admin.MapGet("/kiosk-link", CurrentKioskLink).WithName("GetKioskLink").ProducesProblems(401, 403, 404);
         admin.MapPost("/kiosk-link", KioskLink).WithName("IssueKioskLink").ProducesProblems(401, 403);
         admin.MapGet("/board", Board).WithName("GetClockBoard").ProducesProblems(401, 403);
         admin.MapGet("/report", Report).WithName("GetClockReport").ProducesProblems(400, 401, 403);
@@ -40,6 +41,8 @@ public static class StaffAttendanceEndpoints
         (await h.Handle(new GetClockSettingsQuery(), ct)).ToHttpResult();
     private static async Task<Results<Ok<ClockSettingsDto>, ProblemHttpResult>> SaveSettings(ClockSettingsInput body, ICommandHandler<SaveClockSettingsCommand, ClockSettingsDto> h, CancellationToken ct) =>
         (await h.Handle(new SaveClockSettingsCommand(body), ct)).ToHttpResult();
+    private static async Task<Results<Ok<KioskLink>, ProblemHttpResult>> CurrentKioskLink(IQueryHandler<GetKioskLinkQuery, KioskLink> h, CancellationToken ct) =>
+        (await h.Handle(new GetKioskLinkQuery(), ct)).ToHttpResult();
     private static async Task<Results<Ok<KioskLink>, ProblemHttpResult>> KioskLink(ICommandHandler<IssueKioskLinkCommand, KioskLink> h, CancellationToken ct) =>
         (await h.Handle(new IssueKioskLinkCommand(), ct)).ToHttpResult();
     private static async Task<Results<Ok<DayBoard>, ProblemHttpResult>> Board(DateOnly? date, IQueryHandler<DayBoardQuery, DayBoard> h, CancellationToken ct) =>

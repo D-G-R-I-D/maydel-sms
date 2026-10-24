@@ -25,7 +25,8 @@
 | `GET /api/public/clock/kiosk?token` | anonymous (rate-limited) | | `{ code, url, expiresAt, school }`; 401 `clock.kiosk` if the token is revoked |
 | `GET /api/clock/settings` | admin | | `{ startsAt "07:30:00", endsAt, graceMinutes, requireLocation, latitude, longitude, radiusMeters, kioskLinkIssued }` |
 | `PUT /api/clock/settings` | admin | same fields without `kioskLinkIssued` | the settings |
-| `POST /api/clock/kiosk-link` | admin | | `{ token }`: build `{origin}/clock/kiosk?token=` and show it once, with a copy button |
+| `POST /api/clock/kiosk-link` | admin | | `{ token }`: issues a new link; the old one stops working |
+| `GET /api/clock/kiosk-link` | admin | | `{ token }` of the current link, for Copy link / Open kiosk; 404 `clock.no_kiosk` if none (or issued before 2026-10-24), so offer Issue |
 | `GET /api/clock/board?date` | admin | default today | `{ date, schoolDay, present, late, absent, staff: StaffDay[] }`: every active staff member, with absent ones as `state: "Absent"` |
 | `GET /api/clock/report?from&to` | admin | up to a year | `{ from, to, schoolDays, staff: [{ staffId, name, jobTitle, schoolDays, daysPresent, daysLate, daysAbsent, averageArrival, hoursWorked }] }` |
 | `GET /api/clock/report.csv?from&to` | admin | | CSV download |

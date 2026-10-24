@@ -34,8 +34,14 @@ public class ClockSettings : Entity
     /// <summary>Signs the rotating codes. Never leaves the server.</summary>
     public string CodeSecret { get; set; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
-    /// <summary>SHA-256 of the kiosk link's token (the token itself is shown once to the admin).</summary>
+    /// <summary>SHA-256 of the kiosk link's token; the kiosk is checked against this.</summary>
     public string? KioskTokenHash { get; set; }
+
+    /// <summary>
+    /// The kiosk link's token, kept so an admin can copy the link again without replacing it (and breaking the tablet).
+    /// Stored as-is: anyone who can read this row can already read <see cref="CodeSecret"/> and mint codes, so it exposes nothing new.
+    /// </summary>
+    public string? KioskToken { get; set; }
 
     public const int WindowSeconds = 30;
 
