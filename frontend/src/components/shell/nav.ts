@@ -67,10 +67,12 @@ export const consoleNav: NavGroup[] = [
   {
     label: "Website",
     items: [
-      { label: "News", href: "/admin/news", icon: "news", roles: A },
-      { label: "Events", href: "/admin/events", icon: "events", roles: A },
-      { label: "Gallery", href: "/admin/gallery", icon: "gallery", roles: A },
-      { label: "Messages", href: "/admin/messages", icon: "messages", roles: A },
+      { label: "News & notices", href: "/admin/website/news", icon: "news", roles: A },
+      { label: "Events", href: "/admin/website/events", icon: "events", roles: A },
+      { label: "Gallery", href: "/admin/website/gallery", icon: "gallery", roles: A },
+      { label: "Messages", href: "/admin/website/messages", icon: "messages", roles: A, ready: true },
+      { label: "Testimonials", href: "/admin/website/testimonials", icon: "news", roles: A, ready: true },
+      { label: "Newsletter", href: "/admin/website/subscribers", icon: "messages", roles: A, ready: true },
     ],
   },
   {
