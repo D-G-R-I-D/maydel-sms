@@ -54,7 +54,7 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
                 PublishedAt = new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.FromHours(1)).ToUniversalTime(), ImagePath = await Picture("news-native-festivity.jpg", "news"), InCarousel = true,
             });
 
-        // Gallery albums. Photos with clearly identifiable children were left out (no consent on record); add them through the CMS.
+        // Gallery albums. Children appear only in photos the school supplied for the website with parental consent; others go through the CMS.
         (string File, string Title, string? Caption, string Album, bool Featured)[] gallery =
         [
             ("campus-entrance.jpg", "Our school entrance", "Early Years, Primary, Junior and Senior High School and After School Care", "Campus", false),
@@ -63,6 +63,8 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
             ("campus-covered-play-area.jpg", "Covered play area", null, "Campus", false),
             ("campus-shaded-lawn.jpg", "Shaded play lawn", null, "Campus", false),
             ("sports-aerobics.jpg", "Aerobics", null, "Sports & Movement", true),
+            ("senior-students.jpg", "Our senior students", null, "Students", true),
+            ("nursery-classroom.jpg", "Play, learn, grow together", null, "Early Years", false),
             ("culture-heritage-banner.jpg", "Our Cultural Heritage", null, "Culture", true),
         ];
         var order = 0;
