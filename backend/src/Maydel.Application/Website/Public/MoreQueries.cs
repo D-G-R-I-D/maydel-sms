@@ -76,16 +76,18 @@ internal sealed class GetPublicStatsHandler(IAppDbContext db, ISchoolClock clock
     }
 }
 
-internal sealed class SubscribeHandler(IAppDbContext db) : ICommandHandler<SubscribeCommand>
+internal sealed class SubscribeHandler(IAppDbContext db, Newsletters.SubscriptionEmails confirmations, ISchoolClock clock) : ICommandHandler<SubscribeCommand>
 {
     public async Task<Result> Handle(SubscribeCommand c, CancellationToken ct)
     {
         if (!string.IsNullOrWhiteSpace(c.Input.Website)) return Result.Success(); // honeypot
         var email = (c.Input.Email ?? "").Trim().ToLowerInvariant();
         if (email.Length > 254 || !MailAddress.TryCreate(email, out _)) return Error.Validation("email", "Enter a valid email address.");
+        // Double opt-in: nothing is sent until the address is confirmed; a confirmed, active subscriber needs nothing more.
         var existing = await db.NewsletterSubscribers.FirstOrDefaultAsync(s => s.Email == email, ct);
-        if (existing is null) db.NewsletterSubscribers.Add(new NewsletterSubscriber { Email = email });
-        else existing.IsActive = true;
+        if (existing is { IsActive: true, ConfirmedAt: not null }) return Result.Success();
+        if (existing is null) db.NewsletterSubscribers.Add(existing = new NewsletterSubscriber { Email = email, IsActive = false });
+        await confirmations.QueueAsync(existing, clock.Now.ToUniversalTime(), ct);
         await db.SaveChangesAsync(ct);
         return Result.Success();
     }

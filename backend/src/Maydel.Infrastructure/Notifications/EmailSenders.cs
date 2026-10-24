@@ -73,7 +73,10 @@ internal sealed class ResendEmailSender(HttpClient http, IOptions<EmailOptions> 
                 reply_to = message.ReplyTo ?? o.ReplyTo,
                 subject = message.Subject,
                 text = message.TextBody,
-                html = MailMessages.Html(message.TextBody, message.Brand),
+                html = MailMessages.Html(message),
+                headers = message.Unsubscribe?.OneClickUrl is { } oneClick
+                    ? new Dictionary<string, string> { ["List-Unsubscribe"] = $"<{oneClick}>", ["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click" }
+                    : null,
                 attachments = Attachments(message),
             }),
         };

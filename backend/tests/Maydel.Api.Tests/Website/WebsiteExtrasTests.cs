@@ -36,10 +36,9 @@ public sealed class WebsiteExtrasTests(PostgresFixture fixture)
         await (await site.PostAsJsonAsync("/api/public/site/subscribe", new { email = "nope", website = "" })).AssertProblemAsync(HttpStatusCode.BadRequest, "validation");
         var list = await AdmissionsKit.ReadAsync<PagedResult<SubscriberDto>>(await admin.GetAsync("/api/cms/subscribers?pageSize=200"));
         var me = Assert.Single(list.Items, s => s.Email == email);
-        var csv = await admin.GetStringAsync("/api/cms/subscribers.csv");
-        Assert.Contains(email, csv);
+        Assert.False(me.Confirmed); // double opt-in: waits for the link in the confirmation email (NewsletterTests)
+        Assert.DoesNotContain(email, await admin.GetStringAsync("/api/cms/subscribers.csv")); // only confirmed, active subscribers
         Assert.Equal(HttpStatusCode.NoContent, (await admin.DeleteAsync($"/api/cms/subscribers/{me.Id}")).StatusCode);
-        Assert.DoesNotContain(email, await admin.GetStringAsync("/api/cms/subscribers.csv"));
 
         var tag = Guid.NewGuid().ToString("N")[..6];
         var shown = await AdmissionsKit.ReadAsync<TestimonialDto>(await admin.PostAsJsonAsync("/api/cms/testimonials",

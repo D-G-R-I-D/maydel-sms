@@ -14,6 +14,7 @@ public static class Senders
             EmailKind.InvoicePublished or EmailKind.ProofConfirmed or EmailKind.ProofRejected or EmailKind.PaymentReceipt or EmailKind.FeesOverdue
                 => (o.AccountsAddress, "Accounts"),
             EmailKind.ReportPublished => (o.ResultsAddress, "Results"),
+            EmailKind.Newsletter or EmailKind.NewsletterConfirm => (null, "Newsletter"),
             _ => (null, null),
         };
         return string.IsNullOrWhiteSpace(address)

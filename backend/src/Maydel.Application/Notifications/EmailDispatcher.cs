@@ -23,10 +23,21 @@ public sealed class EmailDispatcher(
     {
         if (!sender.IsEnabled) return 0;
         var now = clock.GetUtcNow();
-        var due = await db.OutboxEmails
-            .Where(e => e.Status == EmailStatus.Pending && e.NextAttemptAt <= now)
-            .OrderBy(e => e.NextAttemptAt).ThenBy(e => e.CreatedAt)
+        // School notices go first; newsletters use what's left of the provider's daily allowance and otherwise wait.
+        var newsletterSlots = int.MaxValue;
+        if (options.Value.DailyLimit > 0)
+        {
+            var since = now.AddHours(-24);
+            newsletterSlots = Math.Max(0, options.Value.DailyLimit - await db.OutboxEmails.CountAsync(e => e.Status == EmailStatus.Sent && e.SentAt > since, ct));
+        }
+        var pending = db.OutboxEmails.Where(e => e.Status == EmailStatus.Pending && e.NextAttemptAt <= now);
+        if (newsletterSlots == 0) pending = pending.Where(e => e.Kind != EmailKind.Newsletter);
+        var due = await pending
+            .OrderBy(e => e.Kind == EmailKind.Newsletter ? 1 : 0).ThenBy(e => e.NextAttemptAt).ThenBy(e => e.CreatedAt)
             .Take(BatchSize).ToListAsync(ct);
+        var newsletterCopies = due.Where(e => e.Kind == EmailKind.Newsletter).Skip(newsletterSlots).ToHashSet();
+        due = [.. due.Where(e => !newsletterCopies.Contains(e))];
+        var issues = new Dictionary<Guid, Newsletter?>();
 
         var brand = due.Count == 0 ? null : await BrandAsync(ct);
         foreach (var email in due)
@@ -75,8 +86,30 @@ public sealed class EmailDispatcher(
                     attachments.Add(new EmailAttachment(letter.FileName, "application/pdf", letter.Content));
                 }
 
-                await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, email.Body, attachments,
-                    Senders.For(email.Kind, options.Value), email.ReplyTo, brand! with { Heading = EmailHeadings.For(email.Kind) }), ct);
+                string? html = null;
+                EmailUnsubscribe? unsubscribe = null;
+                string? preheader = null;
+                var text = email.Body;
+                if (email.Kind == EmailKind.Newsletter && email.NewsletterId is { } issueId)
+                {
+                    if (!issues.TryGetValue(issueId, out var issue))
+                        issues[issueId] = issue = await db.Newsletters.AsNoTracking().FirstOrDefaultAsync(n => n.Id == issueId, ct);
+                    if (issue is null)
+                    {
+                        email.MarkSkipped("The newsletter was deleted.");
+                        await db.SaveChangesAsync(ct);
+                        continue;
+                    }
+                    (html, preheader) = (NewsletterHtml.Absolute(issue.BodyHtml, options.Value), issue.Preheader);
+                    if (email.UnsubscribeToken is { } token)
+                    {
+                        unsubscribe = NewsletterHtml.Unsubscribe(token, options.Value);
+                        text = $"{email.Body}\n\nUnsubscribe from the newsletter: {unsubscribe.PageUrl}";
+                    }
+                }
+
+                await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, text, attachments,
+                    Senders.For(email.Kind, options.Value), email.ReplyTo, brand! with { Heading = EmailHeadings.For(email.Kind) }, html, unsubscribe, preheader), ct);
                 email.MarkSent(clock.GetUtcNow());
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

@@ -775,6 +775,13 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ConfirmTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -790,6 +797,8 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ConfirmTokenHash");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -1576,6 +1585,91 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("MediaAssets");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Communication.Newsletter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Audience")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BodyHtml")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("BodyText")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("ClassRoomId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Preheader")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("PublishOnWebsite")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Recipients")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ScheduledFor")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Section")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug");
+
+                    b.HasIndex("Status", "ScheduledFor");
+
+                    b.ToTable("Newsletters");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.NewsletterOptOut", b =>
+                {
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Email");
+
+                    b.ToTable("NewsletterOptOuts");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Communication.NoticeRead", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1682,6 +1776,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("NewsletterId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("NextAttemptAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1720,10 +1817,20 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<string>("UnsubscribeToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NewsletterId")
+                        .HasFilter("\"NewsletterId\" IS NOT NULL");
+
+                    b.HasIndex("UnsubscribeToken")
+                        .HasFilter("\"UnsubscribeToken\" IS NOT NULL");
 
                     b.HasIndex("Status", "NextAttemptAt");
 

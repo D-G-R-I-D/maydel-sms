@@ -28,7 +28,12 @@ internal static partial class MailMessages
         };
         mail.To.Add(new MailAddress(message.To, message.ToName));
         if ((message.ReplyTo ?? options.ReplyTo) is { Length: > 0 } replyTo) mail.ReplyToList.Add(replyTo);
-        var html = AlternateView.CreateAlternateViewFromString(Html(message.TextBody, message.Brand), Encoding.UTF8, MediaTypeNames.Text.Html);
+        if (message.Unsubscribe?.OneClickUrl is { } oneClick)
+        {
+            mail.Headers.Add("List-Unsubscribe", $"<{oneClick}>");
+            mail.Headers.Add("List-Unsubscribe-Post", "List-Unsubscribe=One-Click");
+        }
+        var html = AlternateView.CreateAlternateViewFromString(Html(message), Encoding.UTF8, MediaTypeNames.Text.Html);
         if (message.Brand is not null && Logo(message.Brand) is { } logo)
             html.LinkedResources.Add(new LinkedResource(new MemoryStream(logo.Bytes), logo.ContentType) { ContentId = LogoContentId });
         mail.AlternateViews.Add(html);
@@ -53,11 +58,15 @@ internal static partial class MailMessages
     private const string Navy = "#234a6d", Gold = "#d9b16a", Text = "#1f2c38", Muted = "#586d7d", Page = "#f7f9fb", Line = "#d6e1ec", Fill = "#ebf1f7";
     private const string Sans = "Arial,Helvetica,sans-serif", Serif = "Georgia,'Times New Roman',serif";
 
-    public static string Html(string text, EmailBrand? brand = null)
+    public static string Html(EmailMessage m) => Html(m.TextBody, m.Brand, m.HtmlBody, m.Unsubscribe, m.Preheader);
+
+    public static string Html(string text, EmailBrand? brand = null, string? htmlBody = null, EmailUnsubscribe? unsubscribe = null, string? preheader = null)
     {
         var body = new StringBuilder();
-        foreach (var block in text.Replace("\r\n", "\n").Split("\n\n").Select(b => b.Trim('\n')).Where(b => b.Trim().Length > 0))
-            body.Append(Block(block));
+        if (htmlBody is not null) body.Append(Styled(htmlBody));
+        else
+            foreach (var block in text.Replace("\r\n", "\n").Split("\n\n").Select(b => b.Trim('\n')).Where(b => b.Trim().Length > 0))
+                body.Append(Block(block));
         if (brand is null)
             return $"<!doctype html><html><body style=\"font-family:{Sans};font-size:14px;color:{Text}\">{body}</body></html>";
 
@@ -68,7 +77,7 @@ internal static partial class MailMessages
         return $"""
             <!doctype html>
             <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{school}</title></head>
-            <body style="margin:0;padding:0;background:{Page}">
+            <body style="margin:0;padding:0;background:{Page}">{(preheader is { Length: > 0 } ph ? $"<div style=\"display:none;max-height:0;overflow:hidden;opacity:0\">{E(ph)}</div>" : "")}
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{Page}"><tr><td align="center" style="padding:24px 12px">
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid {Line};border-radius:8px;overflow:hidden">
             <tr><td style="background:{Navy};padding:20px 28px">
@@ -81,13 +90,47 @@ internal static partial class MailMessages
             <tr><td style="padding:28px;font-family:{Sans};font-size:15px;line-height:1.6;color:{Text}">{heading}{body}</td></tr>
             <tr><td style="padding:18px 28px;background:{Fill};font-family:{Sans};font-size:12px;line-height:1.6;color:{Muted}">
               <strong style="color:{Navy}">{school}</strong>{(brand.Address is { Length: > 0 } a ? "<br>" + E(a) : "")}{(contacts.Length > 0 ? "<br>" + contacts : "")}
-              <br>You're receiving this because you're a parent, guardian, student or applicant at {school}.
+              <br>You're receiving this because you're a parent, guardian, student, staff member, subscriber or applicant at {school}.{(unsubscribe is null ? "" : $"<br><a href=\"{E(unsubscribe.PageUrl)}\" style=\"color:{Muted}\">Unsubscribe from the newsletter</a>")}
             </td></tr>
             </table>
             </td></tr></table>
             </body></html>
             """;
     }
+
+    /// <summary>
+    /// Inline styles for cleaned editor HTML (it carries no style attributes of its own, so adding them is safe): email apps
+    /// ignore stylesheets.
+    /// </summary>
+    private static string Styled(string html)
+    {
+        // Alignment classes become text-align; the class itself stays (harmless).
+        html = Aligned().Replace(html, m => $"<{m.Groups[1].Value} class=\"align-{m.Groups[2].Value}\" style=\"text-align:{m.Groups[2].Value}\">");
+        html = ButtonLink().Replace(html, m => m.Value.TrimEnd('>')
+            + $" style=\"display:inline-block;background:{Navy};color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:6px\">");
+        html = PlainLink().Replace(html, $"<a style=\"color:{Navy}\" ");
+        return html
+            .Replace("<h2>", $"<h2 style=\"margin:24px 0 8px;font-family:{Serif};font-size:20px;font-weight:normal;color:{Navy}\">")
+            .Replace("<h3>", $"<h3 style=\"margin:20px 0 6px;font-size:17px;color:{Navy}\">")
+            .Replace("<h4>", $"<h4 style=\"margin:16px 0 4px;font-size:15px;color:{Navy}\">")
+            .Replace("<p>", "<p style=\"margin:0 0 14px\">")
+            .Replace("<blockquote>", $"<blockquote style=\"margin:0 0 16px;padding:8px 16px;border-left:4px solid {Gold};color:{Muted}\">")
+            .Replace("<hr>", $"<hr style=\"border:0;border-top:1px solid {Line};margin:20px 0\">")
+            .Replace("<figcaption>", $"<figcaption style=\"font-size:13px;color:{Muted};margin-top:6px\">")
+            .Replace("<figure>", "<figure style=\"margin:0 0 16px\">")
+            .Replace("<img ", "<img style=\"max-width:100%;height:auto;border-radius:6px;display:block\" ");
+    }
+
+    [GeneratedRegex("<(p|h2|h3|h4|figure) class=\"align-(left|center|right)\">")]
+    private static partial Regex Aligned();
+
+    /// <summary>An editor link marked as a button (no style attribute yet: cleaned HTML never has one).</summary>
+    [GeneratedRegex("<a [^>]*class=\"button\"[^>]*>")]
+    private static partial Regex ButtonLink();
+
+    /// <summary>Any other link: one without a style attribute.</summary>
+    [GeneratedRegex("<a (?![^>]*style=)")]
+    private static partial Regex PlainLink();
 
     /// <summary>One paragraph of the text: a details table, a link button, or a plain paragraph with line breaks.</summary>
     private static string Block(string block)
@@ -112,6 +155,7 @@ internal static partial class MailMessages
 
     private static string ButtonLabel(string url) =>
         url.Contains("/portal", StringComparison.OrdinalIgnoreCase) ? "Open the parent portal"
+        : url.Contains("/newsletter/confirm", StringComparison.OrdinalIgnoreCase) ? "Confirm my subscription"
         : url.Contains("/admissions", StringComparison.OrdinalIgnoreCase) ? "Open your application"
         : "Open the link";
 

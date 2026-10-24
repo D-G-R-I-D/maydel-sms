@@ -16,10 +16,11 @@ public sealed record SaveTestimonialCommand(Guid? Id, TestimonialInput Testimoni
 
 public sealed record DeleteTestimonialCommand(Guid Id) : ICommand;
 
-public sealed record SubscriberDto(Guid Id, string Email, bool IsActive, DateTimeOffset CreatedAt);
+/// <summary><c>Confirmed</c>: they clicked the link in the confirmation email (newsletters go only to confirmed, active subscribers).</summary>
+public sealed record SubscriberDto(Guid Id, string Email, bool IsActive, DateTimeOffset CreatedAt, bool Confirmed);
 
-/// <summary>Newsletter subscribers, newest first; <c>Active</c> null = all.</summary>
-public sealed record ListSubscribersQuery(bool? Active = true, int? Page = null, int? PageSize = null) : IQuery<PagedResult<SubscriberDto>>;
+/// <summary>Everyone by default, with their status; <c>active=true</c> for those who currently receive newsletters.</summary>
+public sealed record ListSubscribersQuery(bool? Active = null, int? Page = null, int? PageSize = null) : IQuery<PagedResult<SubscriberDto>>;
 
 /// <summary>Takes an address off the list (kept, marked inactive, so it isn't re-added silently by an import).</summary>
 public sealed record UnsubscribeCommand(Guid Id) : ICommand;
@@ -73,7 +74,7 @@ internal sealed class ListSubscribersHandler(IAppDbContext db) : IQueryHandler<L
     {
         var list = db.NewsletterSubscribers.AsNoTracking();
         if (q.Active is { } active) list = list.Where(s => s.IsActive == active);
-        return await list.OrderByDescending(s => s.CreatedAt).Select(s => new SubscriberDto(s.Id, s.Email, s.IsActive, s.CreatedAt)).ToPagedAsync(q.Page, q.PageSize, ct);
+        return await list.OrderByDescending(s => s.CreatedAt).Select(s => new SubscriberDto(s.Id, s.Email, s.IsActive, s.CreatedAt, s.ConfirmedAt != null)).ToPagedAsync(q.Page, q.PageSize, ct);
     }
 }
 
