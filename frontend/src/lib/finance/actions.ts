@@ -113,3 +113,10 @@ export async function confirmProof(id: string, body: { amount: number | null; me
 export async function rejectProof(id: string, reason: string): Promise<Loaded<Proof>> {
   return done(await load((api) => api.POST("/api/finance/proofs/{id}/reject", { params: { path: { id } }, body: { reason } })));
 }
+
+/** E12.8: overdue-fee reminders, sent in office hours and then every `intervalDays` until paid (admin). */
+export async function saveFeeReminders(body: { enabled: boolean; intervalDays: number }): Promise<Loaded<{ enabled: boolean; intervalDays: number }>> {
+  const r = await load((api) => api.PUT("/api/finance/reminders", { body }));
+  if (r.ok) revalidatePath("/admin/settings/fees");
+  return r;
+}
