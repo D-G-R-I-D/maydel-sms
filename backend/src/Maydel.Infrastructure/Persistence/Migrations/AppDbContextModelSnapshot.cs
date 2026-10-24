@@ -2407,6 +2407,107 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("SchoolProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Maydel.Domain.StaffAttendance.ClockSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CodeSecret")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeOnly>("EndsAt")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<int>("GraceMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("KioskTokenHash")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("RadiusMeters")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequireLocation")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeOnly>("StartsAt")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClockSettings");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.StaffAttendance.StaffDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClockInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ClockOutAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<double?>("InLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("InLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("InMethod")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("OutMethod")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("StaffId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("StaffDays");
+                });
+
             modelBuilder.Entity("Maydel.Infrastructure.Persistence.SeedRun", b =>
                 {
                     b.Property<string>("Key")
@@ -3506,6 +3607,15 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Navigation("Guardian");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.StaffAttendance.StaffDay", b =>
+                {
+                    b.HasOne("Maydel.Domain.People.Staff", null)
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

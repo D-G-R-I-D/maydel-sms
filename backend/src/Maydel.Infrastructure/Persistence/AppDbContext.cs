@@ -54,6 +54,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<NoticeRead> NoticeReads => Set<NoticeRead>();
     public DbSet<SeedRun> SeedRuns => Set<SeedRun>();
+    public DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings => Set<Domain.StaffAttendance.ClockSettings>();
+    public DbSet<Domain.StaffAttendance.StaffDay> StaffDays => Set<Domain.StaffAttendance.StaffDay>();
 
     public DbSet<AdmissionApplication> Applications => Set<AdmissionApplication>();
     public DbSet<AdmissionSettings> AdmissionSettings => Set<AdmissionSettings>();

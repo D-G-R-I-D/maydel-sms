@@ -56,6 +56,8 @@ public interface IAppDbContext
     DbSet<GalleryPhoto> GalleryPhotos { get; }
     DbSet<Testimonial> Testimonials { get; }
     DbSet<NoticeRead> NoticeReads { get; }
+    DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
+    DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 
     DbSet<AdmissionApplication> Applications { get; }
     DbSet<AdmissionSettings> AdmissionSettings { get; }
