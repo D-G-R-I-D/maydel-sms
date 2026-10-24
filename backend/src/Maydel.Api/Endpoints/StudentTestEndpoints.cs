@@ -42,7 +42,7 @@ public static class StudentTestEndpoints
     private static async Task<Results<Ok<AnswerSaved>, ProblemHttpResult>> Save(Guid id, Guid itemId, AnswerInput body, ICommandHandler<SaveAnswerCommand, AnswerSaved> h, CancellationToken ct) =>
         (await h.Handle(new SaveAnswerCommand(id, itemId, body), ct)).ToHttpResult();
 
-    private static async Task<Results<NoContent, ProblemHttpResult>> Event(Guid id, EventInput body, ICommandHandler<LogAttemptEventCommand> h, CancellationToken ct) =>
+    private static async Task<Results<NoContent, ProblemHttpResult>> Event(Guid id, IntegrityEventInput body, ICommandHandler<LogAttemptEventCommand> h, CancellationToken ct) =>
         (await h.Handle(new LogAttemptEventCommand(id, body), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<AttemptPaper>, ProblemHttpResult>> Submit(Guid id, TokenInput body, ICommandHandler<SubmitAttemptCommand, AttemptPaper> h, CancellationToken ct) =>

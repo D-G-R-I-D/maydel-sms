@@ -5,9 +5,15 @@ public sealed record EmailAttachment(string FileName, string ContentType, byte[]
 /// <summary>
 /// <c>From</c>/<c>ReplyTo</c>: null = the configured defaults (E12.7 picks a department sender per email kind).
 /// <c>Brand</c>: the school's look for the HTML part; null = a plain layout.
+/// <c>HtmlBody</c>: already-cleaned formatted content (newsletters) used instead of the text for the HTML part.
+/// <c>Unsubscribe</c>: newsletter links (footer page, and one-click for the List-Unsubscribe header).
 /// </summary>
 public sealed record EmailMessage(string To, string? ToName, string Subject, string TextBody, IReadOnlyList<EmailAttachment> Attachments,
-    EmailFrom? From = null, string? ReplyTo = null, EmailBrand? Brand = null);
+    EmailFrom? From = null, string? ReplyTo = null, EmailBrand? Brand = null, string? HtmlBody = null, EmailUnsubscribe? Unsubscribe = null,
+    string? Preheader = null);
+
+/// <summary><c>PageUrl</c>: the page with an Unsubscribe button. <c>OneClickUrl</c>: the API address mail apps POST to (RFC 8058); optional.</summary>
+public sealed record EmailUnsubscribe(string PageUrl, string? OneClickUrl);
 
 /// <summary>
 /// The school's identity for branded emails. <c>Heading</c> titles the message ("Payment received"); <c>Logo</c> is PNG or JPEG
@@ -49,6 +55,12 @@ public sealed class EmailOptions
 
     /// <summary>Link to the parent portal mentioned in result emails, e.g. https://portal.maydelspringschools.com.</summary>
     public string? PortalUrl { get; set; }
+
+    /// <summary>The API's public address (e.g. https://api.maydel.sch.ng): makes newsletter pictures load in inboxes and enables one-click unsubscribe.</summary>
+    public string? PublicApiUrl { get; set; }
+
+    /// <summary>The provider's daily allowance (Resend free: 100). Newsletters wait for the next day; school notices always go first. 0 = no limit.</summary>
+    public int DailyLimit { get; set; }
 
     public string PickupDirectory { get; set; } = "emails";
     public string? SmtpHost { get; set; }

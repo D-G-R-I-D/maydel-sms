@@ -112,6 +112,20 @@ public sealed class EmailLayoutTests
 
                 Maydel Spring Schools
                 """);
+            File.WriteAllText(Path.Combine(folder, "5-newsletter.html"), MailMessages.Html("", brand with { Heading = null }, """
+                <h2>Welcome back to a new term</h2>
+                <p>Dear parents and guardians,</p>
+                <p>It's been a wonderful start to the <strong>First Term</strong>. Here are a few highlights and dates for your diary.</p>
+                <h3>Highlights</h3>
+                <ul><li>Our Year 6 pupils won the inter-school spelling bee.</li><li>The new science lab opens on 3 November.</li><li>Inter-house sports day is on Friday 14 November.</li></ul>
+                <blockquote>"Every child can shine when we work together." – The Head Teacher</blockquote>
+                <h3>Dates for your diary</h3>
+                <p>Mid-term break: 30 October – 3 November<br>Open day: Saturday 22 November, 10am</p>
+                <p class="align-center"><a href="https://maydel.sch.ng/events" class="button" rel="noopener noreferrer">See all events</a></p>
+                <hr>
+                <p>With warm regards,<br>The Maydel Spring Schools team</p>
+                """, new EmailUnsubscribe("https://maydel.sch.ng/newsletter/unsubscribe?t=abc", null), "Highlights, sports day and dates for your diary")
+                .Replace("cid:" + MailMessages.LogoContentId, src));
             Save("4-report-card.html", "Report card", """
                 Dear Mrs. Ada Obi,
 

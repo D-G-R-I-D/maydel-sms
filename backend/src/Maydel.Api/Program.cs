@@ -109,6 +109,7 @@ app.MapStudentTestEndpoints();
 app.MapWebsiteEndpoints();
 app.MapNoticeEndpoints();
 app.MapNotificationEndpoints();
+app.MapNewsletterEndpoints();
 app.MapUserEndpoints();
 app.MapStaffAttendanceEndpoints();
 

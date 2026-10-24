@@ -58,6 +58,8 @@ public interface IAppDbContext
     DbSet<NoticeRead> NoticeReads { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<MediaAsset> MediaAssets { get; }
+    DbSet<Newsletter> Newsletters { get; }
+    DbSet<NewsletterOptOut> NewsletterOptOuts { get; }
     DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
     DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 

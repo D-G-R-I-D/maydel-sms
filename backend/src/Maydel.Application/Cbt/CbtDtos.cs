@@ -175,7 +175,7 @@ public sealed record AnswerInput(string SessionToken, IReadOnlyList<Guid>? Optio
 
 public sealed record TokenInput(string SessionToken);
 
-public sealed record EventInput(string SessionToken, IntegrityEventKind Kind);
+public sealed record IntegrityEventInput(string SessionToken, IntegrityEventKind Kind);
 
 public sealed record AiQuotaDto(bool Available, bool Enabled, int Allowance, int Used, int Remaining, int SchoolCap, int SchoolUsed,
     DateTimeOffset ResetsAt);

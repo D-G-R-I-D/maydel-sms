@@ -230,6 +230,9 @@ internal sealed class OutboxEmailConfig : IEntityTypeConfiguration<Domain.Commun
         b.Property(x => x.ReplyTo).HasMaxLength(254);
         b.HasIndex(x => new { x.Status, x.NextAttemptAt });
         b.HasIndex(x => new { x.StudentId, x.TermId });
+        b.Property(x => x.UnsubscribeToken).HasMaxLength(64);
+        b.HasIndex(x => x.UnsubscribeToken).HasFilter("\"UnsubscribeToken\" IS NOT NULL");
+        b.HasIndex(x => x.NewsletterId).HasFilter("\"NewsletterId\" IS NOT NULL");
     }
 }
 
@@ -698,6 +701,32 @@ internal sealed class NewsletterConfig : IEntityTypeConfiguration<NewsletterSubs
     public void Configure(EntityTypeBuilder<NewsletterSubscriber> b)
     {
         b.HasIndex(x => x.Email).IsUnique();
+        b.Property(x => x.Email).HasMaxLength(254);
+        b.Property(x => x.ConfirmTokenHash).HasMaxLength(64);
+        b.HasIndex(x => x.ConfirmTokenHash);
+    }
+}
+
+internal sealed class NewsletterIssueConfig : IEntityTypeConfiguration<Newsletter>
+{
+    public void Configure(EntityTypeBuilder<Newsletter> b)
+    {
+        b.Property(x => x.Title).HasMaxLength(150);
+        b.Property(x => x.Preheader).HasMaxLength(200);
+        b.Property(x => x.Audience).HasConversion<int>();
+        b.Property(x => x.Section).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Slug).HasMaxLength(180);
+        b.HasIndex(x => x.Slug);
+        b.HasIndex(x => new { x.Status, x.ScheduledFor });
+    }
+}
+
+internal sealed class NewsletterOptOutConfig : IEntityTypeConfiguration<NewsletterOptOut>
+{
+    public void Configure(EntityTypeBuilder<NewsletterOptOut> b)
+    {
+        b.HasKey(x => x.Email);
         b.Property(x => x.Email).HasMaxLength(254);
     }
 }
