@@ -71,7 +71,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Prom
         ) : photos.length === 0 ? (
           // Until the school uploads photos (Console → Website → Gallery), show the campus.
           <GalleryGrid
-            photos={[siteImages.campus, siteImages.coveredPlay, siteImages.culture, siteImages.courtyard, siteImages.pitch, siteImages.playArea].map((img) => ({
+            photos={[siteImages.nurseryCrest, siteImages.seniors, siteImages.nursery, siteImages.campus, siteImages.coveredPlay, siteImages.culture, siteImages.courtyard, siteImages.playArea, siteImages.aerobics].map((img) => ({
               id: img.src,
               title: img.alt,
               caption: null,

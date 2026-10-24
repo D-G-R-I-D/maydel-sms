@@ -7,6 +7,7 @@ import { CrestWatermark, DriftingCircles } from "@/components/ui/drifting-circle
 import { Card } from "@/components/ui/primitives";
 import { HighlightsCarousel, type CarouselSlide } from "@/components/site/highlights-carousel";
 import { NewsTicker } from "@/components/site/news-ticker";
+import { HeroBackdrop } from "@/components/site/hero-backdrop";
 import { EventItem, NewsCard, SectionHeading } from "@/components/site/cards";
 
 const pillarIcons = [GraduationCap, HeartHandshake, Users, BookOpen];
@@ -31,13 +32,19 @@ export default async function HomePage() {
     <>
       {highlights.ok && <NewsTicker items={highlights.data.ticker} />}
 
-      {/* Full-bleed hero: the campus, a navy wash for legible text, and the drifting circles over it. */}
+      {/* Full-bleed hero: the campus, the seniors and the little ones in turn, a navy wash for legible text, and the drifting circles over it. */}
       <section className="relative isolate overflow-hidden bg-navy text-white" aria-labelledby="hero-title">
-        <Image src={siteImages.hero.src} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[50%_40%]" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0f2a44]/90 via-[#0f2a44]/55 to-[#0f2a44]/10" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-[#0f2a44]/70 to-transparent" aria-hidden />
+        <HeroBackdrop
+          photos={[
+            { wide: siteImages.hero.src, photo: siteImages.heroPhone.src, position: "object-[50%_40%]" },
+            { wide: siteImages.heroSeniors.src, photo: siteImages.seniors.src, position: "object-[88%_30%]" },
+            { wide: siteImages.heroNursery.src, photo: siteImages.nurseryCrest.src, position: "object-[88%_40%]" },
+          ]}
+        />
+        <div className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-[#0f2a44]/90 via-[#0f2a44]/55 to-[#0f2a44]/10 sm:block" aria-hidden />
+        <div className="absolute inset-x-0 bottom-0 -z-10 hidden h-32 bg-gradient-to-t from-[#0f2a44]/70 to-transparent sm:block" aria-hidden />
         <DriftingCircles density="light" />
-        <div className="relative z-10 mx-auto flex min-h-[32rem] max-w-6xl flex-col justify-center gap-5 px-4 py-16 sm:px-6 lg:min-h-[36rem]">
+        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-6xl flex-col justify-end gap-5 px-4 pt-[60vw] pb-10 sm:min-h-[32rem] sm:justify-center sm:px-6 sm:py-16 lg:min-h-[36rem]">
           <p className="text-sm font-semibold tracking-[0.18em] text-gold uppercase">Abuja · Since {story.founded}</p>
           <h1 id="hero-title" className="max-w-2xl font-display text-4xl leading-tight font-semibold text-balance sm:text-6xl">
             {hero.titleLead} <em className="text-gold">{hero.titleAccent}</em>
@@ -161,7 +168,7 @@ export default async function HomePage() {
           A fenced, gated campus with CCTV, airy classrooms, a shaded early-years play area, courts and a football pitch.
         </SectionHeading>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:grid-rows-2">
-          {[siteImages.aerobics, siteImages.coveredPlay, siteImages.culture, siteImages.courtyard, siteImages.pitch].map((img, i) => (
+          {[siteImages.nurseryCrest, siteImages.aerobics, siteImages.coveredPlay, siteImages.culture, siteImages.courtyard].map((img, i) => (
             <div key={img.src} className={`relative overflow-hidden rounded-card ${i === 0 ? "col-span-2 row-span-2 aspect-[4/3] lg:aspect-auto" : "aspect-[4/3]"}`}>
               <Image src={img.src} alt={img.alt} fill sizes={i === 0 ? "(min-width: 1024px) 560px, 100vw" : "(min-width: 1024px) 280px, 50vw"} className="object-cover transition-transform duration-500 hover:scale-105 motion-reduce:transition-none" />
             </div>
