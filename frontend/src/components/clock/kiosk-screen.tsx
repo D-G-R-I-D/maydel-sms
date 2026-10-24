@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { Link2Off, WifiOff } from "lucide-react";
+import { Link2Off, TriangleAlert, WifiOff } from "lucide-react";
 import { kioskCode } from "@/lib/clock/actions";
-import { ClockCodes, resolveKioskUrl, watClock, type KioskCode } from "@/lib/clock/clock";
+import { ClockCodes, isLocalOnly, resolveKioskUrl, watClock, type KioskCode } from "@/lib/clock/clock";
 import type { Problem } from "@/lib/api/problem";
 import { DriftingCircles } from "@/components/ui/drifting-circles";
 
@@ -18,9 +18,10 @@ const DRIFT = ["translate-x-0 translate-y-0", "translate-x-1.5 -translate-y-1", 
  * It fetches the next code just before the current one expires, keeps the screen awake where the browser
  * allows, and drifts the content a few pixels each minute so a tablet left on all day doesn't burn in.
  */
-export function KioskScreen({ token }: { token: string }) {
+export function KioskScreen({ token, publicOrigin }: { token: string; publicOrigin: string | null }) {
   const [code, setCode] = useState<KioskCode | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
+  const [target, setTarget] = useState<string | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
   // Null until mounted: the server's time would never match the browser's on hydration.
   const [now, setNow] = useState<Date | null>(null);
@@ -34,8 +35,9 @@ export function KioskScreen({ token }: { token: string }) {
         const r = await kioskCode(token);
         if (cancelled) return;
         if (r.ok) {
-          const url = resolveKioskUrl(r.data.url, window.location.origin);
+          const url = resolveKioskUrl(r.data.url, publicOrigin ?? window.location.origin);
           if (url) {
+            setTarget(url);
             setSvg(await QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0f2a44", light: "#ffffff" } }));
             setCode(r.data);
             setProblem(null);
@@ -56,7 +58,7 @@ export function KioskScreen({ token }: { token: string }) {
       cancelled = true;
       window.clearTimeout(timer.current);
     };
-  }, [token]);
+  }, [token, publicOrigin]);
 
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -144,6 +146,17 @@ export function KioskScreen({ token }: { token: string }) {
             <p className="text-lg">Scan with your phone camera to clock in or out.</p>
             <p className="tabular text-sm text-white/70">{code ? `New code in ${Math.ceil(left)} s` : " "}</p>
             {problem && code && <p className="text-sm text-gold">Connection lost; the code may be out of date. Retrying…</p>}
+            {target && (
+              <p className="text-xs text-white/60">
+                Opens <span className="font-mono">{new URL(target).host}</span>
+              </p>
+            )}
+            {target && isLocalOnly(target) && (
+              <p className="mx-auto mt-2 flex max-w-md items-start gap-2 rounded-input bg-gold/15 p-3 text-left text-sm text-gold" role="alert">
+                <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                Phones can&apos;t open &quot;localhost&quot;. Open this kiosk through the school&apos;s web address, a dev tunnel, or this computer&apos;s Wi-Fi address (e.g. http://192.168.x.x:3000) instead.
+              </p>
+            )}
           </div>
         )}
       </div>

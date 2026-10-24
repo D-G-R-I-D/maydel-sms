@@ -5,6 +5,7 @@ import { hasAnyRole } from "@/lib/auth/roles";
 import { Card, PageHeader } from "@/components/ui/primitives";
 import { AccessDenied, ProblemState } from "@/components/ui/states";
 import { ClockSettingsForm, KioskLinkCard } from "@/components/clock/clock-settings-form";
+import { publicSiteOrigin } from "@/lib/clock/origin";
 
 export const metadata: Metadata = { title: "Staff clock-in" };
 
@@ -28,7 +29,7 @@ export default async function ClockSettingsPage() {
       {settings.ok ? (
         <div className="grid gap-5 lg:grid-cols-[3fr_2fr] lg:items-start">
           <ClockSettingsForm initial={settings.data} />
-          <KioskLinkCard issued={settings.data.kioskLinkIssued} />
+          <KioskLinkCard issued={settings.data.kioskLinkIssued} publicOrigin={publicSiteOrigin()} />
         </div>
       ) : (
         <Card>
