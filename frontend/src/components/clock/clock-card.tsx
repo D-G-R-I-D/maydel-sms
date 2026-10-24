@@ -6,7 +6,7 @@ import { CheckCircle2, Clock3, LogOut, MapPin, QrCode, TriangleAlert } from "luc
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import { unreachableProblem } from "@/lib/client/unreachable";
 import { clock } from "@/lib/clock/actions";
-import { ClockCodes, resultHeadline, type ClockResult } from "@/lib/clock/clock";
+import { ClockCodes, locationError, resultHeadline, type ClockResult } from "@/lib/clock/clock";
 import { Button, Card } from "@/components/ui/primitives";
 
 type Phase = { kind: "working"; label: string } | { kind: "done"; result: ClockResult } | { kind: "problem"; problem: Problem; needsLocation: boolean };
@@ -40,12 +40,9 @@ export function ClockCard({ code }: { code: string }) {
             const p = await position();
             lat = p.coords.latitude;
             lon = p.coords.longitude;
-          } catch {
-            setPhase({
-              kind: "problem",
-              needsLocation: true,
-              problem: { status: 400, title: "Location needed", detail: "The school needs your location to clock you in. Allow location for this site, then try again." },
-            });
+          } catch (error) {
+            const code = error && typeof error === "object" && "code" in error ? Number((error as { code: unknown }).code) : undefined;
+            setPhase({ kind: "problem", needsLocation: true, problem: { status: 400, title: "Location needed", detail: `The school needs your location to clock you in. ${locationError(code)}` } });
             return;
           }
         }
