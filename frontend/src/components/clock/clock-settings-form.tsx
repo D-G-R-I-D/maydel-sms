@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { Copy, ExternalLink, KeyRound, LocateFixed, Save } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import { runAction } from "@/lib/client/action";
@@ -12,6 +12,7 @@ import { Alert } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/toast";
 
+const noSubscribe = () => () => {};
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
 
 /** Settings → Staff clock-in: school hours, grace period and the optional location check. */
@@ -153,13 +154,20 @@ export function ClockSettingsForm({ initial }: { initial: ClockSettings }) {
   );
 }
 
-/** The kiosk link: issued once and shown once. Issuing a new one stops the old screen at once. */
-export function KioskLinkCard({ issued, publicOrigin }: { issued: boolean; publicOrigin: string | null }) {
+/**
+ * The kiosk link: copy or open it any time. Issuing a new one stops the old screen at once.
+ * `token` is null when no link exists yet, or when it was issued before links could be shown again.
+ */
+export function KioskLinkCard({ token, issued, publicOrigin }: { token: string | null; issued: boolean; publicOrigin: string | null }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [link, setLink] = useState<string | null>(null);
+  const [current, setCurrent] = useState(token);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  // The page's own address is only known in the browser (null while rendering on the server).
+  const pageOrigin = useSyncExternalStore(noSubscribe, () => window.location.origin, () => null);
+  const origin = publicOrigin ?? pageOrigin;
+  const link = current && origin ? `${origin}/clock/kiosk?token=${encodeURIComponent(current)}` : null;
 
   const issue = async () => {
     setConfirming(false);
@@ -167,7 +175,7 @@ export function KioskLinkCard({ issued, publicOrigin }: { issued: boolean; publi
     const r = await runAction(() => issueKioskLink(), { success: issued ? "New kiosk link issued; the old one has stopped working" : "Kiosk link issued" });
     setBusy(false);
     if (r) {
-      setLink(`${publicOrigin ?? window.location.origin}/clock/kiosk?token=${encodeURIComponent(r.token)}`);
+      setCurrent(r.token);
       startTransition(() => router.refresh());
     }
   };
@@ -195,10 +203,9 @@ export function KioskLinkCard({ issued, publicOrigin }: { issued: boolean; publi
       </div>
 
       {link ? (
-        <Alert tone="success" title="Here is the kiosk link. It is shown only once.">
-          <p className="mt-1 text-sm">Open it on the kiosk now, or copy it somewhere safe. Anyone with this link can show the clock-in code.</p>
-          <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="mt-2 w-full font-mono text-xs" aria-label="Kiosk link" />
-          <div className="mt-2 flex flex-wrap gap-2">
+        <div className="space-y-2">
+          <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="w-full font-mono text-xs" aria-label="Kiosk link" />
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={copy}>
               <Copy className="size-4" aria-hidden />
               Copy link
@@ -208,14 +215,17 @@ export function KioskLinkCard({ issued, publicOrigin }: { issued: boolean; publi
               Open kiosk
             </a>
           </div>
-        </Alert>
+          <p className="text-xs text-muted">Keep it to the kiosk device: anyone with this link can show the clock-in code.</p>
+        </div>
       ) : (
-        <p className="text-sm">{issued ? "A kiosk link is active. It can't be shown again; issue a new one if you've lost it." : "No kiosk link yet."}</p>
+        <p className="text-sm">
+          {issued ? "A kiosk link is active but was made before links could be shown again. Issue a new one once, and you can copy it any time after." : "No kiosk link yet."}
+        </p>
       )}
 
       {confirming ? (
         <Alert tone="warning" title="Replace the kiosk link?">
-          <p className="mt-1 text-sm">The screen using the current link will stop showing codes straight away.</p>
+          <p className="mt-1 text-sm">The screen using the current link will stop showing codes straight away. Use this if the link was shared with someone it shouldn&apos;t have been.</p>
           <div className="mt-2 flex gap-2">
             <Button size="sm" variant="destructive" onClick={issue}>
               Replace link

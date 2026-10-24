@@ -22,14 +22,16 @@ export default async function ClockSettingsPage() {
       </>
     );
   }
-  const settings = await load((api) => api.GET("/api/clock/settings"));
+  const [settings, link] = await Promise.all([load((api) => api.GET("/api/clock/settings")), load((api) => api.GET("/api/clock/kiosk-link"))]);
+  // 404 clock.no_kiosk: no link yet, or one issued before links were kept (the card offers to issue).
+  const token = link.ok ? link.data.token : null;
   return (
     <>
       <PageHeader title="Staff clock-in" description="Staff scan a QR code on a screen at the entrance when they arrive and leave. Times are Abuja time (WAT)." />
       {settings.ok ? (
         <div className="grid gap-5 lg:grid-cols-[3fr_2fr] lg:items-start">
           <ClockSettingsForm initial={settings.data} />
-          <KioskLinkCard issued={settings.data.kioskLinkIssued} publicOrigin={publicSiteOrigin()} />
+          <KioskLinkCard token={token} issued={settings.data.kioskLinkIssued} publicOrigin={publicSiteOrigin()} />
         </div>
       ) : (
         <Card>
