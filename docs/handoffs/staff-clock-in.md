@@ -6,6 +6,7 @@
 1. The admin opens **Settings → Staff clock-in** and issues a **kiosk link**: `POST /api/clock/kiosk-link` returns `{ token }` **once**. Only its hash is stored, so issuing a new link kills the old one.
 2. A screen at the school entrance (a tablet or an old phone) opens the kiosk page `/clock/kiosk?token=…`. The page needs no sign-in.
    - The page polls `GET /api/public/clock/kiosk?token=…` and shows `url` as a QR code.
+    `url` is absolute when the server has `PortalUrl` set (production) and relative (`/clock?c=…`) when it doesn't (local dev). Resolve it against the page's own origin before encoding it.
    - The code changes every 30 s (`expiresAt`), so a photo of it sent over WhatsApp stops working quickly. The previous code is still accepted, to allow for slow phones.
 3. A staff member scans the QR with their phone camera. It opens `{portal}/clock?c=<code>`. They sign in if needed (keep `c` through the login redirect).
    - The page calls `POST /api/clock { code, latitude?, longitude? }`.

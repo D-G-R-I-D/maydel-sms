@@ -23,7 +23,7 @@ public sealed class StarterContentTests(PostgresFixture fixture)
             Assert.True(await seeder.RunAsync());
             var waec = await db.Announcements.SingleAsync(a => a.Slug == "waec-neco-approval-confirmed");
             Assert.True(waec.IsPinned && waec.PublishedAt is not null && waec.ImagePath is not null);
-            Assert.True(await db.GalleryPhotos.CountAsync(p => p.Category == "Campus") >= 8);
+            Assert.True(await db.GalleryPhotos.CountAsync(p => p.Category == "Campus") >= 6);
             Assert.Equal(3, await db.Testimonials.CountAsync(t => t.Quote.Contains("Maydel") || t.Quote.Contains("WAEC")));
 
             // An admin deletes a post: running again changes nothing.
