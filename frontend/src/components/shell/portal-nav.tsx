@@ -6,14 +6,14 @@ import { cn } from "@/components/ui/primitives";
 import { activeHref, type NavItem } from "./nav";
 import { NavIcon } from "./nav-icon";
 
-/** Bottom tab bar on phones, inline tabs in the header from md up. Unreleased tabs are disabled. */
+/** Bottom tab bar on phones and tablets, inline tabs in the header from lg up (six tabs need the room). Unreleased tabs are disabled. */
 export function PortalNav({ items, variant }: { items: NavItem[]; variant: "bottom" | "top" }) {
   const pathname = usePathname();
   const active = activeHref(pathname, items.filter((i) => i.ready).map((i) => i.href));
 
   if (variant === "top") {
     return (
-      <nav aria-label="Portal" className="hidden md:block">
+      <nav aria-label="Portal" className="hidden min-w-0 lg:block">
         <ul className="flex items-center gap-1">
           {items.map((item) => (
             <li key={item.href}>
@@ -43,7 +43,7 @@ export function PortalNav({ items, variant }: { items: NavItem[]; variant: "bott
   }
 
   return (
-    <nav aria-label="Portal" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav aria-label="Portal" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
       <ul className={cn("grid", items.length > 5 ? "grid-cols-6" : "grid-cols-5")}>
         {items.map((item) => (
           <li key={item.href}>
