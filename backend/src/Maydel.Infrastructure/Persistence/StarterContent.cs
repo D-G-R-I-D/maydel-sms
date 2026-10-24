@@ -60,8 +60,6 @@ public sealed class StarterContent(AppDbContext db, PhotoStore photos, IOptions<
             ("campus-entrance.jpg", "Our school entrance", "Early Years, Primary, Junior and Senior High School and After School Care", "Campus", false),
             ("campus-courtyard.jpg", "The courtyard", null, "Campus", true),
             ("campus-classroom-blocks.jpg", "Classroom blocks", null, "Campus", false),
-            ("campus-sports-court.jpg", "Sports court", null, "Campus", false),
-            ("campus-sports-pitch.jpg", "Sports pitch", null, "Campus", false),
             ("campus-covered-play-area.jpg", "Covered play area", null, "Campus", false),
             ("campus-shaded-lawn.jpg", "Shaded play lawn", null, "Campus", false),
             ("campus-play-lawn.jpg", "Play time on the lawn", null, "Campus", false),
