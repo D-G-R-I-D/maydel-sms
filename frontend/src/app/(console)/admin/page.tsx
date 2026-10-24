@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, CalendarCheck, CalendarDays, Command, FileText, GraduationCap, KeyRound, Layers, School, ScrollText, SlidersHorizontal, TableProperties, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, Clock3, CalendarDays, Command, FileText, GraduationCap, KeyRound, Layers, School, ScrollText, SlidersHorizontal, TableProperties, Wallet, type LucideIcon } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { hasAnyRole, type Role } from "@/lib/auth/roles";
 import { firstName } from "@/lib/flash";
+import { todayWat, watTime } from "@/lib/clock/clock";
 import { Badge, Card, cn } from "@/components/ui/primitives";
 import { ProblemState } from "@/components/ui/states";
 
@@ -29,12 +30,19 @@ const tiles: Tile[] = [
   { title: "Audit log", body: "Every change to school records: who, what, when and from where.", icon: ScrollText, roles: ["Admin"], href: "/admin/audit" },
   { title: "Change password", body: "Keep your account safe. Other devices get signed out.", icon: KeyRound, roles: ["Admin", "Teacher", "Bursar"], href: "/change-password" },
   { title: "Attendance", body: "Daily register in a couple of taps, and term attendance per student.", icon: CalendarCheck, roles: ["Admin", "Teacher"], href: "/admin/attendance" },
+  { title: "Staff attendance", body: "Who clocked in at the entrance kiosk today, lateness, and reports with CSV.", icon: Clock3, roles: ["Admin"], href: "/admin/staff/attendance" },
   { title: "Fees & invoices", body: "Fee items, sibling discount, instalments and each student's invoice for the term.", icon: Wallet, roles: ["Admin", "Bursar"], href: "/admin/invoices" },
 ];
 
 export default async function DashboardPage() {
-  const me = await load((api) => api.GET("/api/auth/me"));
+  const day = todayWat();
+  const [me, clockDays] = await Promise.all([
+    load((api) => api.GET("/api/auth/me")),
+    load((api) => api.GET("/api/clock/me", { params: { query: { from: day, to: day } } })),
+  ]);
   if (!me.ok) return <ProblemState problem={me.problem} />;
+  // Staff without a staff record (403 clock.not_staff) simply don't get the chip.
+  const clockToday = clockDays.ok ? (clockDays.data.find((d) => d.date === day) ?? null) : undefined;
   const user = me.data;
   const now = new Date();
   const today = new Intl.DateTimeFormat("en-NG", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Lagos" }).format(now);
@@ -53,6 +61,16 @@ export default async function DashboardPage() {
               {r}
             </span>
           ))}
+          {clockToday !== undefined && (
+            <Link href="/clock" className="inline-flex items-center gap-1.5 rounded-full bg-gold/90 px-3 py-1 text-xs font-semibold text-navy hover:bg-gold">
+              <Clock3 className="size-3.5" aria-hidden />
+              {!clockToday?.clockInAt
+                ? "Not clocked in today"
+                : clockToday.clockOutAt
+                  ? `Clocked out ${watTime(clockToday.clockOutAt)}`
+                  : `${clockToday.isLate ? "Late, in" : "Clocked in"} ${watTime(clockToday.clockInAt)}`}
+            </Link>
+          )}
         </div>
         <p className="mt-5 hidden items-center gap-2 text-sm text-navy-ink/75 sm:flex">
           <Command className="size-4" aria-hidden />

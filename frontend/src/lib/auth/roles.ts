@@ -25,6 +25,9 @@ export const isAdmissionsUser = (roles: readonly string[]) => hasAnyRole(roles, 
 export const isStudent = (roles: readonly string[]) => hasAnyRole(roles, ["Student"]);
 export const isExamPath = (pathname: string) => pathname === "/exam" || pathname.startsWith("/exam/");
 
+/** Where a scanned kiosk QR lands (staff only). The kiosk screen itself, /clock/kiosk, is public. */
+export const isClockPath = (pathname: string) => pathname === "/clock";
+
 /** The public "Buy admission form" page; the rest of /admissions needs an applicant or parent account. */
 export const isPublicAdmissionsPath = (pathname: string) => pathname === "/admissions/apply" || pathname.startsWith("/admissions/apply/");
 
@@ -41,6 +44,7 @@ export function canEnter(pathname: string, roles: readonly string[]): boolean {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return isStaff(roles);
   if (pathname === "/portal" || pathname.startsWith("/portal/")) return isPortalUser(roles);
   if (isExamPath(pathname)) return isStudent(roles);
+  if (isClockPath(pathname)) return isStaff(roles);
   if ((pathname === "/admissions" || pathname.startsWith("/admissions/")) && !isPublicAdmissionsPath(pathname)) return isAdmissionsUser(roles);
   return true;
 }
