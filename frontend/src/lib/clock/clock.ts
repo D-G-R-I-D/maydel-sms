@@ -104,3 +104,11 @@ export function cleanCode(c: string | string[] | undefined): string | null {
 export function toApiTime(v: string): string | null {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? `${v}:00` : null;
 }
+
+/** Why the browser gave no location (GeolocationPositionError codes), in words staff can act on. */
+export function locationError(code: number | undefined): string {
+  if (code === 1) return "Location is blocked for this site. Tap the lock icon by the address, allow Location, then try again.";
+  if (code === 2) return "This device couldn't find its position. Turn on Location (GPS) in the phone's settings, then try again.";
+  if (code === 3) return "Finding your location took too long. Move nearer a window or outside, then try again.";
+  return "This browser can't share its location. Try Chrome or Safari on your phone.";
+}

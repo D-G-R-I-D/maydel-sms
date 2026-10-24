@@ -6,7 +6,7 @@ import { Copy, ExternalLink, KeyRound, LocateFixed, Save } from "lucide-react";
 import { problemMessage, type Problem } from "@/lib/api/problem";
 import { runAction } from "@/lib/client/action";
 import { issueKioskLink, saveClockSettings } from "@/lib/clock/actions";
-import { hhmm, toApiTime, type ClockSettings } from "@/lib/clock/clock";
+import { hhmm, locationError, toApiTime, type ClockSettings } from "@/lib/clock/clock";
 import { Button, Card, Field, Input, buttonClasses, describedBy } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
@@ -53,7 +53,7 @@ export function ClockSettingsForm({ initial }: { initial: ClockSettings }) {
   const otherProblem = problem && !problem.errors ? problemMessage(problem) : null;
 
   const locate = () => {
-    if (!("geolocation" in navigator)) return toast.error("This browser can't share its location.");
+    if (!("geolocation" in navigator)) return toast.error(locationError(undefined));
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (p) => {
@@ -62,9 +62,9 @@ export function ClockSettingsForm({ initial }: { initial: ClockSettings }) {
         setLocating(false);
         toast.success(`Location set (accurate to about ${Math.round(p.coords.accuracy)} m)`);
       },
-      () => {
+      (e) => {
         setLocating(false);
-        toast.error("Couldn't get this device's location. Allow location for this site and try again.");
+        toast.error(locationError(e.code));
       },
       { enableHighAccuracy: true, timeout: 20_000 },
     );
