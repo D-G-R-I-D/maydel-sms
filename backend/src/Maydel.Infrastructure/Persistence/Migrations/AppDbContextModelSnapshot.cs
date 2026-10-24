@@ -1442,6 +1442,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20000)
                         .HasColumnType("character varying(20000)");
 
+                    b.Property<string>("BodyHtml")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("Category")
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
@@ -1549,6 +1553,27 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GalleryPhotos");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.MediaAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MediaAssets");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Communication.NoticeRead", b =>
@@ -1721,6 +1746,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("DescriptionHtml")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTimeOffset?>("EndsAt")
                         .HasColumnType("timestamp with time zone");

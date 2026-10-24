@@ -9,7 +9,7 @@ namespace Maydel.Application.Website.Notices;
 
 /// <summary>A notice in the portal (E12.1), with whether this user has read it.</summary>
 public sealed record PortalNotice(Guid Id, string Title, string? Summary, string Body, string? Category, string? ImageUrl, string? LinkUrl, string? LinkText,
-    bool IsPinned, bool IsFeatured, DateTimeOffset PublishedAt, bool IsRead);
+    bool IsPinned, bool IsFeatured, DateTimeOffset PublishedAt, bool IsRead, string? BodyHtml);
 
 public sealed record NoticeInbox(int Unread, IReadOnlyList<PortalNotice> Notices);
 
@@ -51,7 +51,7 @@ internal sealed class ListMyNoticesHandler(IAppDbContext db, ICurrentUser me, IS
             .Select(n => new { n, IsRead = read.Contains(n.Id) }).ToListAsync(ct);
         return new NoticeInbox(unread, [.. list.Select(x => new PortalNotice(x.n.Id, x.n.Title, x.n.Summary, x.n.Body, x.n.Category,
             WebsiteUrls.Image("news", x.n.Id, (x.n.Audience & Audience.Public) == Audience.Public ? x.n.ImagePath : null), x.n.LinkUrl, x.n.LinkText,
-            x.n.IsPinned, x.n.IsFeatured, x.n.PublishedAt!.Value, x.IsRead))]);
+            x.n.IsPinned, x.n.IsFeatured, x.n.PublishedAt!.Value, x.IsRead, x.n.BodyHtml))]);
     }
 }
 

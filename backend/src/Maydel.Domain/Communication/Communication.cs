@@ -24,7 +24,12 @@ public partial class Announcement : Entity
     /// <summary>The web address part, e.g. "inter-house-sports-2026"; fixed once published so links keep working.</summary>
     public string Slug { get; set; } = "";
     public string? Summary { get; set; }
+
+    /// <summary>Plain text: typed by staff, or derived from <see cref="BodyHtml"/> when the post was written in the editor.</summary>
     public required string Body { get; set; }
+
+    /// <summary>Formatted content from the editor (cleaned on save); null for plain-text posts.</summary>
+    public string? BodyHtml { get; set; }
     public string? Category { get; set; }
     public string? ImagePath { get; set; }
     public Audience Audience { get; set; } = Audience.Everyone;
@@ -87,6 +92,9 @@ public class SchoolEvent : Entity
 
     public required string Title { get; set; }
     public string? Description { get; set; }
+
+    /// <summary>Formatted description from the editor (cleaned on save); null for plain text.</summary>
+    public string? DescriptionHtml { get; set; }
     public DateTimeOffset StartsAt { get; set; }
     public DateTimeOffset? EndsAt { get; set; }
     public string? Location { get; set; }
@@ -135,6 +143,12 @@ public class Testimonial : Entity
     public required string Attribution { get; set; }
     public int Order { get; set; }
     public bool IsPublished { get; set; } = true;
+}
+
+/// <summary>A picture placed inside formatted content (posts, events, newsletters). Public by its unguessable id.</summary>
+public class MediaAsset : Entity
+{
+    public required string ImagePath { get; set; }
 }
 
 public class GalleryPhoto : Entity

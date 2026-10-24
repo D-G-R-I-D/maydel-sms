@@ -35,6 +35,7 @@ public static class WebsiteEndpoints
         cms.MapPut("/posts/{id:guid}/image", SetPostImage).WithName("SetPostImage").Upload();
         cms.MapDelete("/posts/{id:guid}/image", RemovePostImage).WithName("RemovePostImage").ProducesProblems(400, 401, 403, 404);
         cms.MapGet("/events", Events).WithName("ListEvents").ProducesProblems(401, 403);
+        cms.MapPost("/media", UploadMedia).WithName("UploadMedia").Upload();
         cms.MapPost("/events", CreateEvent).WithName("CreateEvent").ProducesProblems(400, 401, 403);
         cms.MapPut("/events/{id:guid}", UpdateEvent).WithName("UpdateEvent").ProducesProblems(400, 401, 403, 404);
         cms.MapDelete("/events/{id:guid}", DeleteEvent).WithName("DeleteEvent").ProducesProblems(401, 403, 404);
@@ -130,6 +131,12 @@ public static class WebsiteEndpoints
         await PhotoEndpoints.ReadAsync(file, ct) is { } bytes ? (await h.Handle(new SetPostImageCommand(id, bytes), ct)).ToHttpResult() : PhotoErrors.Invalid.ToProblem();
     private static async Task<Results<Ok<PostDto>, ProblemHttpResult>> RemovePostImage(Guid id, ICommandHandler<SetPostImageCommand, PostDto> h, CancellationToken ct) =>
         (await h.Handle(new SetPostImageCommand(id, null), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<Maydel.Application.Website.Media.MediaDto>, ProblemHttpResult>> UploadMedia(IFormFile? file,
+        ICommandHandler<Maydel.Application.Website.Media.UploadMediaCommand, Maydel.Application.Website.Media.MediaDto> h, CancellationToken ct) =>
+        await PhotoEndpoints.ReadAsync(file, ct) is { } bytes
+            ? (await h.Handle(new Maydel.Application.Website.Media.UploadMediaCommand(bytes), ct)).ToHttpResult()
+            : PhotoErrors.Invalid.ToProblem();
 
     private static async Task<Results<Ok<IReadOnlyList<EventDto>>, ProblemHttpResult>> Events(DateTimeOffset? from, IQueryHandler<ListEventsQuery, IReadOnlyList<EventDto>> h, CancellationToken ct) =>
         (await h.Handle(new ListEventsQuery(from), ct)).ToHttpResult();

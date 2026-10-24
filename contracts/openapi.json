@@ -15673,6 +15673,81 @@
         }
       }
     },
+    "/api/cms/media": {
+      "post": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "UploadMedia",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/cms/events/{id}": {
       "put": {
         "tags": [
@@ -21559,7 +21634,8 @@
           "startsAt",
           "endsAt",
           "location",
-          "audience"
+          "audience",
+          "descriptionHtml"
         ],
         "type": "object",
         "properties": {
@@ -21595,6 +21671,12 @@
           },
           "audience": {
             "$ref": "#/components/schemas/Audience"
+          },
+          "descriptionHtml": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -23459,6 +23541,22 @@
           }
         }
       },
+      "MediaDto": {
+        "required": [
+          "id",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
       "MeResponse": {
         "required": [
           "id",
@@ -23517,7 +23615,8 @@
           "updatedAt",
           "imageUrl",
           "linkUrl",
-          "linkText"
+          "linkText",
+          "bodyHtml"
         ],
         "type": "object",
         "properties": {
@@ -23570,6 +23669,12 @@
             ]
           },
           "linkText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bodyHtml": {
             "type": [
               "null",
               "string"
@@ -24902,7 +25007,8 @@
           "isPinned",
           "isFeatured",
           "publishedAt",
-          "isRead"
+          "isRead",
+          "bodyHtml"
         ],
         "type": "object",
         "properties": {
@@ -24958,6 +25064,12 @@
           },
           "isRead": {
             "type": "boolean"
+          },
+          "bodyHtml": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -25035,7 +25147,8 @@
           "inCarousel",
           "imageUrl",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "bodyHtml"
         ],
         "type": "object",
         "properties": {
@@ -25128,6 +25241,12 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "bodyHtml": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -25207,6 +25326,12 @@
           },
           "inCarousel": {
             "type": "boolean"
+          },
+          "bodyHtml": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -25442,7 +25567,8 @@
           "description",
           "startsAt",
           "endsAt",
-          "location"
+          "location",
+          "descriptionHtml"
         ],
         "type": "object",
         "properties": {
@@ -25471,6 +25597,12 @@
             "format": "date-time"
           },
           "location": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionHtml": {
             "type": [
               "null",
               "string"

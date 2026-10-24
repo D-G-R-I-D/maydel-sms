@@ -57,6 +57,7 @@ public interface IAppDbContext
     DbSet<Testimonial> Testimonials { get; }
     DbSet<NoticeRead> NoticeReads { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<MediaAsset> MediaAssets { get; }
     DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
     DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 
