@@ -79,16 +79,23 @@ export const faqs = [
 ] as const;
 
 export const siteImages = {
-  aerobics: { src: "/site/aerobics.jpg", alt: "Pupils at a morning exercise session" },
+  aerobics: { src: "/site/aerobics-turf.jpg", alt: "Pupils at a morning exercise session" },
   founder: { src: "/site/founder-photo.jpg", alt: "Lekwot Chiamaka, Proprietress and Founder" },
-  campus: { src: "/site/campus.jpg", alt: "The school campus: blue-and-white classroom blocks around the basketball court" },
-  courtyard: { src: "/site/courtyard.jpg", alt: "The courtyard, with murals on the classroom walls and the court" },
+  campus: { src: "/site/campus-blocks.jpg", alt: "The school campus: blue-and-white classroom blocks around the basketball court" },
+  courtyard: { src: "/site/courtyard-court.jpg", alt: "The courtyard, with murals on the classroom walls and the court" },
   playArea: { src: "/site/play-area.jpg", alt: "The shaded early-years play area with soft artificial grass" },
-  pitch: { src: "/site/sports-pitch.jpg", alt: "The fenced football pitch and courts" },
+  /** A closer 4:3 cut of the classroom blocks for the hero on phones. */
+  heroPhone: { src: "/site/campus-phone.jpg", alt: "Classroom blocks with red roofs" },
   hero: { src: "/site/campus-hero.jpg", alt: "Classroom blocks with red roofs around the school's basketball court" },
   signboard: { src: "/site/signboard.jpg", alt: "The Maydel Spring Schools signboard by the gate: Early years, Primary, Junior High, Senior High, After-school care" },
   culture: { src: "/site/cultural-heritage.jpg", alt: "The play area set up for the Cultural Heritage celebration" },
   coveredPlay: { src: "/site/covered-play-area.jpg", alt: "The covered play area with soft artificial grass" },
+  seniors: { src: "/site/senior-students.jpg", alt: "Three senior students in school blazers in front of the Maydel Spring Schools crest" },
+  /** The seniors photo set on the right of a wide navy canvas, so the hero headline never covers a face. */
+  heroSeniors: { src: "/site/seniors-hero.jpg", alt: "Senior students in front of the school crest" },
+  nursery: { src: "/site/nursery-classroom.jpg", alt: "Nursery pupils on colourful chairs in a bright classroom" },
+  nurseryCrest: { src: "/site/nursery-crest.jpg", alt: "Nursery pupils in their classroom under the Maydel Spring Schools crest" },
+  heroNursery: { src: "/site/nursery-hero.jpg", alt: "Nursery pupils in their classroom" },
 } as const;
 
 /** Short reasons to choose the school, scrolled in a band on the homepage. */
@@ -113,8 +120,8 @@ export const testimonials = [
 
 export const anniversary = { years: 5, when: "March 2027" } as const;
 
-// Website photos never show identifiable children unless the school confirms parents' consent for
-// website use (e.g. the old site's assembly crowd and single-child close-up are deliberately left out).
+// Photos of identifiable children are used only when the school supplies them for the website (the
+// seniors and nursery photos); the old site's assembly crowd and single-child close-up stay out.
 
 /** The parents' guide (the previous site's "For Parents" page). */
 export const parentGuide = [

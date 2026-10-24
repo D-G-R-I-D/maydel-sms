@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Download } from "lucide-react";
 import { loadSite } from "@/lib/site/api";
-import { admissionSteps, faqs, programmes } from "@/lib/site/content";
+import { admissionSteps, faqs, programmes, siteImages } from "@/lib/site/content";
 import { DriftingCircles } from "@/components/ui/drifting-circles";
 import { formatNaira } from "@/lib/finance/rules";
 import { Card, buttonClasses } from "@/components/ui/primitives";
@@ -47,10 +47,14 @@ export default async function AdmissionsInfoPage() {
           </p>
         )}
       </header>
-        {/* A branded panel rather than a photo: the live admissions status at a glance. */}
-        <aside className="brand-panel relative overflow-hidden rounded-card p-8 text-white" aria-label="Admissions at a glance">
+        {/* The nursery classroom over a branded panel: the live admissions status at a glance. */}
+        <aside className="brand-panel relative overflow-hidden rounded-card text-white" aria-label="Admissions at a glance">
+          <div className="relative aspect-[16/9]">
+            <Image src={siteImages.nursery.src} alt={siteImages.nursery.alt} fill sizes="(min-width: 1024px) 400px, 100vw" className="object-cover object-[50%_60%]" />
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#183754] to-transparent" aria-hidden />
+          </div>
           <DriftingCircles density="light" />
-          <div className="relative z-10 space-y-5">
+          <div className="relative z-10 space-y-5 p-8 pt-2">
             <span className="inline-flex size-16 items-center justify-center rounded-full bg-white/95 p-2.5 shadow-lg">
               <Image src="/brand/crest.svg" alt="" width={40} height={50} className="h-auto w-10" />
             </span>
