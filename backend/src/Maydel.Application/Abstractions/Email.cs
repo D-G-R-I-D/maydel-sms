@@ -2,9 +2,18 @@ namespace Maydel.Application.Abstractions;
 
 public sealed record EmailAttachment(string FileName, string ContentType, byte[] Content);
 
-/// <summary><c>From</c>/<c>ReplyTo</c>: null = the configured defaults (E12.7 picks a department sender per email kind).</summary>
+/// <summary>
+/// <c>From</c>/<c>ReplyTo</c>: null = the configured defaults (E12.7 picks a department sender per email kind).
+/// <c>Brand</c>: the school's look for the HTML part; null = a plain layout.
+/// </summary>
 public sealed record EmailMessage(string To, string? ToName, string Subject, string TextBody, IReadOnlyList<EmailAttachment> Attachments,
-    EmailFrom? From = null, string? ReplyTo = null);
+    EmailFrom? From = null, string? ReplyTo = null, EmailBrand? Brand = null);
+
+/// <summary>
+/// The school's identity for branded emails. <c>Heading</c> titles the message ("Payment received"); <c>Logo</c> is PNG or JPEG
+/// bytes embedded in the email (no remote images to block). Null logo = the built-in crest.
+/// </summary>
+public sealed record EmailBrand(string School, string? Motto, string? Address, string? Phone, string? Email, string? Website, byte[]? Logo, string? Heading);
 
 public sealed record EmailFrom(string Address, string Name);
 

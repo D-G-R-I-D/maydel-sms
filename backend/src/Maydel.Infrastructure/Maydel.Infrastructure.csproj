@@ -6,6 +6,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The email layout (MailMessages) is checked directly. -->
+    <InternalsVisibleTo Include="Maydel.Api.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Anthropic" Version="12.58.0" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.104.6" />

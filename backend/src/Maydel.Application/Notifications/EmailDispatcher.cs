@@ -13,6 +13,7 @@ namespace Maydel.Application.Notifications;
 /// </summary>
 public sealed class EmailDispatcher(
     IAppDbContext db, IEmailSender sender, ReportBuilder reports, ReportPdfs pdfs, Finance.FinanceDocuments finance, Admissions.AdmissionLetters letters,
+    SchoolSettings.SchoolBranding branding,
     Microsoft.Extensions.Options.IOptions<EmailOptions> options, TimeProvider clock, ILogger<EmailDispatcher> logger)
 {
     public const int BatchSize = 10;
@@ -27,6 +28,7 @@ public sealed class EmailDispatcher(
             .OrderBy(e => e.NextAttemptAt).ThenBy(e => e.CreatedAt)
             .Take(BatchSize).ToListAsync(ct);
 
+        var brand = due.Count == 0 ? null : await BrandAsync(ct);
         foreach (var email in due)
         {
             try
@@ -74,7 +76,7 @@ public sealed class EmailDispatcher(
                 }
 
                 await sender.SendAsync(new EmailMessage(email.ToAddress, email.ToName, email.Subject, email.Body, attachments,
-                    Senders.For(email.Kind, options.Value), email.ReplyTo), ct);
+                    Senders.For(email.Kind, options.Value), email.ReplyTo, brand! with { Heading = EmailHeadings.For(email.Kind) }), ct);
                 email.MarkSent(clock.GetUtcNow());
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -94,5 +96,13 @@ public sealed class EmailDispatcher(
             .Where(r => r.StudentId == studentId && r.TermId == termId && r.Status == ReportStatus.Published)
             .Select(r => (Guid?)r.ClassRoomId).FirstOrDefaultAsync(ct);
         return classRoomId is null ? null : await reports.BuildAsync(studentId, termId, classRoomId.Value, ct);
+    }
+
+    /// <summary>The school's name, contacts and logo for the email layout (a logo over 300 KB is left out; the crest is used).</summary>
+    private async Task<EmailBrand> BrandAsync(CancellationToken ct)
+    {
+        var b = await branding.LoadAsync(ct);
+        return new EmailBrand(b.Name, b.Motto, string.IsNullOrWhiteSpace(b.Address) ? null : b.Address, b.Phone, b.Email, b.Website,
+            b.Logo is { Length: <= 300_000 } logo ? logo : null, null);
     }
 }
