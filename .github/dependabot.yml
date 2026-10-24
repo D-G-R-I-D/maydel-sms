@@ -9,6 +9,10 @@ updates:
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
+    # One PR for routine bumps (each PR costs a CI run); majors stay separate. Security fixes still arrive immediately.
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
