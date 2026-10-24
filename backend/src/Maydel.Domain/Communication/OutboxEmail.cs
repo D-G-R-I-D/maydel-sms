@@ -24,6 +24,12 @@ public enum EmailKind
 
     /// <summary>A website contact form message, forwarded to the school's address.</summary>
     ContactForm,
+
+    /// <summary>A payment recorded by the office or paid online (E12.8): the receipt PDF is attached at send time.</summary>
+    PaymentReceipt,
+
+    /// <summary>A reminder that fees are overdue (E12.8). Plain text.</summary>
+    FeesOverdue,
 }
 
 public enum EmailStatus

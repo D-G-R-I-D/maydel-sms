@@ -729,6 +729,21 @@ internal sealed class SeedRunConfig : IEntityTypeConfiguration<SeedRun>
     }
 }
 
+internal sealed class NotificationConfig : IEntityTypeConfiguration<Notification>
+{
+    public void Configure(EntityTypeBuilder<Notification> b)
+    {
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
+        b.Property(x => x.Title).HasMaxLength(200);
+        b.Property(x => x.Body).HasMaxLength(2000);
+        b.Property(x => x.LinkUrl).HasMaxLength(300);
+        b.Property(x => x.DedupeKey).HasMaxLength(120);
+        b.HasIndex(x => new { x.UserId, x.CreatedAt });
+        b.HasIndex(x => new { x.UserId, x.DedupeKey }).IsUnique().HasFilter("\"DedupeKey\" IS NOT NULL");
+        b.HasOne<Application.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class NoticeReadConfig : IEntityTypeConfiguration<NoticeRead>
 {
     public void Configure(EntityTypeBuilder<NoticeRead> b)

@@ -93,6 +93,31 @@ public class SchoolEvent : Entity
     public Audience Audience { get; set; } = Audience.Everyone;
 }
 
+/// <summary>What a personal notification is about. Homework and the communication book (E17) will add kinds.</summary>
+public enum NotificationKind
+{
+    PaymentReceived,
+    FeesOverdue,
+}
+
+/// <summary>
+/// A message for one signed-in user (E12.8), e.g. a guardian about their child's fees, shown under the portal bell.
+/// <see cref="DedupeKey"/> stops one event notifying the same person twice (retries, both online payment paths).
+/// </summary>
+public class Notification : Entity
+{
+    public Guid UserId { get; set; }
+    public NotificationKind Kind { get; set; }
+    public required string Title { get; set; }
+    public required string Body { get; set; }
+
+    /// <summary>A portal path to open, e.g. <c>/portal/fees</c>.</summary>
+    public string? LinkUrl { get; set; }
+    public Guid? StudentId { get; set; }
+    public string? DedupeKey { get; set; }
+    public DateTimeOffset? ReadAt { get; set; }
+}
+
 /// <summary>That a signed-in user has read a notice (E12.1): drives the unread badge.</summary>
 public class NoticeRead
 {

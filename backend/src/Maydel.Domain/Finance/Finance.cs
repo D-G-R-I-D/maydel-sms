@@ -83,6 +83,15 @@ public class FeeSettings : Entity
     public SiblingDiscountMode SiblingMode { get; set; }
     public decimal SecondChild { get; set; }
     public decimal ThirdAndLater { get; set; }
+
+    /// <summary>Remind families by email and in the portal while fees are overdue (E12.8).</summary>
+    public bool RemindersEnabled { get; set; } = true;
+
+    /// <summary>Days between reminders for the same invoice while it stays overdue.</summary>
+    public int ReminderIntervalDays { get; set; } = 7;
+
+    public static DomainError? CheckReminders(int intervalDays) =>
+        intervalDays is < 1 or > 60 ? new("fees.reminder_interval", "Remind every 1 to 60 days.", "intervalDays") : null;
 }
 
 /// <summary>
@@ -230,6 +239,9 @@ public class Invoice : Entity
     /// <summary>Null while a draft: staff can check and fix it; parents only see published invoices (E10.7).</summary>
     public DateTimeOffset? PublishedAt { get; set; }
     public bool IsPublished => PublishedAt is not null;
+
+    /// <summary>When the family was last reminded that this invoice is overdue (E12.8).</summary>
+    public DateOnly? LastReminderOn { get; set; }
 
     /// <summary>Makes a draft visible to parents. False when it was already published or is cancelled, so nobody is notified twice.</summary>
     public bool Publish(DateTimeOffset at)

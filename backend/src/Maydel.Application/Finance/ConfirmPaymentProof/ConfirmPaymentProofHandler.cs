@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Maydel.Application.Finance.ConfirmPaymentProof;
 
-internal sealed class ConfirmPaymentProofHandler(IAppDbContext db, PaymentProofs proofs, ProofEmails emails, ISchoolClock clock, TimeProvider time, ICurrentUser me)
+internal sealed class ConfirmPaymentProofHandler(IAppDbContext db, PaymentProofs proofs, ProofEmails emails, FeeNotices notices, ISchoolClock clock, TimeProvider time, ICurrentUser me)
     : ICommandHandler<ConfirmPaymentProofCommand, ProofDto>
 {
     public async Task<Result<ProofDto>> Handle(ConfirmPaymentProofCommand c, CancellationToken ct)
@@ -28,6 +28,8 @@ internal sealed class ConfirmPaymentProofHandler(IAppDbContext db, PaymentProofs
         db.Payments.Add(payment!);
         proof.Confirm(payment!.Id, me.UserId, time.GetUtcNow());
         await emails.QueueAsync(proof, confirmed: true, time.GetUtcNow(), ct);
+        // The confirmation email above already carries the receipt: portal notice only.
+        await notices.PaymentAsync(payment!, invoice, time.GetUtcNow(), email: false, ct);
         await db.SaveChangesAsync(ct);
         return await proofs.Dtos(db.PaymentProofs.Where(p => p.Id == proof.Id)).FirstAsync(ct);
     }

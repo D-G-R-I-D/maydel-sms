@@ -1,12 +1,13 @@
 using Maydel.Application.Abstractions;
 using Maydel.Application.Common;
 using Maydel.Application.Common.Messaging;
+using Maydel.Application.Notifications;
 using Maydel.Domain.Finance;
 using Microsoft.EntityFrameworkCore;
 
 namespace Maydel.Application.Finance.RecordPayment;
 
-internal sealed class RecordPaymentHandler(IAppDbContext db, ISchoolClock clock, ICurrentUser me) : ICommandHandler<RecordPaymentCommand, ReceiptDto>
+internal sealed class RecordPaymentHandler(IAppDbContext db, ISchoolClock clock, ICurrentUser me, FeeNotices notices) : ICommandHandler<RecordPaymentCommand, ReceiptDto>
 {
     public async Task<Result<ReceiptDto>> Handle(RecordPaymentCommand c, CancellationToken ct)
     {
@@ -22,6 +23,7 @@ internal sealed class RecordPaymentHandler(IAppDbContext db, ISchoolClock clock,
         var (payment, error) = invoice.RecordPayment(c.Amount, c.Method, c.Reference, paidOn, me.UserId, number, [.. schedule.Select(s => s.Amount)]);
         if (error is not null) return error.ToError();
         db.Payments.Add(payment!);
+        await notices.PaymentAsync(payment!, invoice, clock.Now.ToUniversalTime(), email: true, ct);
         await db.SaveChangesAsync(ct);
 
         var room = await db.ClassRooms.AsNoTracking().Where(r => r.Id == invoice.ClassRoomId).Select(r => r.ClassLevel.Name + " " + r.Arm).FirstOrDefaultAsync(ct);

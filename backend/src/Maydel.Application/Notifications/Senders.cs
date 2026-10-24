@@ -11,7 +11,8 @@ public static class Senders
         var (address, label) = kind switch
         {
             EmailKind.AdmissionStage or EmailKind.AdmissionOffer => (o.AdmissionsAddress, "Admissions"),
-            EmailKind.InvoicePublished or EmailKind.ProofConfirmed or EmailKind.ProofRejected => (o.AccountsAddress, "Accounts"),
+            EmailKind.InvoicePublished or EmailKind.ProofConfirmed or EmailKind.ProofRejected or EmailKind.PaymentReceipt or EmailKind.FeesOverdue
+                => (o.AccountsAddress, "Accounts"),
             EmailKind.ReportPublished => (o.ResultsAddress, "Results"),
             _ => (null, null),
         };
