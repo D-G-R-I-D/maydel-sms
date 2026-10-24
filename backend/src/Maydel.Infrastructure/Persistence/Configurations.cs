@@ -411,6 +411,11 @@ internal sealed class EventConfig : IEntityTypeConfiguration<SchoolEvent>
     }
 }
 
+internal sealed class MediaAssetConfig : IEntityTypeConfiguration<MediaAsset>
+{
+    public void Configure(EntityTypeBuilder<MediaAsset> b) => b.Property(x => x.ImagePath).HasMaxLength(300);
+}
+
 internal sealed class GalleryPhotoConfig : IEntityTypeConfiguration<GalleryPhoto>
 {
     public void Configure(EntityTypeBuilder<GalleryPhoto> b)

@@ -2852,6 +2852,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cms/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UploadMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cms/events/{id}": {
         parameters: {
             query?: never;
@@ -4450,6 +4466,7 @@ export interface components {
             endsAt: null | string;
             location: null | string;
             audience: components["schemas"]["Audience"];
+            descriptionHtml: null | string;
         };
         EventInput: {
             sessionToken: string;
@@ -4965,6 +4982,11 @@ export interface components {
             score: number;
             comment: null | string;
         };
+        MediaDto: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+        };
         MeResponse: {
             /** Format: uuid */
             id: string;
@@ -4991,6 +5013,7 @@ export interface components {
             imageUrl: null | string;
             linkUrl: null | string;
             linkText: null | string;
+            bodyHtml: null | string;
         };
         NewsSummary: {
             /** Format: uuid */
@@ -5377,6 +5400,7 @@ export interface components {
             /** Format: date-time */
             publishedAt: string;
             isRead: boolean;
+            bodyHtml: null | string;
         };
         PortalResultSummary: {
             /** Format: uuid */
@@ -5420,6 +5444,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: null | string;
+            bodyHtml: null | string;
         };
         PostInput: {
             title: string;
@@ -5437,6 +5462,7 @@ export interface components {
             linkText: null | string;
             inTicker: boolean;
             inCarousel: boolean;
+            bodyHtml?: null | string;
         };
         PreviousSubjectResult: {
             number: components["schemas"]["TermNumber"];
@@ -5510,6 +5536,7 @@ export interface components {
             /** Format: date-time */
             endsAt: null | string;
             location: null | string;
+            descriptionHtml: null | string;
         };
         PublicGallery: {
             categories: string[];
@@ -19065,6 +19092,68 @@ export interface operations {
             };
             /** @description Forbidden */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UploadMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    file?: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
