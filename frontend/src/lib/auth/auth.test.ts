@@ -37,6 +37,9 @@ describe("roles", () => {
     expect(canEnter("/admin/audit", ["Parent"])).toBe(false);
     expect(canEnter("/admissions", ["Applicant"])).toBe(true);
     expect(canEnter("/admissions", ["Parent"])).toBe(true);
+    expect(canEnter("/clock", ["Teacher"])).toBe(true);
+    expect(canEnter("/clock", ["Parent"])).toBe(false);
+    expect(canEnter("/clock/kiosk", ["Parent"])).toBe(true);
     expect(canEnter("/admissions", ["Teacher"])).toBe(false);
     expect(canEnter("/portal", ["Applicant"])).toBe(false);
     expect(canEnter("/admin", ["Applicant"])).toBe(false);
