@@ -14,7 +14,7 @@ Story format: *As a ‹role›, I want ‹capability› so that ‹outcome›.* 
 | E5 | Assessment & report cards | 1 | M |
 | E6 | Parent & student portal | 1 | M |
 | E7 | Public website & CMS | 1 | M |
-| E8 | Legacy data migration | 1 | M |
+| E8 | Legacy data migration (dropped 2026-10-24) | — | — |
 | E9 | Attendance | 2 | M |
 | E10 | Fees & payments | 2 | M |
 | E11 | Admissions pipeline | 2 | S |
@@ -23,6 +23,9 @@ Story format: *As a ‹role›, I want ‹capability› so that ‹outcome›.* 
 | E14 | Compliance, audit & operations | 0–2 | M |
 | E15 | Timetable, messaging, homework | 3 | C |
 | E16 | Online tests & exams (CBT) | 2–3 | S |
+| E17 | Homework & communication book | 3 | S |
+| E18 | School bus: trip log & driver checklist | 3 | S |
+| E19 | Store & inventory (uniforms, books, ID cards) | 3 | S |
 
 ---
 
@@ -110,6 +113,8 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
   - AC: never blocks the page; Esc / ✕ closes it; it's shown at most once per visitor until edited.
 
 ## E8 — Legacy data migration
+> **Dropped 2026-10-24.** The school starts fresh on the new server; the old Firebase portal's data is not moved.
+
 - **E8.1** Export Firestore `students` + `adminActivity` (admin SDK script run by the school).
 - **E8.2** Importer: maps students, guardians (from guardian fields + shared parent login ids → one guardian), class "Year N" → class room, results array → term + subject scores + term report (published), photos from Firebase Storage. AC: dry-run report (counts, unmapped subjects, invalid scores); re-runnable idempotently; reconciliation totals match.
 - **E8.3** Everyone receives new credentials (Firebase passwords cannot be exported); printable credential slips per family.
@@ -176,6 +181,7 @@ Rebuild the existing design in Next.js with improved IA, performance and accessi
 - **E12.5** **Audience targeting** for announcements & emails: everyone, all parents, all staff, all teachers, a section (e.g. Primary), a class/arm, guardians of specific students, or debtors. AC: preview recipient count before sending; only recipients in the target receive it (tested); staff can only target their own class unless Admin.
 - **E12.6** **Newsletters**: compose (rich text + images) → choose audience (parents, staff, public subscribers from the website) → schedule or send → per-recipient tracking. Templates with school branding; unsubscribe link (required for public subscribers). AC: public subscribers confirm by email (double opt-in); unsubscribes honoured immediately.
 - **E12.4** Contact-form messages inbox in admin.
+- **E12.8** *(added 2026-10-24)* **Fee notifications.** Every recorded or confirmed payment creates an in-app notice for the family and emails the receipt (from `accounts@`). Overdue invoices trigger a reminder (in-app + email) when they become overdue, then at most weekly until paid; the admin can switch reminders off or change the interval. AC: one notice per payment (no duplicates on retries); reminders stop the day the balance is cleared; only that family's guardians are notified.
 - **E12.7** *(added 2026-10-17)* **Sender addresses on the school domain, per purpose:** `admissions@`, `accounts@` (invoices, receipts), `results@` (report cards), and `no-reply@` for the rest. Replies go to a monitored inbox. SPF/DKIM/DMARC are set up on the domain so mail isn't flagged as spam.
 
 ## E13 — Dashboards & analytics
@@ -215,7 +221,21 @@ Computer-based tests for students, with results flowing into the gradebook.
   - AC: a request over quota is refused with a clear message, and the remaining allowance is shown before generating.
 
 ## E15 — Later (phase 3, Could)
-Timetable builder; parent ↔ teacher messaging; homework/assignments; library; transport routes & GPS; staff payroll; multi-campus.
+Timetable builder; library; transport routes & GPS; staff payroll; multi-campus. (Homework and parent ↔ teacher messaging moved to E17; the bus trip log to E18.)
+
+## E17 — Homework & communication book *(added 2026-10-24)*
+- **E17.1** **Homework.** A teacher posts homework to a class (and subject they teach): title, instructions, attachments, due date. Students see it on their dashboard and hand in text and/or files; parents see their child's homework and whether it's done. The teacher sees who has handed in, marks it seen or gives a short comment. AC: teachers only post to their own classes; students and parents only see their own class's homework (tested).
+- **E17.2** **Communication book.** One running notebook per student between the class teacher (and admin) and that student's guardians; the student can read and write too. Entries are short notes with an optional attachment; each side sees when the other has read. New entries create an in-app notice (and an email digest at most daily). AC: only the class teacher, admins, the student and their guardians can open a book (tested); entries can't be edited after 15 minutes, only followed up.
+
+## E18 — School bus *(added 2026-10-24)*
+- **E18.1** **Buses and drivers.** Admin registers buses (name, plate, capacity) and assigns a driver (a staff member with the Driver role, signs in on their phone).
+- **E18.2** **Trip log.** Each school day has runs: morning pickup Batch A, morning pickup Batch B, afternoon drop-off Batch A, afternoon drop-off Batch B (the admin can rename or add runs). The driver taps *Left* and *Back* for each run; times are recorded in WAT, with an optional note. Admin sees today's runs live and a report by date range (CSV). AC: one tap per event, undo within 2 minutes; admin corrections need a note and are audited.
+- **E18.3** **Daily driver checklist.** Before the first run the driver answers a short checklist (fuel, tyres, lights, brakes, cleanliness, odometer, any incident) as yes/no or a number, with a notes box. The admin edits the questions. A *No* or an incident flags the day for the admin. AC: takes under a minute on a phone; history per bus.
+
+## E19 — Store & inventory *(added 2026-10-24)*
+- **E19.1** **Catalogue.** Items by category (Uniform, Sportswear, Books, ID cards, Other) with sizes or variants, price, and who it's for (Nursery, Primary, Secondary or all). The admin adds, edits, re-prices or retires items. Starter list (editable): black blazer, white shirt, tie, black skirt, black trousers (Secondary), black shorts (Primary), sportswear per house colour (houses are set by the admin). Nursery items are added by the admin.
+- **E19.2** **Stock.** Quantity per variant, restock entries (supplier, quantity, cost), low-stock alert level per item, stock count adjustments with a reason.
+- **E19.3** **Selling or issuing.** Sell to a student either as a cash/transfer sale (receipt PDF) or added to the student's fee account (an invoice line, E10). ID cards can be issued per student and reprinted. AC: stock can't go below zero; every movement is audited; parents see store purchases on their portal statement.
 
 ---
 
