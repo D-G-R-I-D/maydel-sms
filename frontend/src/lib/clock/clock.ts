@@ -112,3 +112,13 @@ export function locationError(code: number | undefined): string {
   if (code === 3) return "Finding your location took too long. Move nearer a window or outside, then try again.";
   return "This browser can't share its location. Try Chrome or Safari on your phone.";
 }
+
+/** True for addresses a phone can't reach from another device (this computer only). */
+export function isLocalOnly(url: string): boolean {
+  try {
+    const h = new URL(url).hostname;
+    return h === "localhost" || h === "::1" || h === "[::1]" || h.startsWith("127.") || h.endsWith(".localhost");
+  } catch {
+    return false;
+  }
+}

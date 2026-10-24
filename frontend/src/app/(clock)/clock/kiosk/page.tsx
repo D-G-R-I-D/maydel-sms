@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { KioskScreen } from "@/components/clock/kiosk-screen";
+import { publicSiteOrigin } from "@/lib/clock/origin";
 
 export const metadata: Metadata = { title: "Staff clock-in", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
@@ -7,5 +8,5 @@ export const metadata: Metadata = { title: "Staff clock-in", robots: { index: fa
 export default async function KioskPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const raw = (await searchParams).token;
   const token = (Array.isArray(raw) ? raw[0] : raw) ?? "";
-  return <KioskScreen token={token} />;
+  return <KioskScreen token={token} publicOrigin={publicSiteOrigin()} />;
 }

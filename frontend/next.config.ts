@@ -32,8 +32,9 @@ function serverActionOrigins(): string[] {
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  // `npm run dev` only: let tunnel links load dev assets/HMR.
-  allowedDevOrigins: devTunnels,
+  // `npm run dev` only: let tunnel links and phones on the same Wi-Fi (http://192.168.x.x:3000, e.g. to
+  // scan the staff clock-in QR) load dev assets/HMR.
+  allowedDevOrigins: [...devTunnels, "192.168.*.*", "10.*.*.*", "172.*.*.*"],
   experimental: {
     serverActions: { allowedOrigins: serverActionOrigins() },
   },

@@ -154,7 +154,7 @@ export function ClockSettingsForm({ initial }: { initial: ClockSettings }) {
 }
 
 /** The kiosk link: issued once and shown once. Issuing a new one stops the old screen at once. */
-export function KioskLinkCard({ issued }: { issued: boolean }) {
+export function KioskLinkCard({ issued, publicOrigin }: { issued: boolean; publicOrigin: string | null }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [link, setLink] = useState<string | null>(null);
@@ -167,7 +167,7 @@ export function KioskLinkCard({ issued }: { issued: boolean }) {
     const r = await runAction(() => issueKioskLink(), { success: issued ? "New kiosk link issued; the old one has stopped working" : "Kiosk link issued" });
     setBusy(false);
     if (r) {
-      setLink(`${window.location.origin}/clock/kiosk?token=${encodeURIComponent(r.token)}`);
+      setLink(`${publicOrigin ?? window.location.origin}/clock/kiosk?token=${encodeURIComponent(r.token)}`);
       startTransition(() => router.refresh());
     }
   };
