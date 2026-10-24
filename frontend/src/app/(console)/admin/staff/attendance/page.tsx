@@ -69,14 +69,18 @@ export default async function StaffAttendancePage({ searchParams }: { searchPara
         <Card className="overflow-hidden">
           <form className="flex flex-wrap items-end gap-3 border-b border-border p-5" action="/admin/staff/attendance">
             <input type="hidden" name="view" value="report" />
-            <label className="space-y-1.5 text-sm">
-              <span className="block font-medium">From</span>
-              <Input type="date" name="from" defaultValue={from} max={today} />
-            </label>
-            <label className="space-y-1.5 text-sm">
-              <span className="block font-medium">To</span>
-              <Input type="date" name="to" defaultValue={to} max={today} />
-            </label>
+            <div className="space-y-1.5 text-sm">
+              <label htmlFor="rep-from" className="block font-medium">
+                From
+              </label>
+              <Input id="rep-from" type="date" name="from" defaultValue={from} max={today} />
+            </div>
+            <div className="space-y-1.5 text-sm">
+              <label htmlFor="rep-to" className="block font-medium">
+                To
+              </label>
+              <Input id="rep-to" type="date" name="to" defaultValue={to} max={today} />
+            </div>
             <Button type="submit" variant="secondary">
               Show
             </Button>
