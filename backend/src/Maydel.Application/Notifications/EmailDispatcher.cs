@@ -42,7 +42,7 @@ public sealed class EmailDispatcher(
                     }
                     attachments.Add(new EmailAttachment(ReportPdfs.FileName(card), "application/pdf", await pdfs.RenderAsync([card], ct)));
                 }
-                else if (email.Kind == EmailKind.ProofConfirmed && email.PaymentId is { } paymentId)
+                else if (email.Kind is EmailKind.ProofConfirmed or EmailKind.PaymentReceipt && email.PaymentId is { } paymentId)
                 {
                     if (await finance.ReceiptAsync(paymentId, ct) is { } receipt)
                         attachments.Add(new EmailAttachment(receipt.FileName, "application/pdf", receipt.Content));

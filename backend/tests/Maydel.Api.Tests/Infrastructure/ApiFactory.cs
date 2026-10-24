@@ -80,7 +80,7 @@ public class ApiFactory(string connectionString, IDictionary<string, string?>? s
             services.AddSingleton<IQuestionGenerator>(Ai);
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Email);
-            foreach (var worker in services.Where(d => d.ImplementationType?.Name is "EmailOutboxWorker" or "AdmissionsWorker").ToList()) services.Remove(worker);
+            foreach (var worker in services.Where(d => d.ImplementationType?.Name is "EmailOutboxWorker" or "AdmissionsWorker" or "FeeRemindersWorker").ToList()) services.Remove(worker);
         });
     }
 

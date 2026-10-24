@@ -1,4 +1,5 @@
 using Maydel.Application.Abstractions;
+using Maydel.Application.Notifications;
 using Maydel.Domain.Attendance;
 using Maydel.Domain.Finance;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,7 @@ namespace Maydel.Application.Finance;
 /// whichever arrives first records it, the other sees it done. Everything is re-verified with Paystack: status "success",
 /// currency NGN and the exact amount we asked for.
 /// </summary>
-public sealed class OnlinePayments(IAppDbContext db, IPaymentGateway gateway, TimeProvider time, ILogger<OnlinePayments> logger)
+public sealed class OnlinePayments(IAppDbContext db, IPaymentGateway gateway, TimeProvider time, FeeNotices notices, ILogger<OnlinePayments> logger)
 {
     public async Task<OnlinePaymentResult?> ConfirmAsync(string reference, CancellationToken ct)
     {
@@ -42,7 +43,11 @@ public sealed class OnlinePayments(IAppDbContext db, IPaymentGateway gateway, Ti
         var number = FeeRules.ReceiptNumber(invoice.Term.Session.Name, await db.NextReceiptAsync(prefix, ct));
         var paidOn = RegisterRules.TodayAt(tx.PaidAt ?? now);
         var (payment, applied) = invoice.ApplyGatewayPayment(attempt.Amount, reference, paidOn, number);
-        if (payment is not null) db.Payments.Add(payment);
+        if (payment is not null)
+        {
+            db.Payments.Add(payment);
+            await notices.PaymentAsync(payment, invoice, now, email: true, ct);
+        }
         attempt.PaymentId = payment?.Id;
         attempt.Excess = attempt.Amount - applied;
         attempt.Status = attempt.Excess > 0 ? OnlinePaymentStatus.NeedsReview : OnlinePaymentStatus.Succeeded;

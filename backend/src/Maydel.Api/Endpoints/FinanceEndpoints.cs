@@ -50,6 +50,8 @@ public static class FinanceEndpoints
 
         finance.MapGet("/settings", GetSettings).WithName("GetFeeSettings").ProducesProblems(401, 403);
         admin.MapPut("/settings", SaveSettings).WithName("SaveFeeSettings").ProducesProblems(400, 401, 403);
+        finance.MapGet("/reminders", GetReminders).WithName("GetFeeReminderSettings").ProducesProblems(401, 403);
+        admin.MapPut("/reminders", SaveReminders).WithName("SaveFeeReminderSettings").ProducesProblems(400, 401, 403);
 
         finance.MapGet("/fee-items", ListItems).WithName("ListFeeItems").ProducesProblems(400, 401, 403, 404);
         finance.MapPost("/fee-items", CreateItem).WithName("CreateFeeItem").ProducesProblems(400, 401, 403, 404);
@@ -156,6 +158,12 @@ public static class FinanceEndpoints
 
     private static async Task<Results<Ok<FeeSettingsDto>, ProblemHttpResult>> GetSettings(IQueryHandler<GetFeeSettingsQuery, FeeSettingsDto> h, CancellationToken ct) =>
         (await h.Handle(new GetFeeSettingsQuery(), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<FeeReminderSettings>, ProblemHttpResult>> GetReminders(IQueryHandler<GetFeeReminderSettingsQuery, FeeReminderSettings> h, CancellationToken ct) =>
+        (await h.Handle(new GetFeeReminderSettingsQuery(), ct)).ToHttpResult();
+
+    private static async Task<Results<Ok<FeeReminderSettings>, ProblemHttpResult>> SaveReminders(SaveFeeReminderSettingsCommand command, ICommandHandler<SaveFeeReminderSettingsCommand, FeeReminderSettings> h, CancellationToken ct) =>
+        (await h.Handle(command, ct)).ToHttpResult();
 
     private static async Task<Results<Ok<FeeSettingsDto>, ProblemHttpResult>> SaveSettings(SaveFeeSettingsCommand command, ICommandHandler<SaveFeeSettingsCommand, FeeSettingsDto> h, CancellationToken ct) =>
         (await h.Handle(command, ct)).ToHttpResult();

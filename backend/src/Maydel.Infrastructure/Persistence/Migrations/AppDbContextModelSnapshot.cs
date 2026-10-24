@@ -1569,6 +1569,60 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("NoticeReads");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Communication.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DedupeKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "DedupeKey")
+                        .IsUnique()
+                        .HasFilter("\"DedupeKey\" IS NOT NULL");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Communication.OutboxEmail", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1782,6 +1836,12 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("ReminderIntervalDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RemindersEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<decimal>("SecondChild")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)");
@@ -1862,6 +1922,9 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsCancelled")
                         .HasColumnType("boolean");
+
+                    b.Property<DateOnly?>("LastReminderOn")
+                        .HasColumnType("date");
 
                     b.Property<bool>("NewIntake")
                         .HasColumnType("boolean");
@@ -3410,6 +3473,15 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Maydel.Application.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.Notification", b =>
+                {
                     b.HasOne("Maydel.Application.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")

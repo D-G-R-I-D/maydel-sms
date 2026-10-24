@@ -46,6 +46,8 @@ public static class DependencyInjection
         services.AddScoped<Notifications.EmailDispatcher>();
         services.AddScoped<Notifications.InvoiceEmails>();
         services.AddScoped<Notifications.ProofEmails>();
+        services.AddScoped<Notifications.Notifier>();
+        services.AddScoped<Notifications.FeeNotices>();
         services.AddScoped<Finance.PaymentProofs>();
         services.AddScoped<Admissions.FormPaid>();
         services.AddScoped<Admissions.AdmissionEmails>();
