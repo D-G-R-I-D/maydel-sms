@@ -697,6 +697,29 @@ internal sealed class NewsletterConfig : IEntityTypeConfiguration<NewsletterSubs
     }
 }
 
+internal sealed class ClockSettingsConfig : IEntityTypeConfiguration<Domain.StaffAttendance.ClockSettings>
+{
+    public void Configure(EntityTypeBuilder<Domain.StaffAttendance.ClockSettings> b)
+    {
+        b.Property(x => x.CodeSecret).HasMaxLength(100);
+        b.Property(x => x.KioskTokenHash).HasMaxLength(100);
+    }
+}
+
+internal sealed class StaffDayConfig : IEntityTypeConfiguration<Domain.StaffAttendance.StaffDay>
+{
+    public void Configure(EntityTypeBuilder<Domain.StaffAttendance.StaffDay> b)
+    {
+        b.HasIndex(x => new { x.StaffId, x.Date }).IsUnique();
+        b.HasIndex(x => x.Date);
+        b.Property(x => x.InMethod).HasConversion<string>().HasMaxLength(8);
+        b.Property(x => x.OutMethod).HasConversion<string>().HasMaxLength(8);
+        b.Property(x => x.Note).HasMaxLength(300);
+        b.Ignore(x => x.Worked);
+        b.HasOne<Staff>().WithMany().HasForeignKey(x => x.StaffId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class SeedRunConfig : IEntityTypeConfiguration<SeedRun>
 {
     public void Configure(EntityTypeBuilder<SeedRun> b)

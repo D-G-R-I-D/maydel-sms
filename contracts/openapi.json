@@ -17448,6 +17448,608 @@
           }
         }
       }
+    },
+    "/api/clock": {
+      "post": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "Clock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClockInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/me": {
+      "get": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "MyClockDays",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StaffDayDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/clock/kiosk": {
+      "get": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "GetKioskCode",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskCode"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/settings": {
+      "get": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "GetClockSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "SaveClockSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClockSettingsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockSettingsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/kiosk-link": {
+      "post": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "IssueKioskLink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KioskLink"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/board": {
+      "get": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "GetClockBoard",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayBoard"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/report": {
+      "get": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "GetClockReport",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/report.csv": {
+      "get": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "ExportClockReport",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clock/days/{staffId}/{date}": {
+      "put": {
+        "tags": [
+          "Staff attendance"
+        ],
+        "operationId": "CorrectClockDay",
+        "parameters": [
+          {
+            "name": "staffId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffDayDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -18804,6 +19406,35 @@
           }
         }
       },
+      "AttendanceReport": {
+        "required": [
+          "from",
+          "to",
+          "schoolDays",
+          "staff"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "schoolDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "staff": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffSummary"
+            }
+          }
+        }
+      },
       "AttendanceStatus": {
         "enum": [
           "Present",
@@ -19755,6 +20386,153 @@
           }
         }
       },
+      "ClockInput": {
+        "required": [
+          "code",
+          "latitude",
+          "longitude"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "ClockMethod": {
+        "enum": [
+          "Qr",
+          "Manual",
+          null
+        ]
+      },
+      "ClockResult": {
+        "required": [
+          "clockedIn",
+          "day"
+        ],
+        "type": "object",
+        "properties": {
+          "clockedIn": {
+            "type": "boolean"
+          },
+          "day": {
+            "$ref": "#/components/schemas/StaffDayDto"
+          }
+        }
+      },
+      "ClockSettingsDto": {
+        "required": [
+          "startsAt",
+          "endsAt",
+          "graceMinutes",
+          "requireLocation",
+          "latitude",
+          "longitude",
+          "radiusMeters",
+          "kioskLinkIssued"
+        ],
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "format": "time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "time"
+          },
+          "graceMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requireLocation": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "radiusMeters": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kioskLinkIssued": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ClockSettingsInput": {
+        "required": [
+          "startsAt",
+          "endsAt",
+          "graceMinutes",
+          "requireLocation",
+          "latitude",
+          "longitude",
+          "radiusMeters"
+        ],
+        "type": "object",
+        "properties": {
+          "startsAt": {
+            "type": "string",
+            "format": "time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "time"
+          },
+          "graceMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requireLocation": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "radiusMeters": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ClubLine": {
         "required": [
           "name",
@@ -20018,6 +20796,33 @@
           }
         }
       },
+      "CorrectionInput": {
+        "required": [
+          "clockInAt",
+          "clockOutAt",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "clockInAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "clockOutAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
       "CreateClassRoomCommand": {
         "required": [
           "classLevelId",
@@ -20168,6 +20973,52 @@
             "default": true
           }
         }
+      },
+      "DayBoard": {
+        "required": [
+          "date",
+          "schoolDay",
+          "present",
+          "late",
+          "absent",
+          "staff"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "schoolDay": {
+            "type": "boolean"
+          },
+          "present": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "late": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "absent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "staff": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffDayDto"
+            }
+          }
+        }
+      },
+      "DayState": {
+        "enum": [
+          "In",
+          "Late",
+          "Out",
+          "Absent"
+        ]
       },
       "DebtorRow": {
         "required": [
@@ -22260,6 +23111,41 @@
         }
       },
       "JsonElement": { },
+      "KioskCode": {
+        "required": [
+          "code",
+          "url",
+          "expiresAt",
+          "school"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "school": {
+            "type": "string"
+          }
+        }
+      },
+      "KioskLink": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
       "LoginCommand": {
         "required": [
           "userName",
@@ -26851,6 +27737,95 @@
           }
         }
       },
+      "StaffDayDto": {
+        "required": [
+          "staffId",
+          "name",
+          "jobTitle",
+          "date",
+          "clockInAt",
+          "clockOutAt",
+          "isLate",
+          "state",
+          "hoursWorked",
+          "inMethod",
+          "outMethod",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "staffId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "clockInAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "clockOutAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isLate": {
+            "type": "boolean"
+          },
+          "state": {
+            "$ref": "#/components/schemas/DayState"
+          },
+          "hoursWorked": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "inMethod": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ClockMethod"
+              }
+            ]
+          },
+          "outMethod": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ClockMethod"
+              }
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "StaffDetail": {
         "required": [
           "id",
@@ -27018,6 +27993,62 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "StaffSummary": {
+        "required": [
+          "staffId",
+          "name",
+          "jobTitle",
+          "schoolDays",
+          "daysPresent",
+          "daysLate",
+          "daysAbsent",
+          "averageArrival",
+          "hoursWorked"
+        ],
+        "type": "object",
+        "properties": {
+          "staffId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "schoolDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysPresent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysLate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysAbsent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "averageArrival": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "hoursWorked": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -28716,6 +29747,9 @@
     },
     {
       "name": "Users"
+    },
+    {
+      "name": "Staff attendance"
     }
   ]
 }
