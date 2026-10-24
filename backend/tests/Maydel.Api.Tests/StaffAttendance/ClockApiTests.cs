@@ -26,9 +26,14 @@ public sealed class ClockApiTests(PostgresFixture fixture)
             Api.Clock.Today = new DateOnly(2026, 10, 26);
             (await admin.PutAsJsonAsync("/api/clock/settings", new { startsAt = "07:30", endsAt = "16:00", graceMinutes = 15, requireLocation = false, radiusMeters = 150 }))
                 .EnsureSuccessStatusCode();
+            var replaced = await AdmissionsKit.ReadAsync<KioskLink>(await admin.PostAsync("/api/clock/kiosk-link", null));
             var link = await AdmissionsKit.ReadAsync<KioskLink>(await admin.PostAsync("/api/clock/kiosk-link", null));
+            // The admin can copy the current link again; only the newest one works.
+            Assert.Equal(link.Token, (await AdmissionsKit.ReadAsync<KioskLink>(await admin.GetAsync("/api/clock/kiosk-link"))).Token);
+            await (await teacher.GetAsync("/api/clock/kiosk-link")).AssertProblemAsync(HttpStatusCode.Forbidden);
 
             var kiosk = Api.CreateClient();
+            await (await kiosk.GetAsync($"/api/public/clock/kiosk?token={replaced.Token}")).AssertProblemAsync(HttpStatusCode.Unauthorized, "clock.kiosk");
             await (await kiosk.GetAsync("/api/public/clock/kiosk?token=wrong")).AssertProblemAsync(HttpStatusCode.Unauthorized);
             var code = await AdmissionsKit.ReadAsync<KioskCode>(await kiosk.GetAsync($"/api/public/clock/kiosk?token={link.Token}"));
             Assert.Contains("/clock?c=", code.Url);

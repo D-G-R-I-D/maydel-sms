@@ -50,6 +50,7 @@ public static class ClockErrors
     public static readonly Error BadCode = Error.Rule("clock.code", "That code has expired or isn't valid. Scan the code on the school screen again.");
     public static readonly Error Weekend = Error.Rule("clock.weekend", "Clocking in is for school days (Monday to Friday).");
     public static readonly Error KioskToken = Error.Unauthorized("clock.kiosk", "This kiosk link is no longer valid. Ask the admin for a new one.");
+    public static readonly Error NoKioskLink = Error.NotFound("clock.no_kiosk", "There's no kiosk link to show. Issue one first.");
     public static Error TooFar(int metres) => Error.Rule("clock.too_far", $"You need to be at the school to clock in (you seem to be about {metres} m away).");
     public static readonly Error NeedLocation = Error.Validation("latitude", "Allow location access so we can confirm you're at the school.");
 }
@@ -154,8 +155,11 @@ internal sealed class KioskCodeHandler(IAppDbContext db, ISchoolClock clock, IOp
 public sealed record GetClockSettingsQuery : IQuery<ClockSettingsDto>;
 public sealed record SaveClockSettingsCommand(ClockSettingsInput Settings) : ICommand<ClockSettingsDto>;
 
-/// <summary>Makes a new kiosk link (the old one stops working) and returns its token once.</summary>
+/// <summary>Makes a new kiosk link (the old one stops working) and returns its token.</summary>
 public sealed record IssueKioskLinkCommand : ICommand<KioskLink>;
+
+/// <summary>The current kiosk link's token, to copy or open it again. Links issued before tokens were kept return not-found.</summary>
+public sealed record GetKioskLinkQuery : IQuery<KioskLink>;
 
 public sealed record DayBoardQuery(DateOnly? Date = null) : IQuery<DayBoard>;
 public sealed record AttendanceReportQuery(DateOnly From, DateOnly To) : IQuery<AttendanceReport>;
@@ -190,9 +194,18 @@ internal sealed class IssueKioskLinkHandler(IAppDbContext db) : ICommandHandler<
     {
         var s = await db.SettingsAsync(ct);
         var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
-        s.KioskTokenHash = ClockSettings.HashToken(token);
+        (s.KioskTokenHash, s.KioskToken) = (ClockSettings.HashToken(token), token);
         await db.SaveChangesAsync(ct);
         return new KioskLink(token);
+    }
+}
+
+internal sealed class GetKioskLinkHandler(IAppDbContext db) : IQueryHandler<GetKioskLinkQuery, KioskLink>
+{
+    public async Task<Result<KioskLink>> Handle(GetKioskLinkQuery q, CancellationToken ct)
+    {
+        var s = await db.SettingsAsync(ct);
+        return s.KioskToken is { } token && s.KioskTokenHash == ClockSettings.HashToken(token) ? new KioskLink(token) : ClockErrors.NoKioskLink;
     }
 }
 

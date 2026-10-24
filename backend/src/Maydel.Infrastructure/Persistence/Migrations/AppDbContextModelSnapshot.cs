@@ -18,7 +18,7 @@ namespace Maydel.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -2425,6 +2425,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("GraceMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<string>("KioskToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("KioskTokenHash")
                         .HasMaxLength(100)
