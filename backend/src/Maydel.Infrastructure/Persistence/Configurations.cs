@@ -769,6 +769,36 @@ internal sealed class HomeworkSubmissionConfig : IEntityTypeConfiguration<Domain
     }
 }
 
+internal sealed class BookEntryConfig : IEntityTypeConfiguration<BookEntry>
+{
+    public void Configure(EntityTypeBuilder<BookEntry> b)
+    {
+        b.Property(x => x.AuthorName).HasMaxLength(200);
+        b.Property(x => x.Body).HasMaxLength(4000);
+        b.Property(x => x.Side).HasConversion<string>().HasMaxLength(10);
+        b.HasIndex(x => new { x.StudentId, x.CreatedAt });
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsOne(x => x.Attachment, f =>
+        {
+            f.Property(x => x.Id).HasColumnName("AttachmentId");
+            f.Property(x => x.Key).HasColumnName("AttachmentKey").HasMaxLength(300);
+            f.Property(x => x.FileName).HasColumnName("AttachmentName").HasMaxLength(200);
+            f.Property(x => x.ContentType).HasColumnName("AttachmentType").HasMaxLength(100);
+            f.Property(x => x.Size).HasColumnName("AttachmentSize");
+        });
+    }
+}
+
+internal sealed class BookReadConfig : IEntityTypeConfiguration<BookRead>
+{
+    public void Configure(EntityTypeBuilder<BookRead> b)
+    {
+        b.HasKey(x => new { x.StudentId, x.UserId });
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Application.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class NewsletterOptOutConfig : IEntityTypeConfiguration<NewsletterOptOut>
 {
     public void Configure(EntityTypeBuilder<NewsletterOptOut> b)

@@ -21,9 +21,10 @@ public sealed class Notifier(IAppDbContext db)
     }
 
     /// <summary>Notifies each of the student's guardians who has a portal login.</summary>
-    public async Task<int> GuardiansAsync(Guid studentId, NotificationKind kind, string title, string body, string? link, string dedupeKey, CancellationToken ct)
+    public async Task<int> GuardiansAsync(Guid studentId, NotificationKind kind, string title, string body, string? link, string dedupeKey, CancellationToken ct,
+        Guid? except = null)
     {
-        var users = await db.StudentGuardians.AsNoTracking().Where(g => g.StudentId == studentId && g.Guardian.UserId != null)
+        var users = await db.StudentGuardians.AsNoTracking().Where(g => g.StudentId == studentId && g.Guardian.UserId != null && g.Guardian.UserId != except)
             .Select(g => g.Guardian.UserId!.Value).Distinct().ToListAsync(ct);
         if (users.Count == 0) return 0;
         var sent = await db.Notifications.Where(n => users.Contains(n.UserId) && n.DedupeKey == dedupeKey).Select(n => n.UserId).ToListAsync(ct);

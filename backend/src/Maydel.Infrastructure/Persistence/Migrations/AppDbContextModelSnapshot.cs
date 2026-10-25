@@ -1523,6 +1523,66 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Communication.BookEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Side")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId", "CreatedAt");
+
+                    b.ToTable("BookEntries");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.BookRead", b =>
+                {
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("StudentId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BookReads");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Communication.GalleryPhoto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3705,6 +3765,71 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Navigation("Events");
 
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.BookEntry", b =>
+                {
+                    b.HasOne("Maydel.Domain.People.Student", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Maydel.Domain.Homework.HomeworkFile", "Attachment", b1 =>
+                        {
+                            b1.Property<Guid>("BookEntryId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ContentType")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("AttachmentType");
+
+                            b1.Property<string>("FileName")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("AttachmentName");
+
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("AttachmentId");
+
+                            b1.Property<string>("Key")
+                                .IsRequired()
+                                .HasMaxLength(300)
+                                .HasColumnType("character varying(300)")
+                                .HasColumnName("AttachmentKey");
+
+                            b1.Property<long>("Size")
+                                .HasColumnType("bigint")
+                                .HasColumnName("AttachmentSize");
+
+                            b1.HasKey("BookEntryId");
+
+                            b1.ToTable("BookEntries");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BookEntryId");
+                        });
+
+                    b.Navigation("Attachment");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.BookRead", b =>
+                {
+                    b.HasOne("Maydel.Domain.People.Student", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Application.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Maydel.Domain.Communication.NoticeRead", b =>
