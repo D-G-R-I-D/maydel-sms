@@ -284,8 +284,14 @@ public sealed class DbSeeder(
             while (await db.Staff.AnyAsync(s => s.StaffNumber == $"MSS-DRV-{number:000}", ct)) number++;
             db.Staff.Add(staff = new Staff { StaffNumber = $"MSS-DRV-{number:000}", FullName = "Mr. Musa Ibrahim", Email = email, JobTitle = "School bus driver", UserId = user.Id });
         }
-        if (!await db.Buses.AnyAsync(b => b.Name == "Bus 1", ct))
-            db.Buses.Add(new Domain.Transport.Bus { Name = "Bus 1", PlateNumber = "ABJ 123 MS", Capacity = 30, DriverStaffId = staff.Id });
+        // The demo driver must drive a bus: reuse a driverless "Bus 1" (e.g. made while testing), or add one.
+        if (!await db.Buses.AnyAsync(b => b.DriverStaffId == staff.Id, ct))
+        {
+            if (await db.Buses.Where(b => b.Name == "Bus 1" && b.DriverStaffId == null).OrderBy(b => b.CreatedAt).FirstOrDefaultAsync(ct) is { } bus)
+                bus.DriverStaffId = staff.Id;
+            else
+                db.Buses.Add(new Domain.Transport.Bus { Name = "Bus 1", PlateNumber = "ABJ 123 MS", Capacity = 30, DriverStaffId = staff.Id });
+        }
         await db.SaveChangesAsync(ct);
     }
 
