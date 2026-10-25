@@ -14,6 +14,12 @@ public static class Policies
     public const string Applicants = nameof(Applicants);
     public const string Students = nameof(Students);
 
+    /// <summary>Everyone employed by the school, drivers included: clock-in only (drivers see no student data).</summary>
+    public const string Workforce = nameof(Workforce);
+
+    /// <summary>The school bus: admins and drivers.</summary>
+    public const string Transport = nameof(Transport);
+
     public static void Configure(AuthorizationOptions o)
     {
         o.AddPolicy(Admin, p => p.RequireRole(Roles.Admin));
@@ -25,6 +31,8 @@ public static class Policies
         o.AddPolicy(Applicants, p => p.RequireRole(Roles.Applicant, Roles.Parent));
         // Only students sit online tests; parents follow results through the portal.
         o.AddPolicy(Students, p => p.RequireRole(Roles.Student));
+        o.AddPolicy(Workforce, p => p.RequireRole(Roles.Admin, Roles.Teacher, Roles.Bursar, Roles.Driver));
+        o.AddPolicy(Transport, p => p.RequireRole(Roles.Admin, Roles.Driver));
 
         // Secure by default: an endpoint that forgets to declare a policy still requires a signed-in user.
         o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();

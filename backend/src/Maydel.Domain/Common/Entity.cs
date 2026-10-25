@@ -26,6 +26,9 @@ public enum Role
     Student,
     /// <summary>A family applying for admission (E11). Becomes Parent too once a child is enrolled.</summary>
     Applicant,
+
+    /// <summary>A school bus driver (E18): logs trips and the daily checklist, and clocks in; sees no student records.</summary>
+    Driver,
 }
 
 public static class Roles
@@ -36,7 +39,8 @@ public static class Roles
     public const string Parent = "Parent";
     public const string Student = "Student";
     public const string Applicant = "Applicant";
+    public const string Driver = "Driver";
 
-    public static readonly IReadOnlyList<string> All = [Admin, Teacher, Bursar, Parent, Student, Applicant];
+    public static readonly IReadOnlyList<string> All = [Admin, Teacher, Bursar, Parent, Student, Applicant, Driver];
     public static readonly IReadOnlyList<string> Staff = [Admin, Teacher, Bursar];
 }

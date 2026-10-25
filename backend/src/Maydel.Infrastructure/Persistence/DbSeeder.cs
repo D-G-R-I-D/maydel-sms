@@ -47,6 +47,7 @@ public sealed class DbSeeder(
         await SeedAcademicStructureAsync(ct);
         await SeedAssessmentAsync(ct);
         await SeedSchoolProfileAsync(ct);
+        await SeedTransportAsync(ct);
         if (_options.DemoData)
         {
             await SeedDemoDataAsync(ct);
@@ -136,6 +137,29 @@ public sealed class DbSeeder(
     }
 
     /// <summary>The first start-up copies the <c>School</c> configuration into the editable profile (E2.6); after that the admin owns it.</summary>
+    /// <summary>The school bus's usual runs and a starter driver checklist (E18); the admin edits both. Only when there are none.</summary>
+    private async Task SeedTransportAsync(CancellationToken ct)
+    {
+        if (!await db.BusRuns.AnyAsync(ct))
+            db.BusRuns.AddRange(
+                new Domain.Transport.BusRun { Name = "Morning pickup – Batch A", Kind = Domain.Transport.RunKind.Pickup, Order = 1 },
+                new Domain.Transport.BusRun { Name = "Morning pickup – Batch B", Kind = Domain.Transport.RunKind.Pickup, Order = 2 },
+                new Domain.Transport.BusRun { Name = "Afternoon drop-off – Batch A", Kind = Domain.Transport.RunKind.DropOff, Order = 3 },
+                new Domain.Transport.BusRun { Name = "Afternoon drop-off – Batch B", Kind = Domain.Transport.RunKind.DropOff, Order = 4 });
+        if (!await db.CheckQuestions.AnyAsync(ct))
+        {
+            var order = 0;
+            Domain.Transport.CheckQuestion Q(string text, Domain.Transport.CheckKind kind = Domain.Transport.CheckKind.YesNo, bool flagIfAnswered = false) =>
+                new() { Text = text, Kind = kind, Order = ++order, FlagIfAnswered = flagIfAnswered };
+            db.CheckQuestions.AddRange(
+                Q("Enough fuel for today's runs?"), Q("Tyres look OK?"), Q("Lights and indicators working?"), Q("Brakes OK?"),
+                Q("Seat belts and doors working?"), Q("First-aid kit and fire extinguisher on board?"), Q("Bus clean inside?"),
+                Q("Odometer reading (km)", Domain.Transport.CheckKind.Number),
+                Q("Any incident, damage or problem? Describe it", Domain.Transport.CheckKind.Text, flagIfAnswered: true));
+        }
+        await db.SaveChangesAsync(ct);
+    }
+
     private async Task SeedSchoolProfileAsync(CancellationToken ct)
     {
         var defaults = school.Value;
