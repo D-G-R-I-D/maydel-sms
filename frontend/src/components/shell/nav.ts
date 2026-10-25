@@ -71,7 +71,7 @@ export const consoleNav: NavGroup[] = [
     items: [
       { label: "News & notices", href: "/admin/website/news", icon: "news", roles: A, ready: true },
       { label: "Events", href: "/admin/website/events", icon: "events", roles: A, ready: true },
-      { label: "Gallery", href: "/admin/website/gallery", icon: "gallery", roles: A },
+      { label: "Gallery", href: "/admin/website/gallery", icon: "gallery", roles: A, ready: true },
       { label: "Messages", href: "/admin/website/messages", icon: "messages", roles: A, ready: true },
       { label: "Testimonials", href: "/admin/website/testimonials", icon: "news", roles: A, ready: true },
       { label: "Newsletter", href: "/admin/website/subscribers", icon: "messages", roles: A, ready: true },
