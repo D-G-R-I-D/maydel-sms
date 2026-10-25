@@ -52,6 +52,7 @@ public sealed class DbSeeder(
         if (_options.DemoData)
         {
             await SeedDemoDataAsync(ct);
+            await SeedDemoDriverAsync(ct);
             await ResetDemoAccountsAsync();
         }
     }
@@ -249,7 +250,7 @@ public sealed class DbSeeder(
     private static readonly (string UserName, bool MustChangePassword)[] DemoAccounts =
     [
         ("admin@maydel.test", false), ("teacher@maydel.test", false), ("bursar@maydel.test", false),
-        ("parent@maydel.test", false), ("newteacher@maydel.test", true),
+        ("parent@maydel.test", false), ("newteacher@maydel.test", true), ("driver@maydel.test", false),
         ("MSS/2026/0001", false), ("MSS/2026/0002", false), ("MSS/2026/0003", false), ("MSS/2026/0004", false), ("MSS/2026/0005", false),
     ];
 
@@ -269,6 +270,23 @@ public sealed class DbSeeder(
             user.LockoutEnd = null;
             await users.UpdateAsync(user);
         }
+    }
+
+    /// <summary>A demo bus driver on "Bus 1" (E18), added to existing demo databases too.</summary>
+    private async Task SeedDemoDriverAsync(CancellationToken ct)
+    {
+        const string email = "driver@maydel.test";
+        var user = await users.FindByNameAsync(email) ?? await CreateUserAsync(email, "Mr. Musa Ibrahim", Roles.Driver, DemoPassword);
+        var staff = await db.Staff.FirstOrDefaultAsync(s => s.UserId == user.Id, ct);
+        if (staff is null)
+        {
+            var number = 1;
+            while (await db.Staff.AnyAsync(s => s.StaffNumber == $"MSS-DRV-{number:000}", ct)) number++;
+            db.Staff.Add(staff = new Staff { StaffNumber = $"MSS-DRV-{number:000}", FullName = "Mr. Musa Ibrahim", Email = email, JobTitle = "School bus driver", UserId = user.Id });
+        }
+        if (!await db.Buses.AnyAsync(b => b.Name == "Bus 1", ct))
+            db.Buses.Add(new Domain.Transport.Bus { Name = "Bus 1", PlateNumber = "ABJ 123 MS", Capacity = 30, DriverStaffId = staff.Id });
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task SeedDemoDataAsync(CancellationToken ct)

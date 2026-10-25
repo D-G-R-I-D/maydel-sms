@@ -17,7 +17,7 @@
    - Do the **daily checklist** once per bus per day (submitting again replaces it).
    - For each run, tap **Left** when the bus sets off and **Back** when it returns. Times are recorded in WAT.
    - A mis-tap can be **undone within 2 minutes**. After that, the admin corrects it, with a reason that is kept.
-4. **Checklist flags.** A "wrong" yes/no answer (e.g. "Tyres look OK?" → No) or anything written in "Any incident?" **flags** the day. Admins get a `BusCheckFlagged` notification (link `/transport`).
+4. **Checklist flags.** A "wrong" yes/no answer (e.g. "Tyres look OK?" → No) or anything written in "Any incident?" **flags** the day. Admins get a `BusCheckFlagged` notification (link `/admin/transport`).
 5. **Admin views:** today's board (every bus × run, plus the checklist), a date-range report with CSV, and checklist history (optionally flagged only).
 
 ## Admin endpoints (`/api/transport`, admin)
