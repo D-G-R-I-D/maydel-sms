@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarDays, QrCode } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
+import { homeFor, isStaff } from "@/lib/auth/roles";
 import { firstName } from "@/lib/flash";
 import { ClockCodes, cleanCode, hours, shortDay, stateLabel, stateTone, watTime } from "@/lib/clock/clock";
 import { ClockCard } from "@/components/clock/clock-card";
@@ -30,9 +31,9 @@ export default async function ClockPage({ searchParams }: { searchParams: Promis
           <Image src="/brand/crest.svg" alt="" width={28} height={35} className="h-auto w-7" />
           <p className="min-w-0 flex-1 truncate font-display font-semibold text-brand">Staff clock-in</p>
           <ThemeToggle />
-          <Link href="/admin" className={buttonClasses("secondary", "sm")}>
+          <Link href={homeFor(user.roles)} className={buttonClasses("secondary", "sm")}>
             <ArrowLeft className="size-4" aria-hidden />
-            Console
+            {isStaff(user.roles) ? "Console" : "Back"}
           </Link>
         </div>
       </header>
