@@ -3,7 +3,7 @@ import type { Role, StaffLookupItem } from "@/lib/api/types";
 
 /** Client mirror of the M1.1 part 2 staff rules (docs/handoffs/m1.1-staff.md). The API re-checks. */
 
-export const STAFF_ROLES = ["Admin", "Teacher", "Bursar"] as const satisfies readonly Role[];
+export const STAFF_ROLES = ["Admin", "Teacher", "Bursar", "Driver"] as const satisfies readonly Role[];
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 const optionalText = (max: number, message: string) =>
@@ -32,6 +32,7 @@ export const roleDescriptions: Record<StaffRole, string> = {
   Admin: "Full access, including settings, staff and the audit log.",
   Teacher: "Classes, score entry, attendance and report comments.",
   Bursar: "Fees, invoices and payments.",
+  Driver: "School bus: the trip log and daily checklist on their phone, and clock-in. No student records.",
 };
 
 /**

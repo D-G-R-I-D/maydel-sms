@@ -3,7 +3,8 @@ import type { Role } from "@/lib/auth/roles";
 export type IconName =
   | "dashboard" | "students" | "guardians" | "staff" | "classes" | "subjects" | "sessions" | "scores" | "reports"
   | "attendance" | "fees" | "invoices" | "payments" | "debtors" | "admissions" | "news" | "events" | "gallery"
-  | "messages" | "school" | "assessment" | "users" | "audit" | "home" | "results" | "questions" | "tests" | "more";
+  | "messages" | "school" | "assessment" | "users" | "audit" | "home" | "results" | "questions" | "tests" | "more"
+  | "transport";
 
 export type NavItem = {
   label: string;
@@ -47,6 +48,7 @@ export const consoleNav: NavGroup[] = [
     ],
   },
   { label: "Attendance", items: [{ label: "Attendance", href: "/admin/attendance", icon: "attendance", roles: AT, ready: true }] },
+  { label: "Transport", items: [{ label: "School bus", href: "/admin/transport", icon: "transport", roles: A, ready: true }] },
   {
     label: "Finance",
     items: [
