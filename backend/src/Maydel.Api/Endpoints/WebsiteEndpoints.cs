@@ -45,6 +45,7 @@ public static class WebsiteEndpoints
         cms.MapDelete("/gallery/{id:guid}", DeletePhoto).WithName("DeleteGalleryPhoto").ProducesProblems(401, 403, 404);
         cms.MapGet("/messages", Messages).WithName("ListContactMessages").ProducesProblems(401, 403);
         cms.MapPut("/messages/{id:guid}/status", MessageStatusSet).WithName("SetContactMessageStatus").ProducesProblems(400, 401, 403, 404);
+        cms.MapGet("/staff", WebsiteStaff).WithName("ListWebsiteStaff").ProducesProblems(401, 403);
         cms.MapPut("/staff/{id:guid}", StaffProfile).WithName("SetStaffWebsiteProfile").ProducesProblems(400, 401, 403, 404);
         cms.MapGet("/testimonials", Testimonials).WithName("ListTestimonials").ProducesProblems(401, 403);
         cms.MapPost("/testimonials", CreateTestimonial).WithName("CreateTestimonial").ProducesProblems(400, 401, 403);
@@ -164,6 +165,9 @@ public static class WebsiteEndpoints
         (await h.Handle(q, ct)).ToHttpResult();
     private static async Task<Results<Ok<ContactMessageDto>, ProblemHttpResult>> MessageStatusSet(Guid id, StatusInput body, ICommandHandler<SetContactStatusCommand, ContactMessageDto> h, CancellationToken ct) =>
         (await h.Handle(new SetContactStatusCommand(id, body.Status), ct)).ToHttpResult();
+    private static async Task<Results<Ok<IReadOnlyList<Maydel.Application.Website.StaffProfiles.WebsiteStaffRow>>, ProblemHttpResult>> WebsiteStaff(
+        IQueryHandler<Maydel.Application.Website.StaffProfiles.ListWebsiteStaffQuery, IReadOnlyList<Maydel.Application.Website.StaffProfiles.WebsiteStaffRow>> h, CancellationToken ct) =>
+        (await h.Handle(new Maydel.Application.Website.StaffProfiles.ListWebsiteStaffQuery(), ct)).ToHttpResult();
     private static async Task<Results<Ok<PublicStaff>, ProblemHttpResult>> StaffProfile(Guid id, StaffWebsiteInput body, ICommandHandler<SetStaffWebsiteCommand, PublicStaff> h, CancellationToken ct) =>
         (await h.Handle(new SetStaffWebsiteCommand(id, body), ct)).ToHttpResult();
 

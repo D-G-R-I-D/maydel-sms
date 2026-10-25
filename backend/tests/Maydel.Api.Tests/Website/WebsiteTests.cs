@@ -111,6 +111,10 @@ public sealed class WebsiteTests(PostgresFixture fixture)
             new { showOnWebsite = true, jobTitle = "Head of Science", bio = "Twelve years teaching.", websiteOrder = 1 }));
         Assert.Equal("Head of Science", shown.JobTitle);
         Assert.Contains(await AdmissionsKit.ReadAsync<List<PublicStaff>>(await site.GetAsync("/api/public/site/staff")), x => x.Id == teacher.Id);
+        // The console lists every active staff member with what's set, to prefill the form and order the page.
+        var row = Assert.Single(await AdmissionsKit.ReadAsync<List<Maydel.Application.Website.StaffProfiles.WebsiteStaffRow>>(await admin.GetAsync("/api/cms/staff")),
+            x => x.StaffId == teacher.Id);
+        Assert.Equal((true, "Head of Science", "Twelve years teaching.", 1, false), (row.ShowOnWebsite, row.JobTitle, row.Bio, row.WebsiteOrder, row.HasPhoto));
 
         // Contact form: stored for the office; the honeypot quietly drops bots.
         var subject = $"Fees enquiry {tag}";
