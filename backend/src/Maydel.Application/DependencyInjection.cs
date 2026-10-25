@@ -54,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<Homework.PortalHomework>();
         services.AddScoped<Communication.BookAccess>();
         services.AddScoped<Communication.BookNotices>();
+        services.AddScoped<Transport.DriverBuses>();
         services.AddScoped<Newsletters.SubscriptionEmails>();
         services.AddScoped<Finance.PaymentProofs>();
         services.AddScoped<Admissions.FormPaid>();

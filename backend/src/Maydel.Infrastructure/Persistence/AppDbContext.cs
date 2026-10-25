@@ -61,6 +61,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Domain.Homework.HomeworkSubmission> HomeworkSubmissions => Set<Domain.Homework.HomeworkSubmission>();
     public DbSet<BookEntry> BookEntries => Set<BookEntry>();
     public DbSet<BookRead> BookReads => Set<BookRead>();
+    public DbSet<Domain.Transport.Bus> Buses => Set<Domain.Transport.Bus>();
+    public DbSet<Domain.Transport.BusRun> BusRuns => Set<Domain.Transport.BusRun>();
+    public DbSet<Domain.Transport.TripLog> TripLogs => Set<Domain.Transport.TripLog>();
+    public DbSet<Domain.Transport.CheckQuestion> CheckQuestions => Set<Domain.Transport.CheckQuestion>();
+    public DbSet<Domain.Transport.DailyCheck> DailyChecks => Set<Domain.Transport.DailyCheck>();
     public DbSet<SeedRun> SeedRuns => Set<SeedRun>();
     public DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings => Set<Domain.StaffAttendance.ClockSettings>();
     public DbSet<Domain.StaffAttendance.StaffDay> StaffDays => Set<Domain.StaffAttendance.StaffDay>();

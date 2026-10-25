@@ -109,6 +109,7 @@ public enum NotificationKind
     HomeworkSet,
     HomeworkReviewed,
     BookEntry,
+    BusCheckFlagged,
 }
 
 /// <summary>

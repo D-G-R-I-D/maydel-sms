@@ -112,6 +112,7 @@ app.MapNotificationEndpoints();
 app.MapNewsletterEndpoints();
 app.MapHomeworkEndpoints();
 app.MapCommunicationBookEndpoints();
+app.MapTransportEndpoints();
 app.MapUserEndpoints();
 app.MapStaffAttendanceEndpoints();
 

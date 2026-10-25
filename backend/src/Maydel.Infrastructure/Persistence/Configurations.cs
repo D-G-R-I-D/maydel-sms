@@ -806,6 +806,69 @@ internal sealed class BookReadConfig : IEntityTypeConfiguration<BookRead>
     }
 }
 
+internal sealed class BusConfig : IEntityTypeConfiguration<Domain.Transport.Bus>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.Bus> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(80);
+        b.Property(x => x.PlateNumber).HasMaxLength(20);
+        b.HasOne<Staff>().WithMany().HasForeignKey(x => x.DriverStaffId).OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+internal sealed class BusRunConfig : IEntityTypeConfiguration<Domain.Transport.BusRun>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.BusRun> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(80);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+    }
+}
+
+internal sealed class TripLogConfig : IEntityTypeConfiguration<Domain.Transport.TripLog>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.TripLog> b)
+    {
+        b.HasIndex(x => new { x.BusId, x.RunId, x.Date }).IsUnique();
+        b.HasIndex(x => x.Date);
+        b.Property(x => x.Note).HasMaxLength(500);
+        b.Property(x => x.Correction).HasMaxLength(500);
+        b.HasOne<Domain.Transport.Bus>().WithMany().HasForeignKey(x => x.BusId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Domain.Transport.BusRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class CheckQuestionConfig : IEntityTypeConfiguration<Domain.Transport.CheckQuestion>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.CheckQuestion> b)
+    {
+        b.Property(x => x.Text).HasMaxLength(200);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+    }
+}
+
+internal sealed class DailyCheckConfig : IEntityTypeConfiguration<Domain.Transport.DailyCheck>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.DailyCheck> b)
+    {
+        b.HasIndex(x => new { x.BusId, x.Date }).IsUnique();
+        b.Property(x => x.DriverName).HasMaxLength(200);
+        b.Property(x => x.Notes).HasMaxLength(2000);
+        b.HasOne<Domain.Transport.Bus>().WithMany().HasForeignKey(x => x.BusId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsMany(x => x.Answers, a =>
+        {
+            a.ToTable("DailyCheckAnswers");
+            a.WithOwner().HasForeignKey("DailyCheckId");
+            a.Property<int>("Id");
+            a.HasKey("Id");
+            a.Property(x => x.Question).HasMaxLength(200);
+            a.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+            a.Property(x => x.Number).HasPrecision(12, 2);
+            a.Property(x => x.Text).HasMaxLength(1000);
+        });
+    }
+}
+
 internal sealed class NewsletterOptOutConfig : IEntityTypeConfiguration<NewsletterOptOut>
 {
     public void Configure(EntityTypeBuilder<NewsletterOptOut> b)

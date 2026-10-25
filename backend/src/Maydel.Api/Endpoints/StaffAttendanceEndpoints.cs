@@ -13,7 +13,7 @@ public static class StaffAttendanceEndpoints
 {
     public static void MapStaffAttendanceEndpoints(this IEndpointRouteBuilder app)
     {
-        var staff = app.MapGroup("/api/clock").WithTags("Staff attendance").RequireAuthorization(Policies.Staff);
+        var staff = app.MapGroup("/api/clock").WithTags("Staff attendance").RequireAuthorization(Policies.Workforce);
         staff.MapPost("", ClockIn).WithName("Clock").ProducesProblems(400, 401, 403, 409, 422);
         staff.MapGet("/me", Mine).WithName("MyClockDays").ProducesProblems(401, 403);
 
