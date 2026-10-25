@@ -44,7 +44,7 @@ internal sealed class SaveEventHandler(IAppDbContext db) : ICommandHandler<SaveE
         if (i.DescriptionHtml is { Length: > RichText.MaxLength }) return Error.Validation("descriptionHtml", "The description is too long.");
         e.DescriptionHtml = null;
         if (RichText.Clean(i.DescriptionHtml) is { } rich) (e.DescriptionHtml, e.Description) = rich;
-        else if (e.Description is { Length: > 4000 }) return Error.Validation("description", "Keep the description under 4000 characters.");
+        if (e.Description is { Length: > 20000 }) return Error.Validation(i.DescriptionHtml is null ? "description" : "descriptionHtml", "Keep the description under 20,000 characters.");
         if (e.Location is { Length: > 200 }) return Error.Validation("location", "Keep the place under 200 characters.");
         await db.SaveChangesAsync(ct);
         return new EventDto(e.Id, e.Title, e.Description, e.StartsAt, e.EndsAt, e.Location, e.Audience, e.DescriptionHtml);

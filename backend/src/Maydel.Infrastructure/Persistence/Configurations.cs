@@ -389,6 +389,7 @@ internal sealed class AnnouncementConfig : IEntityTypeConfiguration<Announcement
     public void Configure(EntityTypeBuilder<Announcement> b)
     {
         b.Property(x => x.Body).HasMaxLength(20000);
+        b.Property(x => x.BodyHtml).HasMaxLength(Application.Website.RichText.MaxLength);
         b.Property(x => x.Title).HasMaxLength(200);
         b.Property(x => x.Slug).HasMaxLength(100);
         b.Property(x => x.Summary).HasMaxLength(500);
@@ -407,7 +408,8 @@ internal sealed class EventConfig : IEntityTypeConfiguration<SchoolEvent>
 {
     public void Configure(EntityTypeBuilder<SchoolEvent> b)
     {
-        b.Property(x => x.Description).HasMaxLength(4000);
+        b.Property(x => x.Description).HasMaxLength(20000);
+        b.Property(x => x.DescriptionHtml).HasMaxLength(Application.Website.RichText.MaxLength);
         b.Property(x => x.Title).HasMaxLength(200);
         b.Property(x => x.Location).HasMaxLength(200);
         b.HasIndex(x => x.StartsAt);
@@ -713,6 +715,8 @@ internal sealed class NewsletterIssueConfig : IEntityTypeConfiguration<Newslette
     {
         b.Property(x => x.Title).HasMaxLength(150);
         b.Property(x => x.Preheader).HasMaxLength(200);
+        b.Property(x => x.BodyHtml).HasMaxLength(Application.Website.RichText.MaxLength);
+        b.Property(x => x.BodyText).HasMaxLength(Application.Website.RichText.MaxLength);
         b.Property(x => x.Audience).HasConversion<int>();
         b.Property(x => x.Section).HasConversion<string>().HasMaxLength(20);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
@@ -729,6 +733,8 @@ internal sealed class HomeworkConfig : IEntityTypeConfiguration<Domain.Homework.
         b.ToTable("Homework");
         b.Property(x => x.Title).HasMaxLength(200);
         b.Property(x => x.SetByName).HasMaxLength(200);
+        b.Property(x => x.Instructions).HasMaxLength(20000);
+        b.Property(x => x.InstructionsHtml).HasMaxLength(Application.Website.RichText.MaxLength);
         b.HasIndex(x => new { x.ClassRoomId, x.DueOn });
         b.HasOne<ClassRoom>().WithMany().HasForeignKey(x => x.ClassRoomId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Restrict);
@@ -753,6 +759,7 @@ internal sealed class HomeworkSubmissionConfig : IEntityTypeConfiguration<Domain
         b.HasIndex(x => new { x.HomeworkId, x.StudentId }).IsUnique();
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
         b.Property(x => x.Feedback).HasMaxLength(4000);
+        b.Property(x => x.Text).HasMaxLength(20000);
         b.HasOne<Domain.Homework.HomeworkTask>().WithMany().HasForeignKey(x => x.HomeworkId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
         b.OwnsMany(x => x.Files, f =>

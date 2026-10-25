@@ -5,6 +5,7 @@ using Maydel.Api.Tests.Infrastructure;
 using Maydel.Application.Website;
 using Maydel.Application.Website.Media;
 using Maydel.Domain.Common;
+using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 
 namespace Maydel.Api.Tests.Website;
@@ -73,6 +74,41 @@ public sealed class RichContentTests(PostgresFixture fixture)
         Assert.Null((await plain.Content.ReadFromJsonAsync<PostDto>(Json.Options))!.BodyHtml);
 
         await (await (await Api.ClientAsync(Roles.Teacher)).PostAsync("/api/cms/media", new MultipartFormDataContent())).AssertProblemAsync(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Long_formatted_posts_and_events_save_a_list_followed_by_a_picture()
+    {
+        // Reported from the editor: bullets, then a picture. Long enough to pass any short default column size.
+        var admin = await Api.ClientAsync(Roles.Admin);
+        var items = string.Concat(Enumerable.Range(1, 40).Select(i => $"<li><p>Race number {i} for every house</p></li>"));
+        var html = $"<ul>{items}</ul><figure class=\"wide\"><img src=\"/api/public/site/images/media/0198?v=1\" alt=\"x\"><figcaption>Cap</figcaption></figure>";
+
+        var post = await admin.PostAsJsonAsync("/api/cms/posts", new { title = $"Sports {Guid.NewGuid():N}", body = "", audience = "Everyone", bodyHtml = html });
+        if (!post.IsSuccessStatusCode) Assert.Fail(await post.Content.ReadAsStringAsync());
+        Assert.Contains("<figcaption>Cap</figcaption>", (await post.Content.ReadFromJsonAsync<PostDto>(Json.Options))!.BodyHtml);
+
+        var ev = await admin.PostAsJsonAsync("/api/cms/events", new
+        {
+            title = "Sports day", startsAt = "2026-11-14T09:00:00+01:00", audience = "Everyone", descriptionHtml = html,
+        });
+        if (!ev.IsSuccessStatusCode) Assert.Fail(await ev.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>Text columns default to 256 characters; long content columns must say otherwise.</summary>
+    [Fact]
+    public async Task Long_content_columns_are_not_left_at_the_default_size()
+    {
+        await Api.WithServicesAsync(sp =>
+        {
+            var model = sp.GetRequiredService<Maydel.Infrastructure.Persistence.AppDbContext>().Model;
+            var tooShort = model.GetEntityTypes().SelectMany(t => t.GetProperties().Select(p => (t, p)))
+                .Where(x => x.p.ClrType == typeof(string) && x.p.GetMaxLength() == 256
+                    && System.Text.RegularExpressions.Regex.IsMatch(x.p.Name, "(Html|Body|BodyText|Text|Instructions|Description|Feedback|Message)$"))
+                .Select(x => $"{x.t.ClrType.Name}.{x.p.Name}").ToList();
+            Assert.True(tooShort.Count == 0, "Give these a length: " + string.Join(", ", tooShort));
+            return Task.CompletedTask;
+        });
     }
 
     private static byte[] Png()
