@@ -367,7 +367,7 @@ internal sealed class SubmitCheckHandler(IAppDbContext db, DriverBuses mine, ICu
             var admins = await db.UserRoles.Join(db.Roles.Where(r => r.Name == Roles.Admin), ur => ur.RoleId, r => r.Id, (ur, r) => ur.UserId).Distinct().ToListAsync(ct);
             foreach (var admin in admins)
                 notifier.User(admin, null, NotificationKind.BusCheckFlagged, $"{bus.Name}: check needs attention", problems.Length > 300 ? problems[..300] + "…" : problems,
-                    "/transport", $"buscheck:{bus.Id}:{today:yyyy-MM-dd}");
+                    "/admin/transport", $"buscheck:{bus.Id}:{today:yyyy-MM-dd}");
         }
         await db.SaveChangesAsync(ct);
         return check.Dto(bus.Name);
