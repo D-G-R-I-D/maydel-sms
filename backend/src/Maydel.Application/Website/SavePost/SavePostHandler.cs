@@ -23,6 +23,7 @@ internal sealed class SavePostHandler(IAppDbContext db, ICurrentUser me) : IComm
         }
         post.Apply(c.Post);
         if (post.Check() is { } invalid) return invalid.ToError();
+        if (post.Body.Length > 20000) return Error.Validation("bodyHtml", "The post is too long. Keep it under 20,000 characters of text.");
         if (post.PublishedAt is null || post.Slug.Length == 0) post.Slug = await db.UniqueSlugAsync(post.Title, post.Id, ct);
         await db.SaveChangesAsync(ct);
         return post.ToDto();
