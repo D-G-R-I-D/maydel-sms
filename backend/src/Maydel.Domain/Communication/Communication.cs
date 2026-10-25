@@ -110,6 +110,7 @@ public enum NotificationKind
     HomeworkReviewed,
     BookEntry,
     BusCheckFlagged,
+    StoreOrderReady,
 }
 
 /// <summary>

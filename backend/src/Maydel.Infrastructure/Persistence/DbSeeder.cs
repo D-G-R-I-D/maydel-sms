@@ -48,6 +48,7 @@ public sealed class DbSeeder(
         await SeedAssessmentAsync(ct);
         await SeedSchoolProfileAsync(ct);
         await SeedTransportAsync(ct);
+        await SeedStoreAsync(ct);
         if (_options.DemoData)
         {
             await SeedDemoDataAsync(ct);
@@ -157,6 +158,34 @@ public sealed class DbSeeder(
                 Q("Odometer reading (km)", Domain.Transport.CheckKind.Number),
                 Q("Any incident, damage or problem? Describe it", Domain.Transport.CheckKind.Text, flagIfAnswered: true));
         }
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// A starter uniform list (E19.1) the admin completes: no prices and not on sale until priced. Only when the store is empty;
+    /// houses and sizes are placeholders to rename.
+    /// </summary>
+    private async Task SeedStoreAsync(CancellationToken ct)
+    {
+        if (await db.StoreItems.AnyAsync(ct)) return;
+        string[] sizes = ["Age 3–4", "Age 5–6", "Age 7–8", "Age 9–10", "Age 11–12", "S", "M", "L", "XL"];
+        const Domain.Store.StoreSections Secondary = Domain.Store.StoreSections.JuniorSecondary | Domain.Store.StoreSections.SeniorSecondary;
+        Domain.Store.StoreItem Item(string name, Domain.Store.StoreCategory category, Domain.Store.StoreSections sections, string? description, params string[] labels) => new()
+        {
+            Name = name, Category = category, Sections = sections, Description = description,
+            Variants = [.. labels.Select((l, i) => new Domain.Store.StoreVariant { Label = l, Order = i })],
+        };
+        db.StoreItems.AddRange(
+            Item("Blazer (black)", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, "School blazer with the crest.", sizes),
+            Item("White shirt", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, null, sizes),
+            Item("School tie", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, null, "Standard"),
+            Item("Skirt (black)", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, null, sizes),
+            Item("Trousers (black)", Domain.Store.StoreCategory.Uniform, Secondary, "Secondary school.", "S", "M", "L", "XL"),
+            Item("Shorts (black)", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.Primary, "Primary school.", sizes[..5]),
+            Item("House sportswear", Domain.Store.StoreCategory.Sportswear, Domain.Store.StoreSections.None, "In your child's house colour.",
+                "Red house – S", "Red house – M", "Red house – L", "Blue house – S", "Blue house – M", "Blue house – L",
+                "Green house – S", "Green house – M", "Green house – L", "Yellow house – S", "Yellow house – M", "Yellow house – L"),
+            Item("Replacement ID card", Domain.Store.StoreCategory.IdCard, Domain.Store.StoreSections.None, null, "Standard"));
         await db.SaveChangesAsync(ct);
     }
 

@@ -869,6 +869,73 @@ internal sealed class DailyCheckConfig : IEntityTypeConfiguration<Domain.Transpo
     }
 }
 
+internal sealed class StoreItemConfig : IEntityTypeConfiguration<Domain.Store.StoreItem>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StoreItem> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(120);
+        b.Property(x => x.Description).HasMaxLength(1000);
+        b.Property(x => x.Category).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Sections).HasConversion<int>();
+        b.Property(x => x.ImagePath).HasMaxLength(200);
+        b.HasMany(x => x.Variants).WithOne().HasForeignKey(v => v.ItemId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class StoreVariantConfig : IEntityTypeConfiguration<Domain.Store.StoreVariant>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StoreVariant> b)
+    {
+        b.Property(x => x.Label).HasMaxLength(60);
+        b.Property(x => x.Price).HasPrecision(12, 2);
+        // Two sales of the last item at once: the second one fails instead of selling stock that isn't there.
+        b.Property(x => x.Stock).IsConcurrencyToken();
+    }
+}
+
+internal sealed class StockMovementConfig : IEntityTypeConfiguration<Domain.Store.StockMovement>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StockMovement> b)
+    {
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(12);
+        b.Property(x => x.Note).HasMaxLength(300);
+        b.Property(x => x.Supplier).HasMaxLength(120);
+        b.Property(x => x.UnitCost).HasPrecision(12, 2);
+        b.HasIndex(x => new { x.VariantId, x.CreatedAt });
+        b.HasOne<Domain.Store.StoreVariant>().WithMany().HasForeignKey(x => x.VariantId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class StoreOrderConfig : IEntityTypeConfiguration<Domain.Store.StoreOrder>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StoreOrder> b)
+    {
+        b.HasIndex(x => x.Number).IsUnique();
+        b.HasIndex(x => new { x.StudentId, x.CreatedAt });
+        b.HasIndex(x => new { x.Status, x.HoldUntil });
+        b.Property(x => x.Number).HasMaxLength(24);
+        b.Property(x => x.PlacedByName).HasMaxLength(200);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(12);
+        b.Property(x => x.Payment).HasConversion<string>().HasMaxLength(14);
+        b.Property(x => x.PaidWith).HasConversion<string>().HasMaxLength(14);
+        b.Property(x => x.PaymentReference).HasMaxLength(100);
+        b.Property(x => x.CancelReason).HasMaxLength(300);
+        b.Property(x => x.Total).HasPrecision(12, 2);
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Lines, l =>
+        {
+            l.ToTable("StoreOrderLines");
+            l.WithOwner().HasForeignKey("OrderId");
+            l.Property<int>("Id");
+            l.HasKey("Id");
+            l.Property(x => x.ItemName).HasMaxLength(120);
+            l.Property(x => x.VariantLabel).HasMaxLength(60);
+            l.Property(x => x.UnitPrice).HasPrecision(12, 2);
+            l.Ignore(x => x.LineTotal);
+        });
+    }
+}
+
 internal sealed class NewsletterOptOutConfig : IEntityTypeConfiguration<NewsletterOptOut>
 {
     public void Configure(EntityTypeBuilder<NewsletterOptOut> b)

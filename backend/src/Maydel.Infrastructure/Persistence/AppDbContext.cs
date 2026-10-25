@@ -66,6 +66,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Domain.Transport.TripLog> TripLogs => Set<Domain.Transport.TripLog>();
     public DbSet<Domain.Transport.CheckQuestion> CheckQuestions => Set<Domain.Transport.CheckQuestion>();
     public DbSet<Domain.Transport.DailyCheck> DailyChecks => Set<Domain.Transport.DailyCheck>();
+    public DbSet<Domain.Store.StoreItem> StoreItems => Set<Domain.Store.StoreItem>();
+    public DbSet<Domain.Store.StoreVariant> StoreVariants => Set<Domain.Store.StoreVariant>();
+    public DbSet<Domain.Store.StockMovement> StockMovements => Set<Domain.Store.StockMovement>();
+    public DbSet<Domain.Store.StoreOrder> StoreOrders => Set<Domain.Store.StoreOrder>();
+    public DbSet<Domain.Store.StoreSettings> StoreSettings => Set<Domain.Store.StoreSettings>();
     public DbSet<SeedRun> SeedRuns => Set<SeedRun>();
     public DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings => Set<Domain.StaffAttendance.ClockSettings>();
     public DbSet<Domain.StaffAttendance.StaffDay> StaffDays => Set<Domain.StaffAttendance.StaffDay>();
