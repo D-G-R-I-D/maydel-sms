@@ -110,6 +110,7 @@ app.MapWebsiteEndpoints();
 app.MapNoticeEndpoints();
 app.MapNotificationEndpoints();
 app.MapNewsletterEndpoints();
+app.MapHomeworkEndpoints();
 app.MapUserEndpoints();
 app.MapStaffAttendanceEndpoints();
 

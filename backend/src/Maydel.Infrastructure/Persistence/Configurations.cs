@@ -722,6 +722,53 @@ internal sealed class NewsletterIssueConfig : IEntityTypeConfiguration<Newslette
     }
 }
 
+internal sealed class HomeworkConfig : IEntityTypeConfiguration<Domain.Homework.HomeworkTask>
+{
+    public void Configure(EntityTypeBuilder<Domain.Homework.HomeworkTask> b)
+    {
+        b.ToTable("Homework");
+        b.Property(x => x.Title).HasMaxLength(200);
+        b.Property(x => x.SetByName).HasMaxLength(200);
+        b.HasIndex(x => new { x.ClassRoomId, x.DueOn });
+        b.HasOne<ClassRoom>().WithMany().HasForeignKey(x => x.ClassRoomId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Files, f =>
+        {
+            f.ToTable("HomeworkFiles");
+            f.WithOwner().HasForeignKey("HomeworkId");
+            f.HasKey(x => x.Id);
+            // Ids are made in code: without this EF takes a new file on an existing row for an old one (UPDATE of nothing).
+            f.Property(x => x.Id).ValueGeneratedNever();
+            f.Property(x => x.Key).HasMaxLength(300);
+            f.Property(x => x.FileName).HasMaxLength(200);
+            f.Property(x => x.ContentType).HasMaxLength(100);
+        });
+    }
+}
+
+internal sealed class HomeworkSubmissionConfig : IEntityTypeConfiguration<Domain.Homework.HomeworkSubmission>
+{
+    public void Configure(EntityTypeBuilder<Domain.Homework.HomeworkSubmission> b)
+    {
+        b.HasIndex(x => new { x.HomeworkId, x.StudentId }).IsUnique();
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Feedback).HasMaxLength(4000);
+        b.HasOne<Domain.Homework.HomeworkTask>().WithMany().HasForeignKey(x => x.HomeworkId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsMany(x => x.Files, f =>
+        {
+            f.ToTable("HomeworkSubmissionFiles");
+            f.WithOwner().HasForeignKey("SubmissionId");
+            f.HasKey(x => x.Id);
+            // Ids are made in code: without this EF takes a new file on an existing row for an old one (UPDATE of nothing).
+            f.Property(x => x.Id).ValueGeneratedNever();
+            f.Property(x => x.Key).HasMaxLength(300);
+            f.Property(x => x.FileName).HasMaxLength(200);
+            f.Property(x => x.ContentType).HasMaxLength(100);
+        });
+    }
+}
+
 internal sealed class NewsletterOptOutConfig : IEntityTypeConfiguration<NewsletterOptOut>
 {
     public void Configure(EntityTypeBuilder<NewsletterOptOut> b)

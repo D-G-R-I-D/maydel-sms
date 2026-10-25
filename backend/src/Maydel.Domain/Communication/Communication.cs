@@ -106,6 +106,8 @@ public enum NotificationKind
 {
     PaymentReceived,
     FeesOverdue,
+    HomeworkSet,
+    HomeworkReviewed,
 }
 
 /// <summary>

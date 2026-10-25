@@ -60,6 +60,8 @@ public interface IAppDbContext
     DbSet<MediaAsset> MediaAssets { get; }
     DbSet<Newsletter> Newsletters { get; }
     DbSet<NewsletterOptOut> NewsletterOptOuts { get; }
+    DbSet<Domain.Homework.HomeworkTask> Homework { get; }
+    DbSet<Domain.Homework.HomeworkSubmission> HomeworkSubmissions { get; }
     DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
     DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 

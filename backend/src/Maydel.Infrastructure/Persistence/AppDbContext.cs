@@ -57,6 +57,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
     public DbSet<Newsletter> Newsletters => Set<Newsletter>();
     public DbSet<NewsletterOptOut> NewsletterOptOuts => Set<NewsletterOptOut>();
+    public DbSet<Domain.Homework.HomeworkTask> Homework => Set<Domain.Homework.HomeworkTask>();
+    public DbSet<Domain.Homework.HomeworkSubmission> HomeworkSubmissions => Set<Domain.Homework.HomeworkSubmission>();
     public DbSet<SeedRun> SeedRuns => Set<SeedRun>();
     public DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings => Set<Domain.StaffAttendance.ClockSettings>();
     public DbSet<Domain.StaffAttendance.StaffDay> StaffDays => Set<Domain.StaffAttendance.StaffDay>();
