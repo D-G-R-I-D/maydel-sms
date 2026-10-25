@@ -62,6 +62,8 @@ public interface IAppDbContext
     DbSet<NewsletterOptOut> NewsletterOptOuts { get; }
     DbSet<Domain.Homework.HomeworkTask> Homework { get; }
     DbSet<Domain.Homework.HomeworkSubmission> HomeworkSubmissions { get; }
+    DbSet<BookEntry> BookEntries { get; }
+    DbSet<BookRead> BookReads { get; }
     DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
     DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 

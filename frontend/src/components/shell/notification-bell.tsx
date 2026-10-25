@@ -3,7 +3,7 @@
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Bell as BellIcon, BookOpenCheck, CheckCheck, ClipboardList, Megaphone, Receipt, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Bell as BellIcon, BookOpenCheck, CheckCheck, ClipboardList, Megaphone, NotebookPen, Receipt, type LucideIcon } from "lucide-react";
 import { loadBell, markAllRead, markNoticeRead, markNotificationRead } from "@/lib/notifications/actions";
 import { ago, badgeText, safeLink, type Bell, type NotificationKind } from "@/lib/notifications/bell";
 import { cn } from "@/components/ui/primitives";
@@ -13,6 +13,7 @@ const kindIcon: Record<NotificationKind, { icon: LucideIcon; tone: string }> = {
   FeesOverdue: { icon: AlertTriangle, tone: "bg-warning/15 text-warning" },
   HomeworkSet: { icon: ClipboardList, tone: "bg-brand/10 text-brand" },
   HomeworkReviewed: { icon: BookOpenCheck, tone: "bg-success/15 text-success" },
+  BookEntry: { icon: NotebookPen, tone: "bg-brand/10 text-brand" },
 };
 
 const itemClasses = "flex w-full cursor-pointer gap-3 rounded-input px-3 py-2.5 text-left outline-none data-[highlighted]:bg-surface-2";

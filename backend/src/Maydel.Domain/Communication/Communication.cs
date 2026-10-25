@@ -108,6 +108,7 @@ public enum NotificationKind
     FeesOverdue,
     HomeworkSet,
     HomeworkReviewed,
+    BookEntry,
 }
 
 /// <summary>
