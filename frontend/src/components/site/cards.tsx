@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { RichContent } from "@/components/website/rich-content";
 import { MapPin } from "lucide-react";
 import { siteImage, type NewsSummary, type PublicEvent } from "@/lib/site/api";
 import { dateTile, formatDay, formatEventWhen } from "@/lib/site/format";
@@ -54,7 +55,7 @@ export function EventItem({ event }: { event: PublicEvent }) {
             {event.location}
           </p>
         )}
-        {event.description && <p className="mt-1 text-sm whitespace-pre-line">{event.description}</p>}
+        <RichContent html={event.descriptionHtml} text={event.description} className="mt-1 text-sm" />
       </div>
     </div>
   );

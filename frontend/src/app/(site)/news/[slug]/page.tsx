@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { RichContent } from "@/components/website/rich-content";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { loadSite, siteImage } from "@/lib/site/api";
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/** E7: one published news article. Body is plain text; blank lines become paragraphs. */
+/** E7: one published news article: formatted HTML from the editor, or plain text where blank lines become paragraphs. */
 export default async function NewsArticlePage({ params }: Props) {
   const a = await article((await params).slug);
   if (!a) notFound();
@@ -52,13 +53,17 @@ export default async function NewsArticlePage({ params }: Props) {
           <Image src={img} alt="" fill priority sizes="(min-width: 768px) 720px, 100vw" className="object-cover" />
         </div>
       )}
-      <div className="mt-6 space-y-4 text-base leading-relaxed">
-        {paragraphs.map((p, i) => (
-          <p key={i} className="whitespace-pre-line">
-            {p}
-          </p>
-        ))}
-      </div>
+      {a.bodyHtml ? (
+        <RichContent html={a.bodyHtml} className="mt-6 text-base" />
+      ) : (
+        <div className="mt-6 space-y-4 text-base leading-relaxed">
+          {paragraphs.map((p, i) => (
+            <p key={i} className="whitespace-pre-line">
+              {p}
+            </p>
+          ))}
+        </div>
+      )}
       {a.linkUrl && (
         <Link href={a.linkUrl} className={`${buttonClasses("primary")} mt-8`}>
           {a.linkText || "Learn more"}

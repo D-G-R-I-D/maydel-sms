@@ -16,10 +16,13 @@ export function FormDialog({
   open: controlledOpen,
   onOpenChange,
   size = "md",
+  onCloseAutoFocus,
   children,
 }: {
   trigger?: ReactNode;
   size?: "md" | "lg";
+  /** Where focus goes on close; default is back to the trigger (e.g. an editor puts it back in the text). */
+  onCloseAutoFocus?: (event: Event) => void;
   title: string;
   description?: ReactNode;
   open?: boolean;
@@ -39,6 +42,7 @@ export function FormDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="animate-fade fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]" />
         <Dialog.Content
+          onCloseAutoFocus={onCloseAutoFocus}
           className={cn(
             "animate-rise fixed z-50 flex flex-col overflow-hidden border border-border bg-surface text-text shadow-2xl",
             "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-panel",
