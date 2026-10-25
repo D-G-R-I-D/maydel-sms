@@ -113,6 +113,7 @@ app.MapNewsletterEndpoints();
 app.MapHomeworkEndpoints();
 app.MapCommunicationBookEndpoints();
 app.MapTransportEndpoints();
+app.MapStoreEndpoints();
 app.MapUserEndpoints();
 app.MapStaffAttendanceEndpoints();
 

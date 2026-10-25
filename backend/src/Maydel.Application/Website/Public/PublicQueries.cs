@@ -21,6 +21,7 @@ public enum PublicImageKind
     Gallery,
     Staff,
     Media,
+    Store,
 }
 
 /// <summary>A picture that's on the public website (published public post, gallery photo, or staff shown on the site).</summary>
@@ -118,6 +119,7 @@ internal sealed class GetPublicImageHandler(IAppDbContext db, PhotoStore photos)
             PublicImageKind.News => await db.PublicPosts().Where(a => a.Id == q.Id).Select(a => a.ImagePath).FirstOrDefaultAsync(ct),
             PublicImageKind.Gallery => await db.GalleryPhotos.AsNoTracking().Where(p => p.Id == q.Id).Select(p => p.ImagePath).FirstOrDefaultAsync(ct),
             PublicImageKind.Media => await db.MediaAssets.AsNoTracking().Where(m => m.Id == q.Id).Select(m => m.ImagePath).FirstOrDefaultAsync(ct),
+            PublicImageKind.Store => await db.StoreItems.AsNoTracking().Where(i => i.Id == q.Id).Select(i => i.ImagePath).FirstOrDefaultAsync(ct),
             // Only staff the school chose to show: everyone else's photo stays private.
             _ => await db.Staff.AsNoTracking().Where(s => s.Id == q.Id && s.ShowOnWebsite && s.IsActive).Select(s => s.PhotoPath).FirstOrDefaultAsync(ct),
         };

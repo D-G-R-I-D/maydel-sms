@@ -69,6 +69,11 @@ public interface IAppDbContext
     DbSet<Domain.Transport.TripLog> TripLogs { get; }
     DbSet<Domain.Transport.CheckQuestion> CheckQuestions { get; }
     DbSet<Domain.Transport.DailyCheck> DailyChecks { get; }
+    DbSet<Domain.Store.StoreItem> StoreItems { get; }
+    DbSet<Domain.Store.StoreVariant> StoreVariants { get; }
+    DbSet<Domain.Store.StockMovement> StockMovements { get; }
+    DbSet<Domain.Store.StoreOrder> StoreOrders { get; }
+    DbSet<Domain.Store.StoreSettings> StoreSettings { get; }
     DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
     DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 
