@@ -4,6 +4,7 @@ import { load } from "@/lib/api/server";
 import { formatLagos } from "@/lib/time/lagos";
 import { safeLink } from "@/lib/notifications/bell";
 import { Badge, Card, PageHeader } from "@/components/ui/primitives";
+import { RichContent } from "@/components/website/rich-content";
 import { EmptyState, ProblemState } from "@/components/ui/states";
 
 export const metadata: Metadata = { title: "School notices" };
@@ -43,7 +44,7 @@ export default async function NoticesPage() {
                     <span className="text-xs text-muted">{formatLagos(n.publishedAt)}</span>
                   </div>
                   <h2 className="font-display text-xl font-semibold">{n.title}</h2>
-                  <p className="text-sm whitespace-pre-line">{n.body || n.summary}</p>
+                  <RichContent html={n.bodyHtml} text={n.body || n.summary} className="text-sm" />
                   {href && (
                     <a href={href} className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline" {...(href.startsWith("/") ? {} : { target: "_blank", rel: "noopener noreferrer" })}>
                       {n.linkText || "Read more"}

@@ -8,7 +8,8 @@ import { loadBell, markAllRead, markNoticeRead, markNotificationRead } from "@/l
 import { ago, badgeText, safeLink, type Bell, type NotificationKind } from "@/lib/notifications/bell";
 import { cn } from "@/components/ui/primitives";
 
-const kindIcon: Record<NotificationKind, { icon: LucideIcon; tone: string }> = {
+// Partial: a kind added on the server shows with the plain bell until it gets its own icon here.
+const kindIcon: Partial<Record<NotificationKind, { icon: LucideIcon; tone: string }>> = {
   PaymentReceived: { icon: Receipt, tone: "bg-success/15 text-success" },
   FeesOverdue: { icon: AlertTriangle, tone: "bg-warning/15 text-warning" },
   HomeworkSet: { icon: ClipboardList, tone: "bg-brand/10 text-brand" },

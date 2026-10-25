@@ -4,11 +4,11 @@ import { GUID } from "@/lib/media/binary-proxy";
 import { bodyless, passImage } from "@/lib/media/image-proxy";
 
 /**
- * E7: public website pictures (news, gallery, staff), passed through with the API's public cache headers.
+ * E7: public website pictures (news, gallery, staff, and pictures inside formatted content), passed through with the API's public cache headers.
  * The version sits in the path (not ?v=) so next/image can optimise them with a query-free localPattern.
  */
 
-const KINDS = new Set(["news", "gallery", "staff"]);
+const KINDS = new Set(["news", "gallery", "staff", "media"]);
 type Params = { params: Promise<{ kind: string; id: string; v: string }> };
 
 export async function GET(request: NextRequest, { params }: Params): Promise<NextResponse> {
