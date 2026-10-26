@@ -109,6 +109,13 @@ export const siteImages = {
   heroSeniors: { src: "/site/seniors-hero.jpg", alt: "Senior students in front of the school crest" },
   nursery: { src: "/site/nursery-classroom.jpg", alt: "Nursery pupils on colourful chairs in a bright classroom" },
   nurseryCrest: { src: "/site/nursery-crest.jpg", alt: "Nursery pupils in their classroom under the Maydel Spring Schools crest" },
+  // Marketing images the school supplied (AI-made; consent confirmed 2026-10-26). Kept out of the event
+  // gallery, which families read as real photos.
+  seniorPortrait: { src: "/site/senior-portrait.jpg", alt: "A senior student in school uniform in front of the Maydel Spring Schools crest" },
+  teacherStudent: { src: "/site/teacher-student.jpg", alt: "A teacher working with a senior student in class" },
+  pupilsClassroom: { src: "/site/pupils-classroom.jpg", alt: "Primary and nursery pupils in their classroom under the school motto" },
+  openDayEnquiries: { src: "/site/open-day-enquiries.jpg", alt: "Families at the admissions and enquiries desk on Open Day" },
+  openDayDesk: { src: "/site/open-day-desk.jpg", alt: "A parent talking with staff at an Open Day table" },
   heroNursery: { src: "/site/nursery-hero.jpg", alt: "Nursery pupils in their classroom" },
 } as const;
 
