@@ -125,6 +125,33 @@ export default async function AdmissionsInfoPage() {
         </ul>
       </section>
 
+      <section aria-labelledby="open-day" className="grid gap-6 rounded-card border border-border bg-surface p-5 sm:p-8 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+        <div className="space-y-3">
+          <p className="text-sm font-semibold tracking-wider text-brand uppercase">Visit us</p>
+          <h2 id="open-day" className="font-display text-3xl font-semibold">
+            Come and see us on Open Day.
+          </h2>
+          <p className="text-muted">
+            Walk round the classrooms, meet our teachers and ask the admissions team anything. Can&apos;t make Open Day? The office is happy to arrange a visit on another day.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/events" className={buttonClasses("primary")}>
+              See upcoming events
+            </Link>
+            <Link href="/contact" className={buttonClasses("secondary")}>
+              Book a visit
+            </Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[siteImages.openDayEnquiries, siteImages.openDayDesk].map((img) => (
+            <div key={img.src} className="relative aspect-[4/3] overflow-hidden rounded-input bg-surface-2">
+              <Image src={img.src} alt={img.alt} fill sizes="(min-width: 1024px) 320px, 50vw" className="object-cover" />
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section aria-labelledby="faq" className="max-w-3xl">
         <h2 id="faq" className="font-display text-2xl font-semibold">
           Questions and answers
