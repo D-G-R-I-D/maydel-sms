@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle2, MailX, MailCheck } from "lucide-react";
 import { problemMessage } from "@/lib/api/problem";
 import { confirmSubscription, unsubscribeNewsletter } from "@/lib/site/newsletter-actions";
+import { markSubscribed } from "@/lib/site/newsletter-prefs";
 import { Button, Card } from "@/components/ui/primitives";
 import { Alert } from "@/components/ui/states";
 
@@ -43,6 +44,7 @@ export function NewsletterLinkAction({ kind, token }: { kind: "confirm" | "unsub
           setState("busy");
           try {
             const r = await (confirm ? confirmSubscription(token) : unsubscribeNewsletter(token));
+            if (r.ok && confirm) markSubscribed();
             setState(r.ok ? "done" : r.problem.status === 404 ? "This link has expired or was already used." : problemMessage(r.problem));
           } catch {
             setState("Couldn't reach the school. Check your connection and try again.");

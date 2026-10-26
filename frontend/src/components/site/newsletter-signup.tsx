@@ -4,10 +4,11 @@ import { useState } from "react";
 import { MailCheck, Send } from "lucide-react";
 import { problemMessage } from "@/lib/api/problem";
 import { subscribe } from "@/lib/site/newsletter-actions";
+import { markSubscribed } from "@/lib/site/newsletter-prefs";
 import { Button, Input } from "@/components/ui/primitives";
 
 /** Footer sign-up (E12.6). Double opt-in: the address gets a confirmation email first. */
-export function NewsletterSignup() {
+export function NewsletterSignup({ idPrefix = "footer" }: { idPrefix?: string }) {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | string>("idle");
@@ -31,17 +32,18 @@ export function NewsletterSignup() {
         setState("busy");
         try {
           const r = await subscribe(email, website);
+          if (r.ok) markSubscribed();
           setState(r.ok ? "done" : r.problem.status === 429 ? "Too many tries. Please wait a minute." : (r.problem.errors?.email?.[0] ?? problemMessage(r.problem)));
         } catch {
           setState("Couldn't reach the school. Check your connection and try again.");
         }
       }}
     >
-      <label htmlFor="footer-email" className="block text-sm font-medium">
+      <label htmlFor={`${idPrefix}-email`} className="block text-sm font-medium">
         Get the school newsletter
       </label>
       <div className="flex gap-2">
-        <Input id="footer-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="min-w-0 flex-1" aria-describedby="footer-email-note" />
+        <Input id={`${idPrefix}-email`} type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="min-w-0 flex-1" aria-describedby={`${idPrefix}-email-note`} />
         <Button type="submit" loading={state === "busy"} loadingText="…" aria-label="Sign up">
           <Send className="size-4" aria-hidden />
         </Button>
@@ -53,7 +55,7 @@ export function NewsletterSignup() {
           {state}
         </p>
       ) : (
-        <p id="footer-email-note" className="text-xs text-muted">
+        <p id={`${idPrefix}-email-note`} className="text-xs text-muted">
           We&apos;ll only send the school newsletter. Unsubscribe any time.
         </p>
       )}

@@ -9,6 +9,7 @@ import { SchoolLogo } from "@/components/school/school-logo";
 import { UserMenu } from "@/components/shell/user-menu";
 import { NotificationBell } from "@/components/shell/notification-bell";
 import { loadBell } from "@/lib/notifications/actions";
+import { NewsletterNudge } from "@/components/site/newsletter-nudge";
 
 export const metadata: Metadata = { title: { default: "Portal", template: "%s · Maydel portal" } };
 
@@ -41,6 +42,7 @@ export default async function PortalLayout({ children }: { children: React.React
         {children}
       </main>
       <PortalNav items={items} variant="bottom" />
+      <NewsletterNudge />
     </div>
   );
 }
