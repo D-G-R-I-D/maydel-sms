@@ -23,6 +23,8 @@ const ButtonableLink = Link.extend({
 });
 
 const linkOk = (href: string) => /^(https?:\/\/|mailto:|\/(?!\/))/i.test(href.trim());
+/** The server keeps http(s) and mailto links only, so a site path becomes a full address (also right in emails). */
+const absolute = (href: string) => (href.startsWith("/") ? `${window.location.origin}${href}` : href);
 
 /**
  * The formatted-text editor for news, notices, events and newsletters. Outputs HTML in the shape the
@@ -163,7 +165,7 @@ function LinkDialog({ editor, active }: { editor: Editor; active: boolean }) {
             <Button
               disabled={!href.trim() || Boolean(error)}
               onClick={() => {
-                const attrs = { href: href.trim(), class: button ? "button" : null };
+                const attrs = { href: absolute(href.trim()), class: button ? "button" : null };
                 const c = editor.chain().focus().extendMarkRange("link");
                 // With no words selected, insert the address itself as the link text.
                 if (editor.state.selection.empty && !active) c.insertContent({ type: "text", text: attrs.href, marks: [{ type: "link", attrs }] }).run();

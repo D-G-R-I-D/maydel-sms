@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { siteNav } from "@/lib/site/content";
 import { telHref, type SchoolProfile } from "@/lib/site/api";
+import { NewsletterSignup } from "./newsletter-signup";
 
 /** E7: contact details from Settings → School (never hard-coded), quick links and the portal. */
 export function SiteFooter({ profile }: { profile: SchoolProfile }) {
@@ -13,6 +14,9 @@ export function SiteFooter({ profile }: { profile: SchoolProfile }) {
           <p className="font-display text-lg font-semibold text-brand">{profile.name}</p>
           {profile.motto && <p className="text-sm text-muted">{profile.motto}</p>}
           <p className="text-sm text-muted">An approved WAEC and NECO examination centre.</p>
+          <div className="pt-3">
+            <NewsletterSignup />
+          </div>
         </div>
         <address className="space-y-2 text-sm not-italic">
           {profile.address && (
@@ -67,6 +71,11 @@ export function SiteFooter({ profile }: { profile: SchoolProfile }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/newsletters" className="hover:text-brand hover:underline">
+                Newsletters
+              </Link>
+            </li>
             <li>
               <Link href="/admissions/apply" className="hover:text-brand hover:underline">
                 Buy admission form
