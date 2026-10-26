@@ -9,6 +9,16 @@ import type { components } from "@/lib/api/schema";
 type GalleryPhoto = components["schemas"]["GalleryPhotoDto"];
 type PhotoInput = components["schemas"]["PhotoInput"];
 
+/** Whether a staff member appears on the website's Staff page, with their title, bio and position. */
+export async function saveStaffWebsite(staffId: string, body: components["schemas"]["StaffWebsiteInput"]): Promise<Loaded<true>> {
+  const r = await load(async (api) => {
+    const res = await api.PUT("/api/cms/staff/{id}", { params: { path: { id: staffId } }, body });
+    return { ...res, data: res.response.ok ? (true as const) : undefined };
+  });
+  if (r.ok) revalidatePath("/admin/website/staff");
+  return r;
+}
+
 /** Gallery photo details (title, caption, album, order, featured on the homepage carousel). */
 export async function saveGalleryPhoto(id: string, body: PhotoInput): Promise<Loaded<GalleryPhoto>> {
   const r = await load((api) => api.PUT("/api/cms/gallery/{id}", { params: { path: { id } }, body }));
