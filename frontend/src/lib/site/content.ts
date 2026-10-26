@@ -61,6 +61,20 @@ export const admissionSteps = [
   { title: "Offer and enrolment", text: "Accept the offer, and your child is placed in the most suitable class with orientation support." },
 ] as const;
 
+/**
+ * Before paying for the form: what to have ready, and what the form asks. The only real form is the online
+ * one, unlocked by the form fee; there's no blank form to download.
+ */
+export const applicationChecklist = [
+  { item: "A recent passport photograph of your child", note: "Required. A clear photo on a plain background (JPEG or PNG)." },
+  { item: "Birth certificate", note: "Or another proof of date of birth." },
+  { item: "Last school report card", note: "If your child is moving from another school." },
+  { item: "Parents' or guardians' contact details", note: "Phone numbers, email and home address." },
+  { item: "Health information", note: "Allergies, conditions or medication the school should know about." },
+] as const;
+
+export const applicationFormSections = ["About your child", "Parents and guardians", "Previous school", "Health and needs", "Photo and documents"] as const;
+
 export const faqs = [
   {
     q: "What age groups do you accept?",

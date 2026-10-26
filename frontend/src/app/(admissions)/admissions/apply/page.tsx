@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, DoorClosed, FileText } from "lucide-react";
+import { DoorClosed, FileText } from "lucide-react";
+import { ApplicationChecklist } from "@/components/site/application-checklist";
 import { load } from "@/lib/api/server";
 import { googleClientId } from "@/lib/api/config";
 import { getSessionUser } from "@/lib/auth/session";
@@ -79,14 +80,7 @@ export default async function ApplyPage() {
             </dl>
             {first.instructions && <p className="mt-3 text-sm whitespace-pre-line">{first.instructions}</p>}
           </Card>
-          <Card className="p-5 text-sm">
-            <p className="font-medium">Prefer paper?</p>
-            <p className="mt-1 text-muted">Download the blank form to see what&apos;s asked. You&apos;ll still need a form code from the school to apply.</p>
-            <a href={`/api/media/admissions/blank-form?sessionId=${first.sessionId}`} download className={`${buttonClasses("secondary", "sm")} mt-3`}>
-              <Download className="size-4" aria-hidden />
-              Download blank form
-            </a>
-          </Card>
+          <ApplicationChecklist compact />
           <p className="px-1 text-sm text-muted">
             Already applied?{" "}
             <Link href="/login?next=%2Fadmissions" className="font-medium text-brand hover:underline">
