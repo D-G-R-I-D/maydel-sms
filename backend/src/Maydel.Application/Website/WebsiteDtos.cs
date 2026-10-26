@@ -29,7 +29,8 @@ public sealed record GalleryPhotoDto(Guid Id, string Title, string? Caption, str
 
 public sealed record ContactMessageDto(Guid Id, string Name, string Email, string? Phone, string? Subject, string Message, MessageStatus Status, DateTimeOffset CreatedAt);
 
-public sealed record StaffWebsiteInput(bool ShowOnWebsite, string? JobTitle, string? Bio, int WebsiteOrder);
+/// <summary><c>DisplayName</c>: the name on the website (e.g. "Mrs. G. Okafor"); empty = the staff record's full name.</summary>
+public sealed record StaffWebsiteInput(bool ShowOnWebsite, string? JobTitle, string? Bio, int WebsiteOrder, string? DisplayName = null);
 
 // ---------- Public ----------
 

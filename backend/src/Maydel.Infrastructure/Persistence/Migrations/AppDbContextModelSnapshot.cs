@@ -2557,6 +2557,10 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("WebsiteName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<int>("WebsiteOrder")
                         .HasColumnType("integer");
 
