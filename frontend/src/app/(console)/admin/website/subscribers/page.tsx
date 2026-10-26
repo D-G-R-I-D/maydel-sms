@@ -9,6 +9,7 @@ import { Badge, Card, PageHeader, buttonClasses, cn } from "@/components/ui/prim
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 import { Pagination } from "@/components/ui/pagination";
 import { UnsubscribeButton } from "@/components/website/unsubscribe-button";
+import { NewsletterTabs } from "@/components/website/newsletter-tabs";
 
 export const metadata: Metadata = { title: "Newsletter subscribers" };
 
@@ -36,8 +37,8 @@ export default async function SubscribersPage({ searchParams }: { searchParams: 
   return (
     <>
       <PageHeader
-        title="Newsletter subscribers"
-        description="People who signed up on the website. Newsletters will go to active addresses."
+        title="Newsletter"
+        description="People who signed up on the website. Newsletters go to confirmed, active addresses; the CSV lists those only."
         actions={
           <a href="/api/media/website/subscribers-csv" className={buttonClasses("secondary")} download>
             <Download className="size-4" aria-hidden />
@@ -45,6 +46,7 @@ export default async function SubscribersPage({ searchParams }: { searchParams: 
           </a>
         }
       />
+      <NewsletterTabs active="subscribers" />
       <nav aria-label="Subscriber filter" className="mb-5 inline-flex rounded-input bg-surface-2 p-1">
         {(["active", "all"] as const).map((v) => (
           <Link
@@ -74,6 +76,7 @@ export default async function SubscribersPage({ searchParams }: { searchParams: 
                 <li key={s.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2.5 text-sm">
                   <span className="min-w-0 flex-1 truncate font-medium">{s.email}</span>
                   <span className="text-xs text-muted">Since {formatLagos(s.createdAt)}</span>
+                  {s.isActive && !s.confirmed && <Badge tone="warning">Pending confirmation</Badge>}
                   {s.isActive ? <UnsubscribeButton subscriber={s} /> : <Badge>Unsubscribed</Badge>}
                 </li>
               ))}

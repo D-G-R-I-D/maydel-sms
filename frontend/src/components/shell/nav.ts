@@ -75,7 +75,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Messages", href: "/admin/website/messages", icon: "messages", roles: A, ready: true },
       { label: "Staff on website", href: "/admin/website/staff", icon: "staff", roles: A, ready: true },
       { label: "Testimonials", href: "/admin/website/testimonials", icon: "news", roles: A, ready: true },
-      { label: "Newsletter", href: "/admin/website/subscribers", icon: "messages", roles: A, ready: true },
+      { label: "Newsletter", href: "/admin/website/newsletters", icon: "messages", roles: A, ready: true },
     ],
   },
   {
