@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { NoticesEnvelope } from "@/components/site/notices-envelope";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
+import { NewsletterNudge } from "@/components/site/newsletter-nudge";
 
 export const metadata: Metadata = {
   title: { default: "Maydel Spring Schools, Abuja", template: "%s · Maydel Spring Schools" },
@@ -31,6 +32,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </main>
       <SiteFooter profile={profile} />
       <WhatsAppButton href={profile.whatsAppUrl} />
+      <NewsletterNudge />
       <NoticesEnvelope notices={notices.ok ? notices.data : []} raised={Boolean(profile.whatsAppUrl)} />
       {/* Structured data for search engines; built from Settings → School only. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
