@@ -7665,6 +7665,7 @@ export interface components {
             bio: null | string;
             /** Format: int32 */
             websiteOrder: number;
+            displayName?: null | string;
         };
         StatementEntry: {
             /** Format: date */
@@ -8236,6 +8237,7 @@ export interface components {
             websiteOrder: number;
             hasPhoto: boolean;
             photoVersion: null | string;
+            displayName: null | string;
         };
     };
     responses: never;

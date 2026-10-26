@@ -137,6 +137,7 @@ internal sealed class StaffConfig : IEntityTypeConfiguration<Staff>
         b.HasIndex(x => x.Email).IsUnique();
         b.HasIndex(x => x.UserId).IsUnique();
         b.Property(x => x.Bio).HasMaxLength(2000);
+        b.Property(x => x.WebsiteName).HasMaxLength(100);
     }
 }
 

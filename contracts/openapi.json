@@ -35143,6 +35143,12 @@
           "websiteOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -37240,7 +37246,8 @@
           "bio",
           "websiteOrder",
           "hasPhoto",
-          "photoVersion"
+          "photoVersion",
+          "displayName"
         ],
         "type": "object",
         "properties": {
@@ -37274,6 +37281,12 @@
             "type": "boolean"
           },
           "photoVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayName": {
             "type": [
               "null",
               "string"

@@ -107,7 +107,7 @@ internal sealed class ListPublicStaffHandler(IAppDbContext db) : IQueryHandler<L
 {
     public async Task<Result<IReadOnlyList<PublicStaff>>> Handle(ListPublicStaffQuery q, CancellationToken ct) =>
         (await db.Staff.AsNoTracking().Where(s => s.ShowOnWebsite && s.IsActive).OrderBy(s => s.WebsiteOrder).ThenBy(s => s.FullName).ToListAsync(ct))
-            .Select(s => new PublicStaff(s.Id, s.FullName, s.JobTitle, s.Bio, WebsiteUrls.Image("staff", s.Id, s.PhotoPath))).ToList();
+            .Select(s => new PublicStaff(s.Id, s.WebsiteName ?? s.FullName, s.JobTitle, s.Bio, WebsiteUrls.Image("staff", s.Id, s.PhotoPath))).ToList();
 }
 
 internal sealed class GetPublicImageHandler(IAppDbContext db, PhotoStore photos) : IQueryHandler<GetPublicImageQuery, PhotoContent>
