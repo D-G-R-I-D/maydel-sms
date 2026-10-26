@@ -53,7 +53,8 @@ test("a family buys the form with a school form code", async ({ page, request })
   await page.context().clearCookies();
   await page.goto("/admissions/apply");
   await expect(page.getByRole("heading", { name: "Apply to Maydel Spring Schools" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Download blank form" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What you'll need" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /blank form/i })).toHaveCount(0);
   await expect(async () => {
     await page.getByLabel("First name").fill("Ada");
     await expect(page.getByLabel("First name")).toHaveValue("Ada", { timeout: 2_000 });

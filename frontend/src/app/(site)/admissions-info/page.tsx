@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { ApplicationChecklist } from "@/components/site/application-checklist";
 import { loadSite } from "@/lib/site/api";
 import { admissionSteps, faqs, programmes, siteImages } from "@/lib/site/content";
 import { DriftingCircles } from "@/components/ui/drifting-circles";
@@ -104,12 +105,7 @@ export default async function AdmissionsInfoPage() {
             </li>
           ))}
         </ol>
-        {open.length > 0 && (
-          <a href={`/api/media/admissions/blank-form?sessionId=${open[0].sessionId}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
-            <Download className="size-4" aria-hidden />
-            Prefer paper? Download a blank admission form (PDF)
-          </a>
-        )}
+        <ApplicationChecklist className="mt-4" />
       </section>
 
       <section aria-labelledby="levels">
