@@ -13,6 +13,7 @@ using Maydel.Domain.Common;
 using Maydel.Domain.Communication;
 using Maydel.Domain.Store;
 using Microsoft.Extensions.DependencyInjection;
+using UglyToad.PdfPig;
 
 namespace Maydel.Api.Tests.Store;
 
@@ -112,6 +113,44 @@ public sealed class StoreTests(PostgresFixture fixture)
             .AssertProblemAsync(HttpStatusCode.NotFound);
         await (await (await Api.ClientAsync(Roles.Bursar)).PutAsJsonAsync("/api/store/settings", new { parentsCanChargeToFees = false, holdHours = 24 }))
             .AssertProblemAsync(HttpStatusCode.Forbidden); // settings are the admin's
+    }
+
+    [Fact]
+    public async Task Receipts_print_for_the_office_and_the_family_and_id_cards_print_for_a_class()
+    {
+        var s = await SchoolBuilder.SetUpAsync(Api);
+        var bursar = await Api.ClientAsync(Roles.Bursar);
+        var admin = await Api.ClientAsync(Roles.Admin);
+        var parent = await ParentAsync(s.Students[0]);
+        var item = await ReadAsync<StoreItemDto>(await bursar.PostAsJsonAsync("/api/store/items", Item($"Book {Guid.NewGuid():N}"[..13], isActive: true, price: 3500)));
+        (await bursar.PostAsJsonAsync($"/api/store/variants/{item.Variants[0].Id}/restock", new { quantity = 5 })).EnsureSuccessStatusCode();
+        var order = await ReadAsync<StoreOrderDto>(await parent.PostAsJsonAsync($"/api/portal/children/{s.Students[0]}/shop/orders",
+            new { lines = new[] { new { variantId = item.Variants[0].Id, quantity = 2 } }, payment = "AtOffice" }));
+
+        var office = await PdfTextAsync(await bursar.GetAsync($"/api/store/orders/{order.Id}/receipt.pdf"));
+        Assert.Contains(order.Number, office);
+        Assert.Contains("NGN 7,000.00", office);
+        Assert.Contains("UNPAID", office);
+        Assert.Contains(order.Number, await PdfTextAsync(await parent.GetAsync($"/api/portal/children/{s.Students[0]}/shop/orders/{order.Id}/receipt.pdf")));
+        var other = await SchoolBuilder.SetUpAsync(Api);
+        var stranger = await ParentAsync(other.Students[0]);
+        await (await stranger.GetAsync($"/api/portal/children/{s.Students[0]}/shop/orders/{order.Id}/receipt.pdf")).AssertProblemAsync(HttpStatusCode.NotFound);
+        await (await stranger.GetAsync($"/api/portal/children/{other.Students[0]}/shop/orders/{order.Id}/receipt.pdf")).AssertProblemAsync(HttpStatusCode.NotFound);
+
+        // ID cards: one, or a whole class on A4 sheets; admin only.
+        var card = await PdfTextAsync(await admin.GetAsync($"/api/students/{s.Students[0]}/id-card.pdf"));
+        Assert.Contains("STUDENT IDENTITY CARD", card);
+        var sheet = await admin.GetAsync($"/api/academics/classrooms/{s.ClassRoomId}/id-cards.pdf");
+        using (var pdf = PdfDocument.Open(await sheet.Content.ReadAsByteArrayAsync()))
+            Assert.Equal(s.Students.Count, pdf.GetPages().Sum(p => System.Text.RegularExpressions.Regex.Matches(p.Text, "STUDENT IDENTITY CARD").Count));
+        await (await bursar.GetAsync($"/api/students/{s.Students[0]}/id-card.pdf")).AssertProblemAsync(HttpStatusCode.Forbidden);
+    }
+
+    private static async Task<string> PdfTextAsync(HttpResponseMessage response)
+    {
+        if (!response.IsSuccessStatusCode) Assert.Fail($"{(int)response.StatusCode}: {await response.Content.ReadAsStringAsync()}");
+        using var pdf = PdfDocument.Open(await response.Content.ReadAsByteArrayAsync());
+        return string.Join('\n', pdf.GetPages().Select(p => p.Text));
     }
 
     // ---------- helpers ----------

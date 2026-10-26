@@ -33,6 +33,7 @@ public static class StoreEndpoints
         store.MapPost("/orders/{id:guid}/ready", Ready).WithName("MarkStoreOrderReady").ProducesProblems(401, 403, 404, 422);
         store.MapPost("/orders/{id:guid}/collected", Collected).WithName("MarkStoreOrderCollected").ProducesProblems(401, 403, 404, 422);
         store.MapPost("/orders/{id:guid}/cancel", Cancel).WithName("CancelStoreOrder").ProducesProblems(401, 403, 404, 422);
+        store.MapGet("/orders/{id:guid}/receipt.pdf", Receipt).WithName("GetStoreReceipt").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
 
         var admin = app.MapGroup("/api/store").WithTags("Store").RequireAuthorization(Policies.Admin);
         admin.MapPut("/settings", SaveSettings).WithName("SaveStoreSettings").ProducesProblems(400, 401, 403);
@@ -42,6 +43,11 @@ public static class StoreEndpoints
         shop.MapGet("/orders", ShopOrders).WithName("ListChildShopOrders").ProducesProblems(401, 403, 404);
         shop.MapPost("/orders", Place).WithName("PlaceShopOrder").ProducesProblems(400, 401, 403, 404, 409, 422);
         shop.MapPost("/orders/{orderId:guid}/cancel", CancelMine).WithName("CancelShopOrder").ProducesProblems(401, 403, 404, 422);
+        shop.MapGet("/orders/{orderId:guid}/receipt.pdf", MyReceipt).WithName("GetShopReceipt").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
+
+        var cards = app.MapGroup("/api").WithTags("Store").RequireAuthorization(Policies.Admin);
+        cards.MapGet("/students/{id:guid}/id-card.pdf", IdCard).WithName("GetStudentIdCard").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404, 422);
+        cards.MapGet("/academics/classrooms/{id:guid}/id-cards.pdf", ClassIdCards).WithName("GetClassIdCards").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404, 422);
     }
 
     private static async Task<Results<Ok<IReadOnlyList<StoreItemDto>>, ProblemHttpResult>> Items(StoreCategory? category, bool? includeInactive, IQueryHandler<ListStoreItemsQuery, IReadOnlyList<StoreItemDto>> h, CancellationToken ct) =>
@@ -78,6 +84,15 @@ public static class StoreEndpoints
         (await h.Handle(new OrderCollectedCommand(id), ct)).ToHttpResult();
     private static async Task<Results<Ok<StoreOrderDto>, ProblemHttpResult>> Cancel(Guid id, CancelOrderInput body, ICommandHandler<CancelOrderCommand, StoreOrderDto> h, CancellationToken ct) =>
         (await h.Handle(new CancelOrderCommand(id, body.Reason), ct)).ToHttpResult();
+
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> Receipt(Guid id, IQueryHandler<GetStoreReceiptQuery, Maydel.Application.Reports.PdfFile> h, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await h.Handle(new GetStoreReceiptQuery(id), ct));
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> MyReceipt(Guid studentId, Guid orderId, IQueryHandler<GetStoreReceiptQuery, Maydel.Application.Reports.PdfFile> h, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await h.Handle(new GetStoreReceiptQuery(orderId, studentId), ct));
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> IdCard(Guid id, IQueryHandler<GetIdCardQuery, Maydel.Application.Reports.PdfFile> h, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await h.Handle(new GetIdCardQuery(id), ct));
+    private static async Task<Results<FileContentHttpResult, ProblemHttpResult>> ClassIdCards(Guid id, IQueryHandler<GetClassIdCardsQuery, Maydel.Application.Reports.PdfFile> h, CancellationToken ct) =>
+        FinanceEndpoints.Pdf(await h.Handle(new GetClassIdCardsQuery(id), ct));
 
     private static async Task<Results<Ok<ShopCatalogue>, ProblemHttpResult>> Shop(Guid studentId, IQueryHandler<GetShopQuery, ShopCatalogue> h, CancellationToken ct) =>
         (await h.Handle(new GetShopQuery(studentId), ct)).ToHttpResult();

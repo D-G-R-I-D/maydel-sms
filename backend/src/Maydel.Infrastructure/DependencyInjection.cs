@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddOptions<SchoolProfileOptions>().BindConfiguration(SchoolProfileOptions.Section);
         services.AddSingleton<IReportCardRenderer, Reports.QuestPdfReportCardRenderer>();
         services.AddSingleton<IFinanceDocumentRenderer, Reports.QuestPdfFinanceRenderer>();
+        services.AddSingleton<IStoreDocumentRenderer, Reports.QuestPdfStoreRenderer>();
         services.AddSingleton<IAdmissionFormRenderer, Reports.QuestPdfAdmissionFormRenderer>();
         services.AddSingleton<IAdmissionLetterRenderer, Reports.QuestPdfAdmissionLetterRenderer>();
         services.AddOptions<Ai.AiOptions>().BindConfiguration(Ai.AiOptions.Section);
