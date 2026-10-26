@@ -62,3 +62,18 @@
   - a cart, then the payment choice (Pay at the office / Add to fees), then a confirmation with the order number and "We'll tell you when it's ready";
   - "My orders" with a status timeline and cancel while `Placed`.
 - Add `StoreOrderReady` (ShoppingBag icon) to the bell.
+
+## Printing (added 2026-10-26)
+| Method & path | Who | Response |
+|---|---|---|
+| `GET /api/store/orders/{id}/receipt.pdf` | admin, bursar | A5 receipt; "UNPAID" / "CANCELLED" stamp when so |
+| `GET /api/portal/children/{studentId}/shop/orders/{orderId}/receipt.pdf` | the child's parents | the same receipt (404 for anyone else) |
+| `GET /api/students/{id}/id-card.pdf` | admin | one ID card (85.6 × 54 mm page) |
+| `GET /api/academics/classrooms/{id}/id-cards.pdf` | admin | every active student in the class, 10 per A4 sheet with cut lines |
+
+- **ID cards** show the student photo (or an empty "PHOTO" box), name, admission number, class, the current session and "valid until" its end date, and "If found, please return to …" with the school phone. There are no parent details, in case a card is lost.
+- **422 `idcard.no_session`** means no current session is set.
+
+**UI:**
+- "Receipt" buttons on the store order view and in the parent's "My orders".
+- "Print ID card" on the student profile, and "Print class ID cards" on the class page.

@@ -84,6 +84,23 @@ public sealed record AdmissionLetterDocument(
     string ReferenceNumber, string AdmissionNumber, string ChildName, string ClassLevel, string Session, string ParentName, string? HomeAddress,
     DateOnly LetterDate, DateOnly? ResumesOn);
 
+/// <summary>A shop order's receipt (E19.3).</summary>
+public sealed record StoreReceiptLine(string Item, string Option, int Quantity, decimal UnitPrice, decimal LineTotal);
+
+public sealed record StoreReceiptDocument(string OrderNumber, DateTimeOffset Date, string StudentName, string AdmissionNumber, string? ClassRoom,
+    IReadOnlyList<StoreReceiptLine> Lines, decimal Total, string PaymentStatus, string? PaidWith, string? Reference, string? InvoiceNumber, bool IsPaid, bool IsCancelled);
+
+/// <summary>One student ID card (E19.3): photo bytes when on file, session it's for, and when it stops being valid.</summary>
+public sealed record IdCardDocument(string StudentName, string AdmissionNumber, string? ClassRoom, string Session, DateOnly ValidUntil, byte[]? Photo);
+
+public interface IStoreDocumentRenderer
+{
+    byte[] Receipt(StoreReceiptDocument document, ReportBranding school);
+
+    /// <summary>One card per page when printing a single card; ten per A4 sheet (with cut lines) for a class.</summary>
+    byte[] IdCards(IReadOnlyList<IdCardDocument> cards, ReportBranding school, bool sheet);
+}
+
 public interface IAdmissionLetterRenderer
 {
     byte[] Render(AdmissionLetterDocument letter, ReportBranding school);
