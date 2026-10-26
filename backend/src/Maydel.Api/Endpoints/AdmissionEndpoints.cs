@@ -103,8 +103,9 @@ public static class AdmissionEndpoints
         family.MapPost("/applications", Start).WithName("StartApplication").ProducesProblems(400, 401, 403, 404, 422);
         family.MapPost("/applications/{id:guid}/redeem-code", Redeem).WithName("RedeemFormCode").ProducesProblems(400, 401, 403, 404, 422);
         family.MapPost("/applications/{id:guid}/pay", Pay).WithName("StartFormPayment").ProducesProblems(401, 403, 404, 422);
-        open.MapGet("/blank-form.pdf", BlankForm).WithName("GetBlankAdmissionForm")
-            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(404);
+        // Staff only: the office prints it for walk-in families; online, the form unlocks after the fee is paid.
+        staff.MapGet("/blank-form.pdf", BlankForm).WithName("GetBlankAdmissionForm")
+            .Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
         family.MapGet("/applications/{id:guid}", Get).WithName("GetMyApplication").ProducesProblems(401, 403, 404);
         family.MapPut("/applications/{id:guid}/form", SaveForm).WithName("SaveApplicationForm").ProducesProblems(400, 401, 403, 404, 422);
         family.MapPost("/applications/{id:guid}/documents", Upload).WithName("UploadApplicationDocument")
