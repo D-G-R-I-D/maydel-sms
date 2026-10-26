@@ -4,6 +4,24 @@ import { revalidatePath } from "next/cache";
 import { load, type Loaded } from "@/lib/api/server";
 import type { ContactMessage, MessageStatus, Testimonial, TestimonialInput } from "./cms";
 import type { Post, PostInput, SiteEvent, SiteEventInput } from "./posts";
+import type { components } from "@/lib/api/schema";
+
+type GalleryPhoto = components["schemas"]["GalleryPhotoDto"];
+type PhotoInput = components["schemas"]["PhotoInput"];
+
+/** Gallery photo details (title, caption, album, order, featured on the homepage carousel). */
+export async function saveGalleryPhoto(id: string, body: PhotoInput): Promise<Loaded<GalleryPhoto>> {
+  const r = await load((api) => api.PUT("/api/cms/gallery/{id}", { params: { path: { id } }, body }));
+  if (r.ok) revalidatePath("/admin/website/gallery");
+  return r;
+}
+
+export async function deleteGalleryPhoto(id: string): Promise<Loaded<true>> {
+  const r = await done((api) => api.DELETE("/api/cms/gallery/{id}", { params: { path: { id } } }));
+  if (r.ok) revalidatePath("/admin/website/gallery");
+  return r;
+}
+
 
 type Api = Parameters<Parameters<typeof load>[0]>[0];
 
