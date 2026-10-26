@@ -35,7 +35,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
     <html lang="en-NG" data-theme={theme === "system" ? undefined : theme} className={`${inter.variable} ${fraunces.variable}`}>
-      <body className="min-h-dvh">
+      {/* Browser extensions (e.g. ColorZilla) add attributes to <body>; this silences only that element's mismatch. */}
+      <body className="min-h-dvh" suppressHydrationWarning>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-input focus:bg-surface focus:px-4 focus:py-2 focus:text-brand"

@@ -4,7 +4,7 @@ import { ExternalLink, Users } from "lucide-react";
 import { load } from "@/lib/api/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
-import { PhotoAvatar } from "@/components/media/photo-avatar";
+import { PhotoControls } from "@/components/media/photo-controls";
 import { Badge, Card, PageHeader, buttonClasses } from "@/components/ui/primitives";
 import { AccessDenied, EmptyState, ProblemState } from "@/components/ui/states";
 import { StaffWebsiteDialog, StaffWebsiteSwitch } from "@/components/website/staff-website";
@@ -33,7 +33,7 @@ export default async function StaffOnWebsitePage() {
     <>
       <PageHeader
         title="Staff on the website"
-        description="Choose who appears on the website's Staff page. Photos come from each person's staff record."
+        description="Choose who appears on the website's Staff page, with the name, photo and short write-up visitors see."
         actions={
           <a href="/staff" target="_blank" rel="noopener noreferrer" className={buttonClasses("secondary")}>
             <ExternalLink className="size-4" aria-hidden />
@@ -58,12 +58,13 @@ export default async function StaffOnWebsitePage() {
             {rows.map((r) => {
               return (
                 <li key={r.staffId} className="flex items-center gap-3 px-5 py-3">
-                  <PhotoAvatar kind="staff" id={r.staffId} name={r.name} photoVersion={r.hasPhoto ? r.photoVersion : null} className="size-11" />
+                  <PhotoControls kind="staff" id={r.staffId} name={r.name} photoVersion={r.hasPhoto ? r.photoVersion : null} canEdit />
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <Link href={`/admin/staff/${r.staffId}`} className="truncate font-medium hover:text-brand hover:underline">
-                        {r.name}
+                        {r.displayName || r.name}
                       </Link>
+                      {r.displayName && r.displayName !== r.name && <span className="text-xs text-muted">({r.name})</span>}
                       {r.showOnWebsite && <Badge tone="success">#{r.websiteOrder}</Badge>}
                       {r.showOnWebsite && !r.hasPhoto && <Badge tone="warning">No photo</Badge>}
                     </span>
