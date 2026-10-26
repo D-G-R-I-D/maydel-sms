@@ -16335,6 +16335,49 @@
         }
       }
     },
+    "/api/cms/staff": {
+      "get": {
+        "tags": [
+          "Website CMS"
+        ],
+        "operationId": "ListWebsiteStaff",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebsiteStaffRow"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/cms/staff/{id}": {
       "put": {
         "tags": [
@@ -37165,6 +37208,56 @@
           "isActive": {
             "type": "boolean",
             "default": true
+          }
+        }
+      },
+      "WebsiteStaffRow": {
+        "required": [
+          "staffId",
+          "name",
+          "jobTitle",
+          "showOnWebsite",
+          "bio",
+          "websiteOrder",
+          "hasPhoto",
+          "photoVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "staffId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "showOnWebsite": {
+            "type": "boolean"
+          },
+          "bio": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "websiteOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPhoto": {
+            "type": "boolean"
+          },
+          "photoVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       }
