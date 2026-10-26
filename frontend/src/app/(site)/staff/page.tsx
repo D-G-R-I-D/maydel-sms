@@ -5,6 +5,9 @@ import { loadSite, siteImage } from "@/lib/site/api";
 import { Avatar, Card } from "@/components/ui/primitives";
 import { EmptyState, ProblemState } from "@/components/ui/states";
 
+/** Bios longer than this show their start with "Read more" (no script needed). */
+const BIO_PREVIEW = 300;
+
 export const metadata: Metadata = { title: "Our staff", description: "Meet the teachers and staff of Maydel Spring Schools, Abuja." };
 
 /** E7: the staff the school has chosen to show on the website, in its order. */
@@ -40,7 +43,19 @@ export default async function StaffPage() {
                     <div className="min-w-0">
                       <h2 className="font-display text-lg font-semibold">{s.name}</h2>
                       {s.jobTitle && <p className="text-sm text-brand">{s.jobTitle}</p>}
-                      {s.bio && <p className="mt-2 text-sm whitespace-pre-line text-muted">{s.bio}</p>}
+                      {s.bio &&
+                        (s.bio.length > BIO_PREVIEW ? (
+                          <details className="group mt-2 text-sm text-muted">
+                            <summary className="cursor-pointer list-none whitespace-pre-line">
+                              <span className="group-open:hidden">{s.bio.slice(0, BIO_PREVIEW).trimEnd()}… </span>
+                              <span className="font-medium text-brand group-open:hidden">Read more</span>
+                              <span className="hidden font-medium text-brand group-open:inline">Show less</span>
+                            </summary>
+                            <p className="whitespace-pre-line">{s.bio}</p>
+                          </details>
+                        ) : (
+                          <p className="mt-2 text-sm whitespace-pre-line text-muted">{s.bio}</p>
+                        ))}
                     </div>
                   </Card>
                 </li>

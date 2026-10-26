@@ -17,13 +17,17 @@ type Row = components["schemas"]["WebsiteStaffRow"];
 const textareaClass =
   "block w-full rounded-input border border-border bg-surface px-3 py-2 text-base text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-brand sm:text-sm";
 
-const input = (r: Row, p: Partial<{ showOnWebsite: boolean; jobTitle: string | null; bio: string | null; websiteOrder: number }>) => ({
+const input = (r: Row, p: Partial<{ showOnWebsite: boolean; jobTitle: string | null; bio: string | null; websiteOrder: number; displayName: string | null }>) => ({
   showOnWebsite: r.showOnWebsite,
   jobTitle: r.jobTitle,
   bio: r.bio,
   websiteOrder: r.websiteOrder,
+  displayName: r.displayName,
   ...p,
 });
+
+/** A card reads best up to about this many characters; longer bios get "Read more" on the website. */
+export const BIO_SUGGESTED = 300;
 
 /** The quick switch: show or hide this person on the website's Staff page. */
 export function StaffWebsiteSwitch({ row, nextOrder }: { row: Row; nextOrder: number }) {
@@ -52,6 +56,7 @@ export function StaffWebsiteDialog({ row }: { row: Row }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [bio, setBio] = useState("");
   const [order, setOrder] = useState("0");
@@ -59,15 +64,17 @@ export function StaffWebsiteDialog({ row }: { row: Row }) {
   const [problem, setProblem] = useState<Problem | null>(null);
   const server = problem?.errors ?? {};
   const local = {
+    name: name.length > 100 ? "100 characters at most." : undefined,
     title: title.length > 100 ? "100 characters at most." : undefined,
     bio: bio.length > 2000 ? "2000 characters at most." : undefined,
     order: /^\d{1,3}$/.test(order) ? undefined : "A whole number, 0 to 999.",
   };
-  const errors = { title: local.title ?? server.jobTitle?.[0], bio: local.bio ?? server.bio?.[0], order: local.order ?? server.websiteOrder?.[0] };
+  const errors = { name: local.name ?? server.displayName?.[0], title: local.title ?? server.jobTitle?.[0], bio: local.bio ?? server.bio?.[0], order: local.order ?? server.websiteOrder?.[0] };
   const id = `sw-${row.staffId}`;
 
   const onOpenChange = (v: boolean) => {
     if (v) {
+      setName(row.displayName ?? "");
       setTitle(row.jobTitle ?? "");
       setBio(row.bio ?? "");
       setOrder(String(row.websiteOrder));
@@ -94,6 +101,9 @@ export function StaffWebsiteDialog({ row }: { row: Row }) {
               {problemMessage(problem)}
             </Alert>
           )}
+          <Field id={`${id}-name`} label="Name shown" error={errors.name} hint={`e.g. Mrs. G. Okafor. Leave empty to use “${row.name}”.`}>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={row.name} {...describedBy(`${id}-name`, errors.name, true)} />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
             <Field id={`${id}-title`} label="Title shown" error={errors.title} hint="e.g. Head of Primary">
               <Input value={title} onChange={(e) => setTitle(e.target.value)} {...describedBy(`${id}-title`, errors.title, true)} />
@@ -102,7 +112,7 @@ export function StaffWebsiteDialog({ row }: { row: Row }) {
               <Input value={order} onChange={(e) => setOrder(e.target.value)} inputMode="numeric" className="tabular" {...describedBy(`${id}-order`, errors.order, true)} />
             </Field>
           </div>
-          <Field id={`${id}-bio`} label="Short bio (optional)" error={errors.bio} hint={`${bio.length}/2000. Qualifications, what they teach, a line about them.`}>
+          <Field id={`${id}-bio`} label="Short bio (optional)" error={errors.bio} hint={bio.length > BIO_SUGGESTED ? `${bio.length} characters. Over ${BIO_SUGGESTED}, the website shows the start with “Read more”.` : `${bio.length}/${BIO_SUGGESTED} suggested. Qualifications, what they teach, a line about them.`}>
             <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} className={textareaClass} {...describedBy(`${id}-bio`, errors.bio, true)} />
           </Field>
           <div className="flex justify-end gap-2">
@@ -112,11 +122,11 @@ export function StaffWebsiteDialog({ row }: { row: Row }) {
             <Button
               loading={busy}
               loadingText="Saving…"
-              disabled={Boolean(local.title || local.bio || local.order)}
+              disabled={Boolean(local.name || local.title || local.bio || local.order)}
               onClick={async () => {
                 setProblem(null);
                 setBusy(true);
-                const r = await runAction(() => saveStaffWebsite(row.staffId, input(row, { jobTitle: title.trim() || null, bio: bio.trim() || null, websiteOrder: Number(order) })), {
+                const r = await runAction(() => saveStaffWebsite(row.staffId, input(row, { displayName: name.trim() || null, jobTitle: title.trim() || null, bio: bio.trim() || null, websiteOrder: Number(order) })), {
                   success: "Saved",
                   onProblem: setProblem,
                 });
