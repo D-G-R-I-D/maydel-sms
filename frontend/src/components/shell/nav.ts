@@ -42,6 +42,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Subjects", href: "/admin/academics/subjects", icon: "subjects", roles: A, ready: true },
       { label: "Sessions & terms", href: "/admin/academics/sessions", icon: "sessions", roles: STAFF, ready: true },
       { label: "Homework", href: "/admin/homework", icon: "homework", roles: AT, ready: true },
+      { label: "Communication books", href: "/admin/books", icon: "messages", roles: AT, ready: true },
       { label: "Score entry", href: "/admin/assessment", icon: "scores", roles: AT, ready: true },
       { label: "Reports", href: "/admin/reports", icon: "reports", roles: AT, ready: true },
       { label: "Question bank", href: "/admin/cbt", icon: "questions", roles: AT, ready: true },
