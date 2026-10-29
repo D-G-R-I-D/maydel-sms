@@ -15,7 +15,12 @@ public sealed record BookEntryDto(Guid Id, Guid StudentId, string AuthorName, Bo
     DateTimeOffset CreatedAt, DateTimeOffset? EditedAt, bool CanEdit);
 
 /// <summary>Entries oldest first (like a chat); <c>Before</c> pages back through older ones.</summary>
-public sealed record BookPage(Guid StudentId, string Student, string? ClassRoom, IReadOnlyList<BookEntryDto> Entries, bool HasOlder);
+/// <summary>
+/// <c>SeenUpTo</c>: the latest time anyone else opened this book; your notes written before it show as seen.
+/// <c>Cursor</c>: pass back as <c>after</c> to get only what's new or corrected since (live updates).
+/// </summary>
+public sealed record BookPage(Guid StudentId, string Student, string? ClassRoom, IReadOnlyList<BookEntryDto> Entries, bool HasOlder,
+    DateTimeOffset? SeenUpTo, DateTimeOffset Cursor);
 
 /// <summary>A row of a book list: the student, the latest note, and how many notes you haven't read.</summary>
 public sealed record BookSummary(Guid StudentId, string Name, string AdmissionNumber, string? ClassRoom, DateTimeOffset? LastEntryAt, string? LastEntry, int Unread);
@@ -127,7 +132,8 @@ internal sealed class ListMyBooksHandler(IAppDbContext db, AccessRules access, I
 
 // ---------- One book ----------
 
-public sealed record GetBookQuery(Guid StudentId, DateTimeOffset? Before = null) : IQuery<BookPage>;
+/// <summary><c>Before</c>: older notes (scrolling back). <c>After</c>: only notes written or corrected since then (polling while open).</summary>
+public sealed record GetBookQuery(Guid StudentId, DateTimeOffset? Before = null, DateTimeOffset? After = null) : IQuery<BookPage>;
 public sealed record WriteEntryCommand(Guid StudentId, string? Body, byte[]? File, string? FileName) : ICommand<BookEntryDto>;
 public sealed record EditEntryCommand(Guid StudentId, Guid EntryId, string Body) : ICommand<BookEntryDto>;
 public sealed record MarkBookReadCommand(Guid StudentId) : ICommand;
@@ -140,13 +146,28 @@ internal sealed class GetBookHandler(IAppDbContext db, BookAccess books, ICurren
     public async Task<Result<BookPage>> Handle(GetBookQuery q, CancellationToken ct)
     {
         if (await books.OpenAsync(q.StudentId, ct) is not { } book) return BookErrors.NotFound;
-        var entries = db.BookEntries.AsNoTracking().Where(e => e.StudentId == q.StudentId);
-        if (q.Before is { } before) entries = entries.Where(e => e.CreatedAt < before.ToUniversalTime());
-        var page = await entries.OrderByDescending(e => e.CreatedAt).Take(PageSize + 1).ToListAsync(ct);
-        var room = await db.ClassRooms.AsNoTracking().Where(r => r.Id == book.Student.ClassRoomId).Select(r => r.ClassLevel.Name + " " + r.Arm).FirstOrDefaultAsync(ct);
+        var uid = me.UserId!.Value;
         var now = time.GetUtcNow();
+        var entries = db.BookEntries.AsNoTracking().Where(e => e.StudentId == q.StudentId);
+        List<BookEntry> page;
+        var hasOlder = false;
+        if (q.After is { } after)
+        {
+            // Live: new notes and corrections since the client's cursor (a few seconds ago).
+            var since = after.ToUniversalTime();
+            page = await entries.Where(e => e.CreatedAt > since || e.EditedAt > since).OrderBy(e => e.CreatedAt).Take(200).ToListAsync(ct);
+        }
+        else
+        {
+            if (q.Before is { } before) entries = entries.Where(e => e.CreatedAt < before.ToUniversalTime());
+            var newest = await entries.OrderByDescending(e => e.CreatedAt).Take(PageSize + 1).ToListAsync(ct);
+            (page, hasOlder) = ([.. newest.Take(PageSize).OrderBy(e => e.CreatedAt)], newest.Count > PageSize);
+        }
+        var seenUpTo = await db.BookReads.AsNoTracking().Where(r => r.StudentId == q.StudentId && r.UserId != uid)
+            .MaxAsync(r => (DateTimeOffset?)r.ReadAt, ct);
+        var room = await db.ClassRooms.AsNoTracking().Where(r => r.Id == book.Student.ClassRoomId).Select(r => r.ClassLevel.Name + " " + r.Arm).FirstOrDefaultAsync(ct);
         return new BookPage(q.StudentId, $"{book.Student.FirstName} {book.Student.LastName}", room,
-            [.. page.Take(PageSize).OrderBy(e => e.CreatedAt).Select(e => e.Dto(me.UserId!.Value, now))], page.Count > PageSize);
+            [.. page.Select(e => e.Dto(uid, now))], hasOlder, seenUpTo, now.AddSeconds(-2)); // overlaps a little: a note saved mid-poll isn't missed (clients skip ids they have)
     }
 }
 

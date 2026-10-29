@@ -45,3 +45,12 @@
   - It goes to the same people as the portal notifications (the other side of the book), skipping notes they've already read.
   - It covers only notes that arrived since their last summary.
 - **No UI needed.** Portal notifications still arrive as each note is written.
+
+## Live updates, chat-style (added 2026-10-29)
+- **While a book is open,** poll `GET /api/books/{studentId}?after={cursor}` every **3 s**, only while the tab is visible.
+  - It returns notes written **or corrected** since then (oldest first) and a new `cursor`.
+  - Use `cursor` from the previous response, starting with the one from the first `GET /api/books/{studentId}`.
+- **Duplicates:** the cursor overlaps by 2 s on purpose, so a note saved mid-poll is never missed. **Merge by `id`**, replacing an existing entry when it was corrected.
+- **"Seen" ticks:** `seenUpTo` is the latest time anyone else opened the book. Your notes with `createdAt <= seenUpTo` show "Seen".
+- **Read state:** call `POST /api/books/{id}/read` when new notes arrive while the book is visible, so the other side's ticks update.
+- **Feel:** after sending, append the returned note immediately (optimistic), then let the poll confirm it.
