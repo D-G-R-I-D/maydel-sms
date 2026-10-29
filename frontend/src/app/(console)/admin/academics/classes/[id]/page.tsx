@@ -74,6 +74,7 @@ export default async function ClassSubjectsPage({ params }: { params: Promise<{ 
             <div className="flex flex-wrap gap-2">
               <PdfDownloadButton href={`/api/media/classrooms/${classroom.id}/id-cards`} label="Print class ID cards" fallbackName={`${classroom.name.replace(/\s+/g, "-")}-id-cards.pdf`} icon="print" size="sm" />
               {levels.ok && <EditClassroomButton levels={levels.data} teachers={teachers} classroom={classroom} />}
+              <p className="w-full text-xs text-muted sm:text-right">ID cards: print double-sided, flip on long edge, at actual size (100%).</p>
             </div>
           ) : undefined
         }

@@ -4,7 +4,7 @@ export type IconName =
   | "dashboard" | "students" | "guardians" | "staff" | "classes" | "subjects" | "sessions" | "scores" | "reports"
   | "attendance" | "fees" | "invoices" | "payments" | "debtors" | "admissions" | "news" | "events" | "gallery"
   | "messages" | "school" | "assessment" | "users" | "audit" | "home" | "results" | "questions" | "tests" | "more"
-  | "transport" | "homework";
+  | "transport" | "homework" | "store";
 
 export type NavItem = {
   label: string;
@@ -59,6 +59,7 @@ export const consoleNav: NavGroup[] = [
       { label: "To verify", href: "/admin/proofs", icon: "payments", roles: AB, ready: true },
       { label: "Payments", href: "/admin/payments", icon: "payments", roles: AB, ready: true },
       { label: "Debtors", href: "/admin/debtors", icon: "debtors", roles: AB, ready: true },
+      { label: "School store", href: "/admin/store", icon: "store", roles: AB, ready: true },
     ],
   },
   {

@@ -4,7 +4,7 @@
  */
 export function siteImage(url: string | null | undefined): string | null {
   if (!url) return null;
-  const m = /\/api\/public\/site\/images\/(news|gallery|staff|media)\/([0-9a-f-]{36})(?:\?v=([\w.-]{1,64}))?/i.exec(url);
+  const m = /\/api\/public\/site\/images\/(news|gallery|staff|media|store)\/([0-9a-f-]{36})(?:\?v=([\w.-]{1,64}))?/i.exec(url);
   return m ? `/api/site/images/${m[1]}/${m[2]}/${m[3] ?? "0"}` : null;
 }
 
@@ -21,6 +21,6 @@ export function rewriteContentImages(html: string): string {
 
 /** The reverse, for the editor: proxied srcs back to the API's public form before saving. */
 export function apiImageSrc(src: string): string {
-  const m = /^\/api\/site\/images\/(news|gallery|staff|media)\/([0-9a-f-]{36})\/([\w.-]{1,64})$/i.exec(src);
+  const m = /^\/api\/site\/images\/(news|gallery|staff|media|store)\/([0-9a-f-]{36})\/([\w.-]{1,64})$/i.exec(src);
   return m ? `/api/public/site/images/${m[1]}/${m[2]}?v=${m[3]}` : src;
 }
