@@ -4,7 +4,7 @@ export type IconName =
   | "dashboard" | "students" | "guardians" | "staff" | "classes" | "subjects" | "sessions" | "scores" | "reports"
   | "attendance" | "fees" | "invoices" | "payments" | "debtors" | "admissions" | "news" | "events" | "gallery"
   | "messages" | "school" | "assessment" | "users" | "audit" | "home" | "results" | "questions" | "tests" | "more"
-  | "transport" | "homework" | "store";
+  | "transport" | "homework" | "store" | "promotion";
 
 export type NavItem = {
   label: string;
@@ -41,6 +41,7 @@ export const consoleNav: NavGroup[] = [
       { label: "Classes", href: "/admin/academics/classes", icon: "classes", roles: A, ready: true },
       { label: "Subjects", href: "/admin/academics/subjects", icon: "subjects", roles: A, ready: true },
       { label: "Sessions & terms", href: "/admin/academics/sessions", icon: "sessions", roles: STAFF, ready: true },
+      { label: "Promotion", href: "/admin/academics/promotion", icon: "promotion", roles: A, ready: true },
       { label: "Homework", href: "/admin/homework", icon: "homework", roles: AT, ready: true },
       { label: "Communication books", href: "/admin/books", icon: "messages", roles: AT, ready: true },
       { label: "Score entry", href: "/admin/assessment", icon: "scores", roles: AT, ready: true },
