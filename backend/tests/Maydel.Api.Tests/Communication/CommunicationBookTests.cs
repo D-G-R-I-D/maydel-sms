@@ -6,7 +6,9 @@ using Maydel.Application.Identity;
 using Maydel.Application.Notifications;
 using Maydel.Application.Students;
 using Maydel.Domain.Common;
+using Maydel.Application.Common.Messaging;
 using Maydel.Domain.Communication;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Maydel.Api.Tests.Communication;
 
@@ -70,6 +72,45 @@ public sealed class CommunicationBookTests(PostgresFixture fixture)
         Assert.Single((await (await Api.ClientAsync(Roles.Admin)).GetFromJsonAsync<BookPage>($"/api/books/{child}", Json.Options))!.Entries);
     }
 
+    [Fact]
+    public async Task Unread_notes_are_summed_up_in_one_evening_email_a_day()
+    {
+        var s = await SchoolBuilder.SetUpAsync(Api);
+        var email = $"digest-{Guid.NewGuid():N}@example.com";
+        await ParentAsync(s.Students[0], email);
+        (await s.FormTeacher.PostAsync($"/api/books/{s.Students[0]}/entries", Body("Please sign the trip form."))).EnsureSuccessStatusCode();
+        (await s.FormTeacher.PostAsync($"/api/books/{s.Students[0]}/entries", Body("Reading went well today."))).EnsureSuccessStatusCode();
+
+        // Today at 07:00 and 19:00 in Abuja (WAT = UTC+1).
+        var watToday = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(1)).Date;
+        var morning = new DateTimeOffset(watToday.AddHours(7), TimeSpan.FromHours(1));
+        var evening = new DateTimeOffset(watToday.AddHours(19), TimeSpan.FromHours(1));
+        Assert.Equal(0, await DigestAsync(morning)); // only from 18:00
+        Assert.True(await DigestAsync(evening) >= 1);
+        await DispatchAsync();
+        var mail = Assert.Single(Api.Email.Sent, m => m.To == email);
+        Assert.Contains("2 new notes", mail.TextBody);
+        Assert.Contains("Please sign the trip form.", mail.TextBody);
+
+        // Later the same evening: nothing more for this parent (once a day).
+        await DigestAsync(evening.AddHours(2));
+        await DispatchAsync();
+        Assert.Single(Api.Email.Sent, m => m.To == email);
+    }
+
+    private async Task<int> DigestAsync(DateTimeOffset now)
+    {
+        await using var scope = Api.Services.CreateAsyncScope();
+        return (await scope.ServiceProvider.GetRequiredService<ICommandHandler<SendBookDigestCommand, int>>().Handle(new SendBookDigestCommand(now), CancellationToken.None)).Value;
+    }
+
+    private async Task DispatchAsync()
+    {
+        await using var scope = Api.Services.CreateAsyncScope();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<EmailDispatcher>();
+        while (await dispatcher.DispatchDueAsync(CancellationToken.None) == EmailDispatcher.BatchSize) { }
+    }
+
     // ---------- helpers ----------
 
     private static MultipartFormDataContent Body(string text) => new() { { new StringContent(text), "body" } };
@@ -81,12 +122,12 @@ public sealed class CommunicationBookTests(PostgresFixture fixture)
     }
 
     /// <summary>A guardian with a portal login for the student.</summary>
-    private async Task<HttpClient> ParentAsync(Guid studentId)
+    private async Task<HttpClient> ParentAsync(Guid studentId, string? email = null)
     {
         var admin = await Api.ClientAsync(Roles.Admin);
         var added = await admin.PostAsJsonAsync($"/api/students/{studentId}/guardians", new
         {
-            fullName = "Mrs. Book Reader", phone = $"0805{Interlocked.Increment(ref _phone):0000000}", email = $"book-{Guid.NewGuid():N}@example.com",
+            fullName = "Mrs. Book Reader", phone = $"0805{Interlocked.Increment(ref _phone):0000000}", email = email ?? $"book-{Guid.NewGuid():N}@example.com",
             relationship = "Mother", isPrimaryContact = true, canPickUp = true,
         });
         var guardianId = (await added.Content.ReadFromJsonAsync<GuardianAdded>(Json.Options))!.GuardianId;

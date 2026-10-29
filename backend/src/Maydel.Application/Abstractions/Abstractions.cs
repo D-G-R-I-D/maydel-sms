@@ -64,6 +64,7 @@ public interface IAppDbContext
     DbSet<Domain.Homework.HomeworkSubmission> HomeworkSubmissions { get; }
     DbSet<BookEntry> BookEntries { get; }
     DbSet<BookRead> BookReads { get; }
+    DbSet<BookDigestMark> BookDigestMarks { get; }
     DbSet<Domain.Transport.Bus> Buses { get; }
     DbSet<Domain.Transport.BusRun> BusRuns { get; }
     DbSet<Domain.Transport.TripLog> TripLogs { get; }

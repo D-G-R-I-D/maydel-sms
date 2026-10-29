@@ -38,3 +38,10 @@
 - **Parent portal:** a "Communication book" tab per child, the same thread view, with the unread badge on the child card.
 - **Student portal:** "My communication book", the same view.
 - **Admin:** a "Books with unread notes" inbox via `GET /api/books` with no class.
+
+## Evening email summary (added 2026-10-29)
+- From **18:00 WAT**, anyone with unread notes and an email address gets **one email a day**: "New in the communication book".
+  - It lists the unread notes per child, up to the last 3 per child with author and text, and links to the portal.
+  - It goes to the same people as the portal notifications (the other side of the book), skipping notes they've already read.
+  - It covers only notes that arrived since their last summary.
+- **No UI needed.** Portal notifications still arrive as each note is written.
