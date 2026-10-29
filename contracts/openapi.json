@@ -19394,6 +19394,14 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         ],
         "responses": {
@@ -25134,7 +25142,9 @@
           "student",
           "classRoom",
           "entries",
-          "hasOlder"
+          "hasOlder",
+          "seenUpTo",
+          "cursor"
         ],
         "type": "object",
         "properties": {
@@ -25159,6 +25169,17 @@
           },
           "hasOlder": {
             "type": "boolean"
+          },
+          "seenUpTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "cursor": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

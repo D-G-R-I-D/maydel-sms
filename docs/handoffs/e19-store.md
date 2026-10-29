@@ -68,10 +68,15 @@
 |---|---|---|
 | `GET /api/store/orders/{id}/receipt.pdf` | admin, bursar | A5 receipt; "UNPAID" / "CANCELLED" stamp when so |
 | `GET /api/portal/children/{studentId}/shop/orders/{orderId}/receipt.pdf` | the child's parents | the same receipt (404 for anyone else) |
-| `GET /api/students/{id}/id-card.pdf` | admin | one ID card (85.6 × 54 mm page) |
-| `GET /api/academics/classrooms/{id}/id-cards.pdf` | admin | every active student in the class, 10 per A4 sheet with cut lines |
+| `GET /api/students/{id}/id-card.pdf` | admin | one ID card: page 1 the front, page 2 the back (85.6 × 54 mm pages) |
+| `GET /api/academics/classrooms/{id}/id-cards.pdf` | admin | every active student in the class, 10 per A4 sheet with cut lines; each sheet of fronts is followed by its sheet of backs |
 
-- **ID cards** show the student photo (or an empty "PHOTO" box), name, admission number, class, the current session and "valid until" its end date, and "If found, please return to …" with the school phone. There are no parent details, in case a card is lost.
+- **ID cards (redesigned 2026-10-29)** have the school crest as a faint watermark on both sides.
+  - **Front:** navy header with the crest and school name, the photo in a gold frame (the student's initials when there is no photo), name, admission number, class and session, and a footer with the motto and "valid until" the session's end date.
+  - **Back:** the school's name, address, phone and email; "If found, please return to the school or call …"; the admission number in large type; and the principal's signature line (the uploaded signature image and principal's name from Settings, when set).
+  - There are no parent details, in case a card is lost.
+- **Double-sided printing (class sheets):** the backs page has its columns swapped left-to-right, so printing "two-sided, flip on long edge" at **actual size (100%)** puts each back behind its own front. Each page says so in small grey text at the top. Tell admins this next to the "Print class ID cards" button.
+- Not included: a QR or barcode (no library for it yet). Ask if the school wants one.
 - **422 `idcard.no_session`** means no current session is set.
 
 **UI:**

@@ -35,8 +35,8 @@ public static class CommunicationBookEndpoints
         (await h.Handle(new ListClassBooksQuery(classRoomId), ct)).ToHttpResult();
     private static async Task<Results<Ok<IReadOnlyList<BookSummary>>, ProblemHttpResult>> MyBooks(IQueryHandler<ListMyBooksQuery, IReadOnlyList<BookSummary>> h, CancellationToken ct) =>
         (await h.Handle(new ListMyBooksQuery(), ct)).ToHttpResult();
-    private static async Task<Results<Ok<BookPage>, ProblemHttpResult>> Get(Guid studentId, DateTimeOffset? before, IQueryHandler<GetBookQuery, BookPage> h, CancellationToken ct) =>
-        (await h.Handle(new GetBookQuery(studentId, before), ct)).ToHttpResult();
+    private static async Task<Results<Ok<BookPage>, ProblemHttpResult>> Get(Guid studentId, DateTimeOffset? before, DateTimeOffset? after, IQueryHandler<GetBookQuery, BookPage> h, CancellationToken ct) =>
+        (await h.Handle(new GetBookQuery(studentId, before, after), ct)).ToHttpResult();
 
     private static async Task<Results<Ok<BookEntryDto>, ProblemHttpResult>> Write(Guid studentId, HttpRequest request, ICommandHandler<WriteEntryCommand, BookEntryDto> h, CancellationToken ct)
     {
