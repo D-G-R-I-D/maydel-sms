@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PdfDownloadButton } from "@/components/reports/pdf-download";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Eye, HeartPulse, Layers } from "lucide-react";
@@ -105,6 +106,7 @@ export default async function StudentProfilePage({
             {active && <IssueLoginButton kind="student" id={s.id} fullName={s.fullName} description={`${s.admissionNumber}${s.classRoom ? ` · ${s.classRoom}` : ""}`} hasLogin={s.hasLogin} />}
             <StatusMenu studentId={s.id} fullName={s.fullName} status={s.status} />
             {classrooms?.ok && <EditStudentButton student={s} classrooms={classrooms.data} />}
+            <PdfDownloadButton href={`/api/media/students/${s.id}/id-card`} label="Print ID card" fallbackName={`${s.admissionNumber.replace(/\//g, "-")}-id-card.pdf`} icon="print" size="sm" />
           </div>
         )}
       </div>

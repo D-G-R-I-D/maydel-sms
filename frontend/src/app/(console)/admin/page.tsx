@@ -14,7 +14,7 @@ function greeting(now: Date): string {
   const hour = Number(new Intl.DateTimeFormat("en-NG", { hour: "numeric", hour12: false, timeZone: "Africa/Lagos" }).format(now));
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  return "Good evening"; 
 }
 
 type Tile = { title: string; body: string; icon: LucideIcon; roles: Role[]; href?: string };
