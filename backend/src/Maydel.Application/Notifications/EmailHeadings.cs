@@ -17,6 +17,7 @@ public static class EmailHeadings
         EmailKind.PaymentReceipt => "Payment received",
         EmailKind.FeesOverdue => "Fees overdue",
         EmailKind.NewsletterConfirm => "Confirm your subscription",
+        EmailKind.BookDigest => "Communication book",
         _ => null,
     };
 }

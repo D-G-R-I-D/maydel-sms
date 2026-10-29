@@ -797,6 +797,15 @@ internal sealed class BookEntryConfig : IEntityTypeConfiguration<BookEntry>
     }
 }
 
+internal sealed class BookDigestMarkConfig : IEntityTypeConfiguration<BookDigestMark>
+{
+    public void Configure(EntityTypeBuilder<BookDigestMark> b)
+    {
+        b.HasKey(x => x.UserId);
+        b.HasOne<Application.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class BookReadConfig : IEntityTypeConfiguration<BookRead>
 {
     public void Configure(EntityTypeBuilder<BookRead> b)

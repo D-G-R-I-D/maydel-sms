@@ -39,6 +39,13 @@ public class BookEntry : Entity
     }
 }
 
+/// <summary>When a user was last sent the daily communication-book email (at most one a day).</summary>
+public class BookDigestMark
+{
+    public Guid UserId { get; set; }
+    public DateTimeOffset SentAt { get; set; }
+}
+
 /// <summary>Up to when a user has read a student's book: drives the unread counts.</summary>
 public class BookRead
 {

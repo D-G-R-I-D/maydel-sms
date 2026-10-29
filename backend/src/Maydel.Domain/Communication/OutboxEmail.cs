@@ -36,6 +36,9 @@ public enum EmailKind
 
     /// <summary>"Please confirm your subscription" for a website sign-up (double opt-in).</summary>
     NewsletterConfirm,
+
+    /// <summary>The evening summary of unread communication-book notes (E17.2). Plain text.</summary>
+    BookDigest,
 }
 
 public enum EmailStatus

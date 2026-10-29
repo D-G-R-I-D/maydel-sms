@@ -1523,6 +1523,19 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Communication.BookDigestMark", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("BookDigestMarks");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Communication.BookEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4202,6 +4215,15 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Navigation("Events");
 
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Communication.BookDigestMark", b =>
+                {
+                    b.HasOne("Maydel.Application.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Maydel.Domain.Communication.BookEntry", b =>
