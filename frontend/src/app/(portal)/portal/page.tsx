@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, CalendarCheck, ClipboardList, Users, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CalendarCheck, ClipboardList, NotebookPen, Users, Wallet, type LucideIcon } from "lucide-react";
 import { formatNaira } from "@/lib/finance/rules";
 import { load } from "@/lib/api/server";
 import { firstName } from "@/lib/flash";
@@ -39,6 +39,9 @@ export default async function PortalHomePage() {
         ),
       )
     : new Map();
+  // Communication books (E17.2): unread notes per child.
+  const books = await load((api) => api.GET("/api/portal/books"));
+  const unreadFor = (studentId: string) => (books.ok ? (books.data.find((b) => b.studentId === studentId)?.unread ?? 0) : 0);
   const isParent = me.data.roles.includes("Parent");
   const today = new Intl.DateTimeFormat("en-NG", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Lagos" }).format(new Date());
 
@@ -107,6 +110,16 @@ export default async function PortalHomePage() {
                       </Link>
                     );
                   })()}
+                  {books.ok && (
+                    <Link href={`/portal/book/${c.studentId}`} className="group mt-2 flex items-center gap-3 rounded-input p-3 transition-colors hover:bg-surface-2">
+                      <IconChip icon={NotebookPen} tone={unreadFor(c.studentId) > 0 ? "bg-brand/10 text-brand" : "bg-surface-2 text-muted"} />
+                      <span className="min-w-0 flex-1 text-sm">
+                        Communication book
+                        {unreadFor(c.studentId) > 0 && <span className="font-medium text-brand"> · {unreadFor(c.studentId)} new</span>}
+                      </span>
+                      <ArrowRight className="size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
+                    </Link>
+                  )}
                   {hw?.ok && (
                     <Link href={`/portal/homework?child=${c.studentId}`} className="group mt-2 flex items-center gap-3 rounded-input p-3 transition-colors hover:bg-surface-2">
                       <IconChip icon={BookOpenCheck} tone={overdue > 0 ? "bg-danger/10 text-danger" : due.length > 0 ? "bg-brand/10 text-brand" : "bg-success/15 text-success"} />
