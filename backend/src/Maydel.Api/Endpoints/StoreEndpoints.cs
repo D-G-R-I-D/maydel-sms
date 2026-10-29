@@ -19,6 +19,7 @@ public static class StoreEndpoints
         var store = app.MapGroup("/api/store").WithTags("Store").RequireAuthorization(Policies.Finance);
         store.MapGet("/items", Items).WithName("ListStoreItems").ProducesProblems(401, 403);
         store.MapPost("/items", CreateItem).WithName("CreateStoreItem").ProducesProblems(400, 401, 403);
+        store.MapGet("/items/{id:guid}", Item).WithName("GetStoreItem").ProducesProblems(401, 403, 404);
         store.MapPut("/items/{id:guid}", UpdateItem).WithName("UpdateStoreItem").ProducesProblems(400, 401, 403, 404);
         store.MapPut("/items/{id:guid}/image", SetImage).WithName("SetStoreItemImage").Upload();
         store.MapDelete("/items/{id:guid}/image", RemoveImage).WithName("RemoveStoreItemImage").ProducesProblems(401, 403, 404);
@@ -45,6 +46,9 @@ public static class StoreEndpoints
         shop.MapPost("/orders/{orderId:guid}/cancel", CancelMine).WithName("CancelShopOrder").ProducesProblems(401, 403, 404, 422);
         shop.MapGet("/orders/{orderId:guid}/receipt.pdf", MyReceipt).WithName("GetShopReceipt").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404);
 
+        app.MapGet("/api/portal/shop/orders/{orderId:guid}", MyOrder).WithTags("Portal").RequireAuthorization(Policies.Portal)
+            .WithName("GetMyShopOrder").ProducesProblems(401, 403, 404);
+
         var cards = app.MapGroup("/api").WithTags("Store").RequireAuthorization(Policies.Admin);
         cards.MapGet("/students/{id:guid}/id-card.pdf", IdCard).WithName("GetStudentIdCard").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404, 422);
         cards.MapGet("/academics/classrooms/{id:guid}/id-cards.pdf", ClassIdCards).WithName("GetClassIdCards").Produces(StatusCodes.Status200OK, contentType: "application/pdf").ProducesProblems(401, 403, 404, 422);
@@ -52,6 +56,8 @@ public static class StoreEndpoints
 
     private static async Task<Results<Ok<IReadOnlyList<StoreItemDto>>, ProblemHttpResult>> Items(StoreCategory? category, bool? includeInactive, IQueryHandler<ListStoreItemsQuery, IReadOnlyList<StoreItemDto>> h, CancellationToken ct) =>
         (await h.Handle(new ListStoreItemsQuery(category, includeInactive ?? true), ct)).ToHttpResult();
+    private static async Task<Results<Ok<StoreItemDto>, ProblemHttpResult>> Item(Guid id, IQueryHandler<GetStoreItemQuery, StoreItemDto> h, CancellationToken ct) =>
+        (await h.Handle(new GetStoreItemQuery(id), ct)).ToHttpResult();
     private static async Task<Results<Ok<StoreItemDto>, ProblemHttpResult>> CreateItem(StoreItemInput body, ICommandHandler<SaveStoreItemCommand, StoreItemDto> h, CancellationToken ct) =>
         (await h.Handle(new SaveStoreItemCommand(null, body), ct)).ToHttpResult();
     private static async Task<Results<Ok<StoreItemDto>, ProblemHttpResult>> UpdateItem(Guid id, StoreItemInput body, ICommandHandler<SaveStoreItemCommand, StoreItemDto> h, CancellationToken ct) =>
@@ -98,6 +104,8 @@ public static class StoreEndpoints
         (await h.Handle(new GetShopQuery(studentId), ct)).ToHttpResult();
     private static async Task<Results<Ok<IReadOnlyList<StoreOrderDto>>, ProblemHttpResult>> ShopOrders(Guid studentId, IQueryHandler<ListShopOrdersQuery, IReadOnlyList<StoreOrderDto>> h, CancellationToken ct) =>
         (await h.Handle(new ListShopOrdersQuery(studentId), ct)).ToHttpResult();
+    private static async Task<Results<Ok<StoreOrderDto>, ProblemHttpResult>> MyOrder(Guid orderId, IQueryHandler<GetMyShopOrderQuery, StoreOrderDto> h, CancellationToken ct) =>
+        (await h.Handle(new GetMyShopOrderQuery(orderId), ct)).ToHttpResult();
     private static async Task<Results<Ok<StoreOrderDto>, ProblemHttpResult>> Place(Guid studentId, ShopOrderInput body, ICommandHandler<PlaceShopOrderCommand, StoreOrderDto> h, CancellationToken ct) =>
         (await h.Handle(new PlaceShopOrderCommand(studentId, body), ct)).ToHttpResult();
     private static async Task<Results<Ok<StoreOrderDto>, ProblemHttpResult>> CancelMine(Guid studentId, Guid orderId, ICommandHandler<CancelShopOrderCommand, StoreOrderDto> h, CancellationToken ct) =>

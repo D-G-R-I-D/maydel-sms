@@ -82,3 +82,11 @@
 **UI:**
 - "Receipt" buttons on the store order view and in the parent's "My orders".
 - "Print ID card" on the student profile, and "Print class ID cards" on the class page.
+
+## Single lookups (added 2026-10-29)
+| Method & path | Who | Response |
+|---|---|---|
+| `GET /api/store/items/{id}` | admin, bursar | `StoreItemDto` (404 `store.item_not_found`) |
+| `GET /api/portal/shop/orders/{orderId}` | any parent or student linked to the order's child | `StoreOrderDto` (404 `store.order_not_found` for anyone else) |
+
+Use the second one for the `StoreOrderReady` notification link (`/portal/shop/orders/{id}`), which carries no student id.
