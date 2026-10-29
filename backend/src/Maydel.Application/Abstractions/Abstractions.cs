@@ -65,6 +65,7 @@ public interface IAppDbContext
     DbSet<BookEntry> BookEntries { get; }
     DbSet<BookRead> BookReads { get; }
     DbSet<BookDigestMark> BookDigestMarks { get; }
+    DbSet<PromotionRecord> Promotions { get; }
     DbSet<Domain.Transport.Bus> Buses { get; }
     DbSet<Domain.Transport.BusRun> BusRuns { get; }
     DbSet<Domain.Transport.TripLog> TripLogs { get; }

@@ -62,6 +62,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BookEntry> BookEntries => Set<BookEntry>();
     public DbSet<BookRead> BookReads => Set<BookRead>();
     public DbSet<BookDigestMark> BookDigestMarks => Set<BookDigestMark>();
+    public DbSet<PromotionRecord> Promotions => Set<PromotionRecord>();
     public DbSet<Domain.Transport.Bus> Buses => Set<Domain.Transport.Bus>();
     public DbSet<Domain.Transport.BusRun> BusRuns => Set<Domain.Transport.BusRun>();
     public DbSet<Domain.Transport.TripLog> TripLogs => Set<Domain.Transport.TripLog>();

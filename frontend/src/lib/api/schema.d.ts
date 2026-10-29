@@ -4532,6 +4532,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetPromotionPlan"];
+        put?: never;
+        post: operations["PromoteStudents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/promotions/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UndoPromotion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6860,6 +6892,77 @@ export interface components {
             /** @description Quote this to support. */
             traceId?: string;
         };
+        PromoteStudentsCommand: {
+            /** Format: uuid */
+            sessionId: null | string;
+            decisions: components["schemas"]["PromotionDecision"][];
+        };
+        PromotionClass: {
+            /** Format: uuid */
+            classRoomId: string;
+            name: string;
+            /** Format: int32 */
+            levelOrder: number;
+            isFinalLevel: boolean;
+            /** Format: uuid */
+            nextClassRoomId: null | string;
+            nextClassName: null | string;
+            students: components["schemas"]["PromotionStudent"][];
+        };
+        PromotionDecision: {
+            /** Format: uuid */
+            studentId: string;
+            outcome: components["schemas"]["PromotionOutcome"];
+            /** Format: uuid */
+            toClassRoomId: null | string;
+        };
+        PromotionDone: {
+            outcome: components["schemas"]["PromotionOutcome"];
+            /** Format: uuid */
+            toClassRoomId: string;
+            toClassName: string;
+            /** Format: date-time */
+            at: string;
+        };
+        /** @enum {unknown} */
+        PromotionOutcome: "Promote" | "Repeat" | "Graduate" | "Withdraw";
+        PromotionPlan: {
+            /** Format: uuid */
+            sessionId: string;
+            session: string;
+            canPromote: boolean;
+            closedReason: null | string;
+            classes: components["schemas"]["PromotionClass"][];
+        };
+        PromotionStudent: {
+            /** Format: uuid */
+            studentId: string;
+            fullName: string;
+            admissionNumber: string;
+            status: components["schemas"]["StudentStatus"];
+            /** Format: double */
+            sessionAverage: null | number;
+            needsReview: boolean;
+            suggestedOutcome: components["schemas"]["PromotionOutcome"];
+            /** Format: uuid */
+            suggestedClassRoomId: null | string;
+            done: null | components["schemas"]["PromotionDone"];
+        };
+        PromotionSummary: {
+            /** Format: int32 */
+            promoted: number;
+            /** Format: int32 */
+            repeated: number;
+            /** Format: int32 */
+            graduated: number;
+            /** Format: int32 */
+            withdrawn: number;
+        };
+        PromotionUndone: {
+            /** Format: int32 */
+            undone: number;
+            skipped: string[];
+        };
         ProofDto: {
             /** Format: uuid */
             id: string;
@@ -8219,6 +8322,12 @@ export interface components {
             busId: string;
             /** Format: uuid */
             runId: string;
+        };
+        UndoPromotionCommand: {
+            /** Format: uuid */
+            sessionId: null | string;
+            /** Format: uuid */
+            classRoomId: string;
         };
         UnpublishClassReportsCommand: {
             /** Format: uuid */
@@ -26780,6 +26889,203 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetPromotionPlan: {
+        parameters: {
+            query?: {
+                sessionId?: string;
+                classRoomId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionPlan"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PromoteStudents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromoteStudentsCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UndoPromotion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UndoPromotionCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionUndone"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

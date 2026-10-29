@@ -23429,6 +23429,242 @@
           }
         }
       }
+    },
+    "/api/promotions": {
+      "get": {
+        "tags": [
+          "Promotions"
+        ],
+        "operationId": "GetPromotionPlan",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "classRoomId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionPlan"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "operationId": "PromoteStudents",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteStudentsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/promotions/undo": {
+      "post": {
+        "tags": [
+          "Promotions"
+        ],
+        "operationId": "UndoPromotion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UndoPromotionCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionUndone"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -31958,6 +32194,271 @@
           }
         }
       },
+      "PromoteStudentsCommand": {
+        "required": [
+          "sessionId",
+          "decisions"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionDecision"
+            }
+          }
+        }
+      },
+      "PromotionClass": {
+        "required": [
+          "classRoomId",
+          "name",
+          "levelOrder",
+          "isFinalLevel",
+          "nextClassRoomId",
+          "nextClassName",
+          "students"
+        ],
+        "type": "object",
+        "properties": {
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "levelOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isFinalLevel": {
+            "type": "boolean"
+          },
+          "nextClassRoomId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "nextClassName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionStudent"
+            }
+          }
+        }
+      },
+      "PromotionDecision": {
+        "required": [
+          "studentId",
+          "outcome",
+          "toClassRoomId"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/PromotionOutcome"
+          },
+          "toClassRoomId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "PromotionDone": {
+        "required": [
+          "outcome",
+          "toClassRoomId",
+          "toClassName",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/PromotionOutcome"
+          },
+          "toClassRoomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toClassName": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PromotionOutcome": {
+        "enum": [
+          "Promote",
+          "Repeat",
+          "Graduate",
+          "Withdraw"
+        ]
+      },
+      "PromotionPlan": {
+        "required": [
+          "sessionId",
+          "session",
+          "canPromote",
+          "closedReason",
+          "classes"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "session": {
+            "type": "string"
+          },
+          "canPromote": {
+            "type": "boolean"
+          },
+          "closedReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionClass"
+            }
+          }
+        }
+      },
+      "PromotionStudent": {
+        "required": [
+          "studentId",
+          "fullName",
+          "admissionNumber",
+          "status",
+          "sessionAverage",
+          "needsReview",
+          "suggestedOutcome",
+          "suggestedClassRoomId",
+          "done"
+        ],
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "admissionNumber": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudentStatus"
+          },
+          "sessionAverage": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "needsReview": {
+            "type": "boolean"
+          },
+          "suggestedOutcome": {
+            "$ref": "#/components/schemas/PromotionOutcome"
+          },
+          "suggestedClassRoomId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "done": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PromotionDone"
+              }
+            ]
+          }
+        }
+      },
+      "PromotionSummary": {
+        "required": [
+          "promoted",
+          "repeated",
+          "graduated",
+          "withdrawn"
+        ],
+        "type": "object",
+        "properties": {
+          "promoted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "repeated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "graduated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withdrawn": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PromotionUndone": {
+        "required": [
+          "undone",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "undone": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ProofDto": {
         "required": [
           "id",
@@ -37223,6 +37724,26 @@
           }
         }
       },
+      "UndoPromotionCommand": {
+        "required": [
+          "sessionId",
+          "classRoomId"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "classRoomId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "UnpublishClassReportsCommand": {
         "required": [
           "classRoomId",
@@ -37643,6 +38164,9 @@
     },
     {
       "name": "Staff attendance"
+    },
+    {
+      "name": "Promotions"
     }
   ]
 }

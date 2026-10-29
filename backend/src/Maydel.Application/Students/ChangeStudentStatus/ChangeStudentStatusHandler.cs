@@ -19,14 +19,7 @@ internal sealed class ChangeStudentStatusHandler(IAppDbContext db, UserManager<A
             && await db.CheckClassHasRoomAsync(classRoomId, student.Id, ct) is { } full) return full;
         if (student.ChangeStatus(c.Status) is { } invalid) return invalid.ToError();
 
-        if (student.UserId is { } userId && await users.FindByIdAsync(userId.ToString()) is { } user && user.IsActive != student.IsActive)
-        {
-            user.IsActive = student.IsActive;
-            await users.UpdateAsync(user);
-            await users.UpdateSecurityStampAsync(user);
-            if (!student.IsActive) await sessions.RevokeAllForUserAsync(user.Id, ct);
-        }
-
+        await users.SyncStudentLoginAsync(student, sessions, ct);
         await db.SaveChangesAsync(ct);
         return (await db.GetStudentDetailAsync(student.Id, ct))!;
     }
