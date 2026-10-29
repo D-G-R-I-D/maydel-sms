@@ -8,7 +8,7 @@ import { bodyless, passImage } from "@/lib/media/image-proxy";
  * The version sits in the path (not ?v=) so next/image can optimise them with a query-free localPattern.
  */
 
-const KINDS = new Set(["news", "gallery", "staff", "media"]);
+const KINDS = new Set(["news", "gallery", "staff", "media", "store"]);
 type Params = { params: Promise<{ kind: string; id: string; v: string }> };
 
 export async function GET(request: NextRequest, { params }: Params): Promise<NextResponse> {

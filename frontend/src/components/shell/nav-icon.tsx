@@ -1,6 +1,6 @@
 import {
   BookOpen, BookOpenCheck, Bus, CalendarCheck, CalendarDays, ClipboardList, CreditCard, FileQuestion, FileText, GraduationCap, Home, Image as ImageIcon,
-  Inbox, LayoutDashboard, Layers, ListChecks, Menu, Newspaper, Receipt, School, ScrollText, Settings2, ShieldCheck, TableProperties,
+  Inbox, LayoutDashboard, Layers, ListChecks, Menu, Newspaper, Receipt, School, ScrollText, Settings2, ShieldCheck, ShoppingBag, TableProperties,
   TriangleAlert, UserPlus, Users, UsersRound, Wallet, type LucideIcon,
 } from "lucide-react";
 import type { IconName } from "./nav";
@@ -11,7 +11,7 @@ const icons: Record<IconName, LucideIcon> = {
   fees: Wallet, invoices: Receipt, payments: CreditCard, debtors: TriangleAlert, admissions: UserPlus, news: Newspaper,
   events: CalendarDays, gallery: ImageIcon, messages: Inbox, school: School, assessment: Settings2, users: ShieldCheck,
   audit: ScrollText, home: Home, results: ClipboardList, questions: FileQuestion, tests: ListChecks, more: Menu,
-  transport: Bus, homework: BookOpenCheck,
+  transport: Bus, homework: BookOpenCheck, store: ShoppingBag,
 };
 
 export function NavIcon({ name, className }: { name: IconName; className?: string }) {

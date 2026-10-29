@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, CalendarCheck, ClipboardList, NotebookPen, Users, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CalendarCheck, ClipboardList, NotebookPen, ShoppingBag, Users, Wallet, type LucideIcon } from "lucide-react";
 import { formatNaira } from "@/lib/finance/rules";
 import { load } from "@/lib/api/server";
 import { firstName } from "@/lib/flash";
@@ -127,6 +127,13 @@ export default async function PortalHomePage() {
                         {due.length === 0 ? "No homework due" : `${due.length} homework to hand in`}
                         {overdue > 0 && <span className="text-danger"> · {overdue} overdue</span>}
                       </span>
+                      <ArrowRight className="size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
+                    </Link>
+                  )}
+                  {isParent && (
+                    <Link href={`/portal/shop?child=${c.studentId}`} className="group mt-2 flex items-center gap-3 rounded-input p-3 transition-colors hover:bg-surface-2">
+                      <IconChip icon={ShoppingBag} tone="bg-surface-2 text-muted" />
+                      <span className="min-w-0 flex-1 text-sm">School shop: uniforms and books</span>
                       <ArrowRight className="size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
                     </Link>
                   )}

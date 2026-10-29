@@ -72,6 +72,12 @@ describe("console navigation", () => {
     expect(labels(["Teacher"])).toEqual(["Dashboard", "Students", "Sessions & terms", "Homework", "Communication books", "Score entry", "Reports", "Question bank", "Tests & exams", "Attendance", "Entrance exams", "Assessment"]);
   });
 
+  it("gives the store to admins and bursars", () => {
+    expect(labels(["Bursar"])).toContain("School store");
+    expect(labels(["Admin"])).toContain("School store");
+    expect(labels(["Teacher"])).not.toContain("School store");
+  });
+
   it("highlights the most specific match", () => {
     expect(activeHref("/admin/audit", ["/admin", "/admin/audit"])).toBe("/admin/audit");
     expect(activeHref("/admin", ["/admin", "/admin/audit"])).toBe("/admin");
