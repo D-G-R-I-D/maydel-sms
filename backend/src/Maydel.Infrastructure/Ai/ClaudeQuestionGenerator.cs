@@ -87,7 +87,7 @@ internal sealed class ClaudeQuestionGenerator(IOptions<AiOptions> options, ILogg
                 Betas = ["server-side-fallback-2026-06-01"],
                 Fallbacks = new List<BetaFallbackParam> { new() { Model = "claude-opus-4-8" } },
                 OutputConfig = new BetaOutputConfig { Effort = Effort.High, Format = new BetaJsonOutputFormat { Schema = Schema() } },
-                Messages = [new BetaMessageParam { Role = Role.User, Content = content }],
+                Messages = [new BetaUserMessageParam { Content = content }],
             }, cancellationToken: ct);
 
             var usage = (response.Usage.InputTokens, response.Usage.OutputTokens);
