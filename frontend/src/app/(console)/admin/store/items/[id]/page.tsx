@@ -43,20 +43,19 @@ export default async function StoreItemPage({ params }: { params: Promise<{ id: 
     );
   if (!GUID.test(id)) notFound();
 
-  // No single-item endpoint: the full list is small (a school's store).
-  const items = await load((api) => api.GET("/api/store/items", { params: { query: { includeInactive: true } } }));
-  if (!items.ok)
+  const r = await load((api) => api.GET("/api/store/items/{id}", { params: { path: { id } } }));
+  if (!r.ok && r.problem.status === 404) notFound();
+  if (!r.ok)
     return (
       <>
         {back}
         <PageHeader title="Store item" />
         <Card>
-          <ProblemState problem={items.problem} />
+          <ProblemState problem={r.problem} />
         </Card>
       </>
     );
-  const item = items.data.find((i) => i.id === id);
-  if (!item) notFound();
+  const item = r.data;
 
   return (
     <>

@@ -27,10 +27,7 @@ function timeline(o: StoreOrder) {
   ];
 }
 
-/**
- * E19 portal: one order. `StoreOrderReady` notifications link here by order id only, so we look
- * through the parent's children's orders to find it (a handful each).
- */
+/** E19 portal: one order (the `StoreOrderReady` notification links here by order id); other families get 404. */
 export default async function ShopOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!GUID.test(id)) notFound();
@@ -40,31 +37,18 @@ export default async function ShopOrderPage({ params }: { params: Promise<{ id: 
       School shop
     </Link>
   );
-  const children = await load((api) => api.GET("/api/portal/children"));
-  if (!children.ok)
+  const r = await load((api) => api.GET("/api/portal/shop/orders/{orderId}", { params: { path: { orderId: id } } }));
+  if (!r.ok && r.problem.status === 404) notFound();
+  if (!r.ok)
     return (
       <>
         {back}
         <Card>
-          <ProblemState problem={children.problem} />
+          <ProblemState problem={r.problem} />
         </Card>
       </>
     );
-  const lists = await Promise.all(children.data.map((c) => load((api) => api.GET("/api/portal/children/{studentId}/shop/orders", { params: { path: { studentId: c.studentId } } }))));
-  const order = lists.flatMap((l) => (l.ok ? l.data : [])).find((o) => o.id === id);
-  if (!order) {
-    const failed = lists.find((l) => !l.ok);
-    if (failed && !failed.ok)
-      return (
-        <>
-          {back}
-          <Card>
-            <ProblemState problem={failed.problem} />
-          </Card>
-        </>
-      );
-    notFound();
-  }
+  const order = r.data;
   const steps = timeline(order);
 
   return (
