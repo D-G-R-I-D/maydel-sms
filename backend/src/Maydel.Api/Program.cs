@@ -116,6 +116,7 @@ app.MapTransportEndpoints();
 app.MapStoreEndpoints();
 app.MapUserEndpoints();
 app.MapStaffAttendanceEndpoints();
+app.MapPromotionEndpoints();
 
 if (!generatingOpenApiDocument && app.Configuration.GetValue("Database:MigrateOnStartup", false))
 {

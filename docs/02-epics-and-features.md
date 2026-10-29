@@ -61,7 +61,7 @@ Goal: a repo anyone can clone and run in one command, with CI guarding quality.
 - **E3.3** 🟡 *API ✅ 2026-10-13; UI pending.* Issue/reset logins for students and guardians; temporary password shown once. AC: never retrievable later; reset revokes sessions.
 - **E3.4** 🟡 *API ✅ 2026-10-13 (performance at 2k students not yet measured); UI pending.* Search & filter (name, admission no., class, status) with pagination. AC: < 300 ms for 2k students.
 - **E3.5** 🟡 *API ✅ 2026-10-13; UI pending.* Lifecycle: Active, Suspended, Withdrawn, Graduated. AC: non-active students lose portal access; history retained.
-- **E3.6** End-of-session promotion wizard: promote class → next level, with per-student exceptions (repeat/withdraw); Year 12 → Graduated. AC: preview before commit; single transaction; audited.
+- **E3.6** 🟡 *API ✅ 2026-10-29 (`docs/handoffs/e3-6-promotion.md`); UI pending.* End-of-session promotion wizard: promote class → next level, with per-student exceptions (repeat/withdraw); Year 12 → Graduated. AC: preview before commit; single transaction; audited.
 - **E3.7 (S)** Documents per student (birth certificate, previous school report) — private storage.
 - **E3.8 (S)** Bulk import from Excel template with validation report.
 

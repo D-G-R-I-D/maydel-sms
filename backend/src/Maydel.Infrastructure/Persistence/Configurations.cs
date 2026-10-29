@@ -797,6 +797,21 @@ internal sealed class BookEntryConfig : IEntityTypeConfiguration<BookEntry>
     }
 }
 
+internal sealed class PromotionRecordConfig : IEntityTypeConfiguration<PromotionRecord>
+{
+    public void Configure(EntityTypeBuilder<PromotionRecord> b)
+    {
+        b.HasIndex(x => new { x.SessionId, x.StudentId }).IsUnique();
+        b.HasIndex(x => new { x.SessionId, x.FromClassRoomId });
+        b.HasOne<AcademicSession>().WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Student).WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.FromClassRoom).WithMany().HasForeignKey(x => x.FromClassRoomId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.ToClassRoom).WithMany().HasForeignKey(x => x.ToClassRoomId).OnDelete(DeleteBehavior.Restrict);
+        b.Property(x => x.Outcome).HasConversion<string>().HasMaxLength(32);
+        b.Property(x => x.PreviousStatus).HasConversion<string>().HasMaxLength(32);
+    }
+}
+
 internal sealed class BookDigestMarkConfig : IEntityTypeConfiguration<BookDigestMark>
 {
     public void Configure(EntityTypeBuilder<BookDigestMark> b)

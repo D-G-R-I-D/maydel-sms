@@ -319,6 +319,55 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.ToTable("ClassSubjects");
                 });
 
+            modelBuilder.Entity("Maydel.Domain.Academics.PromotionRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FromClassRoomId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ToClassRoomId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromClassRoomId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("ToClassRoomId");
+
+                    b.HasIndex("SessionId", "FromClassRoomId");
+
+                    b.HasIndex("SessionId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("Promotions");
+                });
+
             modelBuilder.Entity("Maydel.Domain.Academics.Subject", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3507,6 +3556,39 @@ namespace Maydel.Infrastructure.Persistence.Migrations
                     b.Navigation("Subject");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Maydel.Domain.Academics.PromotionRecord", b =>
+                {
+                    b.HasOne("Maydel.Domain.Academics.ClassRoom", "FromClassRoom")
+                        .WithMany()
+                        .HasForeignKey("FromClassRoomId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Academics.AcademicSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.People.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Maydel.Domain.Academics.ClassRoom", "ToClassRoom")
+                        .WithMany()
+                        .HasForeignKey("ToClassRoomId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromClassRoom");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("ToClassRoom");
                 });
 
             modelBuilder.Entity("Maydel.Domain.Academics.Term", b =>

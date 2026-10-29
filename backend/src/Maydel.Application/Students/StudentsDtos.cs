@@ -127,6 +127,19 @@ public static class StudentQueries
     }
 }
 
+public static class StudentLogins
+{
+    /// <summary>Turns the student's own login on or off to match their status; turning it off signs them out everywhere at once.</summary>
+    public static async Task SyncStudentLoginAsync(this Microsoft.AspNetCore.Identity.UserManager<AppUser> users, Student student, SessionService sessions, CancellationToken ct)
+    {
+        if (student.UserId is not { } userId || await users.FindByIdAsync(userId.ToString()) is not { } user || user.IsActive == student.IsActive) return;
+        user.IsActive = student.IsActive;
+        await users.UpdateAsync(user);
+        await users.UpdateSecurityStampAsync(user);
+        if (!student.IsActive) await sessions.RevokeAllForUserAsync(user.Id, ct);
+    }
+}
+
 /// <summary>Shared by the student and guardian login slices.</summary>
 public static class LoginIssuing
 {
