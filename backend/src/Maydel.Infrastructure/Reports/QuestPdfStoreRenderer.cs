@@ -116,60 +116,114 @@ internal sealed class QuestPdfStoreRenderer : IStoreDocumentRenderer
         }))
         .WithMetadata(new DocumentMetadata { Title = $"Receipt {r.OrderNumber}", Author = school.Name });
 
-    internal static IDocument IdCardsDocument(IReadOnlyList<IdCardDocument> cards, ReportBranding school, bool sheet) =>
-        Document.Create(doc =>
+    internal static IDocument IdCardsDocument(IReadOnlyList<IdCardDocument> cards, ReportBranding school, bool sheet)
+    {
+        var crest = school.Logo ?? DefaultLogo.Value;
+        var watermark = Faded(crest);
+        return Document.Create(doc =>
         {
             if (!sheet)
             {
+                // One card: page 1 the front, page 2 the back.
                 foreach (var card in cards)
-                    doc.Page(page =>
-                    {
-                        page.Size(new PageSize(CardWidth, CardHeight));
-                        page.Margin(0);
-                        page.Content().Element(c => Card(c, card, school));
-                    });
+                {
+                    doc.Page(page => { page.Size(new PageSize(CardWidth, CardHeight)); page.Margin(0); page.Content().Element(c => Front(c, card, school, crest, watermark)); });
+                    doc.Page(page => { page.Size(new PageSize(CardWidth, CardHeight)); page.Margin(0); page.Content().Element(c => Back(c, card, school, watermark)); });
+                }
                 return;
             }
-            // Ten cards per A4 sheet (2 × 5) with thin grey cut lines.
+            // Ten cards per A4 sheet (2 × 5), each sheet of fronts followed by its backs with the columns swapped, so double-sided
+            // printing ("flip on long edge") puts every back behind its own front.
             foreach (var chunk in cards.Chunk(10))
-                doc.Page(page =>
+            {
+                Sheet(doc, "FRONT · Print double-sided on A4, flip on long edge, actual size (100%). Cut along the grey lines.",
+                    [.. chunk.Select(card => (Action<IContainer>?)(c => Front(c, card, school, crest, watermark)))]);
+                var backs = new List<Action<IContainer>?>();
+                for (var row = 0; row < chunk.Length; row += 2)
                 {
-                    page.Size(PageSizes.A4);
-                    page.MarginVertical(28);
-                    page.MarginHorizontal(40);
-                    page.Content().Table(t =>
-                    {
-                        t.ColumnsDefinition(c => { c.ConstantColumn(CardWidth + 8); c.ConstantColumn(CardWidth + 8); });
-                        foreach (var card in chunk)
-                            t.Cell().Padding(4).Border(0.5f).BorderColor("#c9d3dd").Width(CardWidth).Height(CardHeight).Element(c => Card(c, card, school));
-                    });
-                });
+                    var left = chunk[row];
+                    var right = row + 1 < chunk.Length ? chunk[row + 1] : null;
+                    backs.Add(right is null ? null : c => Back(c, right, school, watermark));
+                    backs.Add(c => Back(c, left, school, watermark));
+                }
+                Sheet(doc, "BACK · This page prints on the reverse of the one before.", backs);
+            }
         })
         .WithMetadata(new DocumentMetadata { Title = "Student ID cards", Author = school.Name });
+    }
 
-    private static void Card(IContainer container, IdCardDocument card, ReportBranding school) =>
-        container.Background(Colors.White).Column(col =>
+    private static void Sheet(IDocumentContainer doc, string note, IReadOnlyList<Action<IContainer>?> cells) =>
+        doc.Page(page =>
         {
-            col.Item().Height(34).Background(Navy).PaddingHorizontal(8).Row(row =>
+            page.Size(PageSizes.A4);
+            page.MarginVertical(20);
+            page.MarginHorizontal((PageSizes.A4.Width - 2 * (CardWidth + 8)) / 2); // centred exactly, so the backs line up when flipped
+            page.Header().Height(14).Text(note).FontSize(6.5f).FontColor(Colors.Grey.Medium);
+            page.Content().Table(t =>
             {
-                row.ConstantItem(26).AlignMiddle().Height(26).Background(Colors.White).Padding(1).Image(school.Logo ?? DefaultLogo.Value).FitArea();
+                t.ColumnsDefinition(c => { c.ConstantColumn(CardWidth + 8); c.ConstantColumn(CardWidth + 8); });
+                foreach (var draw in cells)
+                {
+                    var cell = t.Cell().Padding(4).Width(CardWidth).Height(CardHeight);
+                    if (draw is null) cell.Text("");
+                    else draw(cell.Border(0.5f).BorderColor("#c9d3dd"));
+                }
+            });
+        });
+
+    private const string DeepNavy = "#183754";
+
+    /// <summary>The crest at about 7% strength, for a watermark (PDF images have no opacity setting, so it's faded here).</summary>
+    private static byte[] Faded(byte[] logo)
+    {
+        using var source = SkiaSharp.SKBitmap.Decode(logo);
+        if (source is null) return logo;
+        using var surface = SkiaSharp.SKSurface.Create(new SkiaSharp.SKImageInfo(source.Width, source.Height, SkiaSharp.SKColorType.Rgba8888, SkiaSharp.SKAlphaType.Premul));
+        surface.Canvas.Clear(SkiaSharp.SKColors.Transparent);
+        using var image0 = SkiaSharp.SKImage.FromBitmap(source);
+        using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.White.WithAlpha(18) };
+        surface.Canvas.DrawImage(image0, 0, 0, new SkiaSharp.SKSamplingOptions(SkiaSharp.SKFilterMode.Linear), paint);
+        using var image = surface.Snapshot();
+        using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
+    }
+
+    private static void Watermarked(IContainer container, byte[] watermark, Action<IContainer> content) =>
+        container.Background(Colors.White).Layers(layers =>
+        {
+            layers.Layer().AlignCenter().AlignMiddle().Height(CardHeight * 0.7f).Image(watermark).FitArea();
+            content(layers.PrimaryLayer());
+        });
+
+    private static void Header(IContainer container, ReportBranding school, byte[] crest, string label) =>
+        container.Column(col =>
+        {
+            col.Item().Height(32).Background(DeepNavy).PaddingHorizontal(8).Row(row =>
+            {
+                row.ConstantItem(24).AlignMiddle().Height(24).Background(Colors.White).Padding(1).Image(crest).FitArea();
                 row.RelativeItem().PaddingLeft(6).AlignMiddle().Column(c =>
                 {
                     c.Item().Text(school.Name.ToUpperInvariant()).FontSize(8).Bold().FontColor(Colors.White);
-                    c.Item().Text("STUDENT IDENTITY CARD").FontSize(5.5f).FontColor(Gold).LetterSpacing(0.08f);
+                    c.Item().Text(label).FontSize(5.5f).FontColor(Gold).LetterSpacing(0.08f);
                 });
             });
-            col.Item().Height(2).Background(Gold);
+            col.Item().Height(1.5f).Background(Gold);
+        });
+
+    private static void Front(IContainer container, IdCardDocument card, ReportBranding school, byte[] crest, byte[] watermark) =>
+        Watermarked(container, watermark, body => body.Column(col =>
+        {
+            col.Item().Element(h => Header(h, school, crest, "STUDENT IDENTITY CARD"));
             col.Item().PaddingHorizontal(8).PaddingTop(6).Row(row =>
             {
-                var photo = row.ConstantItem(62).Height(78).Border(0.75f).BorderColor(Navy);
+                var photo = row.ConstantItem(60).Height(76).Border(1.25f).BorderColor(Gold).Padding(1);
                 if (card.Photo is { } bytes) photo.Image(bytes).FitArea();
-                else photo.Background(Fill).AlignCenter().AlignMiddle().Text("PHOTO").FontSize(6).FontColor(Navy);
+                else photo.Background("#eef1f4").AlignCenter().AlignMiddle().Text(Initials(card.StudentName)).FontSize(18).Bold().FontColor("#9aa7b4");
 
                 row.RelativeItem().PaddingLeft(8).Column(c =>
                 {
                     c.Spacing(1.5f);
-                    c.Item().Text(card.StudentName).FontSize(10).Bold().FontColor(Text);
+                    c.Item().Text(card.StudentName).FontSize(10).Bold().FontColor(DeepNavy);
                     void Field(string label, string value)
                     {
                         c.Item().PaddingTop(2).Text(label).FontSize(5.5f).Bold().FontColor(Navy);
@@ -177,10 +231,57 @@ internal sealed class QuestPdfStoreRenderer : IStoreDocumentRenderer
                     }
                     Field("ADMISSION NO.", card.AdmissionNumber);
                     if (card.ClassRoom is { } room) Field("CLASS", room);
-                    Field("SESSION", $"{card.Session} · valid until {card.ValidUntil.ToString("d MMM yyyy", Inv)}");
+                    Field("SESSION", card.Session);
                 });
             });
-            col.Item().ExtendVertical().AlignBottom().Background(Fill).PaddingVertical(3).PaddingHorizontal(8)
-                .Text($"If found, please return to {school.Name}{(string.IsNullOrWhiteSpace(school.Phone) ? "" : " · " + school.Phone)}").FontSize(5.5f).FontColor(Navy);
-        });
+            col.Item().ExtendVertical().AlignBottom().Column(f =>
+            {
+                f.Item().Height(1).Background(Gold);
+                f.Item().PaddingVertical(3).PaddingHorizontal(8).Row(r =>
+                {
+                    r.RelativeItem().Text(school.Motto ?? "").FontSize(5.5f).Italic().FontColor(Gold);
+                    r.AutoItem().Text($"Valid until {card.ValidUntil.ToString("d MMM yyyy", Inv)}").FontSize(5.5f).FontColor(Navy);
+                });
+            });
+        }));
+
+    private static void Back(IContainer container, IdCardDocument card, ReportBranding school, byte[] watermark) =>
+        Watermarked(container, watermark, body => body.Column(col =>
+        {
+            col.Item().Height(3).Background(DeepNavy);
+            col.Item().Height(1.5f).Background(Gold);
+            col.Item().PaddingHorizontal(10).PaddingTop(7).Column(c =>
+            {
+                c.Spacing(2);
+                c.Item().Text(school.Name).FontSize(8.5f).Bold().FontColor(DeepNavy);
+                if (!string.IsNullOrWhiteSpace(school.Address)) c.Item().Text(school.Address).FontSize(6.5f).FontColor(Text);
+                var contacts = string.Join("  ·  ", new[] { school.Phone, school.Email }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                if (contacts.Length > 0) c.Item().Text(contacts).FontSize(6.5f).FontColor(Text);
+                c.Item().PaddingTop(4).Text(t =>
+                {
+                    t.Span("If found, please return to the school").FontSize(6.5f).Bold().FontColor(Navy);
+                    if (!string.IsNullOrWhiteSpace(school.Phone)) t.Span($" or call {school.Phone}").FontSize(6.5f).Bold().FontColor(Navy);
+                    t.Span(".").FontSize(6.5f).Bold().FontColor(Navy);
+                });
+                c.Item().Text($"This card is the property of the school and is valid for the {card.Session} session only.").FontSize(5.5f).FontColor(Colors.Grey.Darken2);
+            });
+            col.Item().ExtendVertical().AlignBottom().PaddingHorizontal(10).PaddingBottom(6).Row(row =>
+            {
+                row.RelativeItem().AlignBottom().Column(c =>
+                {
+                    c.Item().Text("ADMISSION NO.").FontSize(5).Bold().FontColor(Navy);
+                    c.Item().Text(card.AdmissionNumber).FontSize(11).Bold().FontColor(DeepNavy).LetterSpacing(0.05f);
+                });
+                row.ConstantItem(96).AlignBottom().Column(c =>
+                {
+                    if (school.Signature is { } signature) c.Item().Height(20).AlignCenter().Image(signature).FitHeight();
+                    else c.Item().Height(20);
+                    c.Item().BorderTop(0.6f).BorderColor(Navy).PaddingTop(1).AlignCenter()
+                        .Text(string.IsNullOrWhiteSpace(school.PrincipalName) ? "Principal" : $"{school.PrincipalName}, Principal").FontSize(5.5f).FontColor(Navy);
+                });
+            });
+        }));
+
+    private static string Initials(string name) =>
+        string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpperInvariant(p[0])));
 }
