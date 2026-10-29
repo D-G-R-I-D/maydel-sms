@@ -53,6 +53,34 @@ public sealed class CommunicationBookTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task An_open_book_picks_up_new_notes_and_shows_when_mine_were_seen()
+    {
+        var s = await SchoolBuilder.SetUpAsync(Api);
+        var parent = await ParentAsync(s.Students[0]);
+        var child = s.Students[0];
+        var first = (await s.FormTeacher.GetFromJsonAsync<BookPage>($"/api/books/{child}", Json.Options))!;
+        Assert.Empty(first.Entries);
+        Assert.Null(first.SeenUpTo);
+
+        var note = await EntryAsync(await s.FormTeacher.PostAsync($"/api/books/{child}/entries", Body("Field trip on Friday.")));
+        // The parent's open book polls with the cursor it last got: only the new note comes back.
+        var parentFirst = (await parent.GetFromJsonAsync<BookPage>($"/api/books/{child}", Json.Options))!;
+        var reply = await EntryAsync(await parent.PostAsync($"/api/books/{child}/entries", Body("Thanks, she'll be ready.")));
+        var update = (await s.FormTeacher.GetFromJsonAsync<BookPage>($"/api/books/{child}?after={Uri.EscapeDataString(first.Cursor.ToString("O"))}", Json.Options))!;
+        Assert.Equal(new[] { note.Id, reply.Id }, update.Entries.Select(e => e.Id).ToArray());
+        // The cursor overlaps by 2 s on purpose (a note saved mid-poll isn't missed); once that's passed, nothing repeats.
+        await Task.Delay(2100);
+        var later = (await s.FormTeacher.GetFromJsonAsync<BookPage>($"/api/books/{child}?after={Uri.EscapeDataString(update.Cursor.ToString("O"))}", Json.Options))!;
+        var none = (await s.FormTeacher.GetFromJsonAsync<BookPage>($"/api/books/{child}?after={Uri.EscapeDataString(later.Cursor.ToString("O"))}", Json.Options))!;
+        Assert.Empty(none.Entries);
+
+        // The parent wrote after opening the book, so the teacher's note shows as seen.
+        Assert.NotNull(update.SeenUpTo);
+        Assert.True(update.SeenUpTo >= note.CreatedAt);
+        Assert.Single(parentFirst.Entries);
+    }
+
+    [Fact]
     public async Task Other_teachers_families_and_students_cannot_open_a_book()
     {
         var s = await SchoolBuilder.SetUpAsync(Api);

@@ -5003,6 +5003,10 @@ export interface components {
             classRoom: null | string;
             entries: components["schemas"]["BookEntryDto"][];
             hasOlder: boolean;
+            /** Format: date-time */
+            seenUpTo: null | string;
+            /** Format: date-time */
+            cursor: string;
         };
         BookRequest: {
             /** Format: uuid */
@@ -23614,6 +23618,7 @@ export interface operations {
         parameters: {
             query?: {
                 before?: string;
+                after?: string;
             };
             header?: never;
             path: {
