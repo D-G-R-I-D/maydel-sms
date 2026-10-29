@@ -13,10 +13,18 @@ public sealed record NotificationInbox(int Unread, IReadOnlyList<NotificationDto
 /// <summary>Adds personal notifications; they're saved with the caller's changes. Anything already sent with the same key is skipped.</summary>
 public sealed class Notifier(IAppDbContext db)
 {
-    /// <summary>Notifies each of the student's guardians who has a portal login.</summary>
-    public async Task<int> GuardiansAsync(Guid studentId, NotificationKind kind, string title, string body, string? link, string dedupeKey, CancellationToken ct)
+    /// <summary>Notifies one user (e.g. a student about their own homework). Skipped when this key is already pending in this change.</summary>
+    public void User(Guid userId, Guid? studentId, NotificationKind kind, string title, string body, string? link, string dedupeKey)
     {
-        var users = await db.StudentGuardians.AsNoTracking().Where(g => g.StudentId == studentId && g.Guardian.UserId != null)
+        if (db.Notifications.Local.Any(n => n.UserId == userId && n.DedupeKey == dedupeKey)) return;
+        db.Notifications.Add(new Notification { UserId = userId, Kind = kind, Title = title, Body = body, LinkUrl = link, StudentId = studentId, DedupeKey = dedupeKey });
+    }
+
+    /// <summary>Notifies each of the student's guardians who has a portal login.</summary>
+    public async Task<int> GuardiansAsync(Guid studentId, NotificationKind kind, string title, string body, string? link, string dedupeKey, CancellationToken ct,
+        Guid? except = null)
+    {
+        var users = await db.StudentGuardians.AsNoTracking().Where(g => g.StudentId == studentId && g.Guardian.UserId != null && g.Guardian.UserId != except)
             .Select(g => g.Guardian.UserId!.Value).Distinct().ToListAsync(ct);
         if (users.Count == 0) return 0;
         var sent = await db.Notifications.Where(n => users.Contains(n.UserId) && n.DedupeKey == dedupeKey).Select(n => n.UserId).ToListAsync(ct);

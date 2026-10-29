@@ -7,6 +7,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { hasAnyRole } from "@/lib/auth/roles";
 import { sectionLabels } from "@/lib/validation/academics";
 import { Card, PageHeader } from "@/components/ui/primitives";
+import { PdfDownloadButton } from "@/components/reports/pdf-download";
 import { AccessDenied, ProblemState } from "@/components/ui/states";
 import { CapacityBar } from "@/components/academics/capacity-bar";
 import { ClassSubjectsEditor } from "@/components/academics/class-subjects-editor";
@@ -68,7 +69,14 @@ export default async function ClassSubjectsPage({ params }: { params: Promise<{ 
       <PageHeader
         title={classroom.name}
         description={`${sectionLabels[classroom.section]} · choose the subjects this class offers.`}
-        actions={isAdmin && levels.ok ? <EditClassroomButton levels={levels.data} teachers={teachers} classroom={classroom} /> : undefined}
+        actions={
+          isAdmin ? (
+            <div className="flex flex-wrap gap-2">
+              <PdfDownloadButton href={`/api/media/classrooms/${classroom.id}/id-cards`} label="Print class ID cards" fallbackName={`${classroom.name.replace(/\s+/g, "-")}-id-cards.pdf`} icon="print" size="sm" />
+              {levels.ok && <EditClassroomButton levels={levels.data} teachers={teachers} classroom={classroom} />}
+            </div>
+          ) : undefined
+        }
       />
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2">

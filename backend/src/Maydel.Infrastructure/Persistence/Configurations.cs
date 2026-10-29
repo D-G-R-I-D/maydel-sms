@@ -137,6 +137,7 @@ internal sealed class StaffConfig : IEntityTypeConfiguration<Staff>
         b.HasIndex(x => x.Email).IsUnique();
         b.HasIndex(x => x.UserId).IsUnique();
         b.Property(x => x.Bio).HasMaxLength(2000);
+        b.Property(x => x.WebsiteName).HasMaxLength(100);
     }
 }
 
@@ -230,6 +231,9 @@ internal sealed class OutboxEmailConfig : IEntityTypeConfiguration<Domain.Commun
         b.Property(x => x.ReplyTo).HasMaxLength(254);
         b.HasIndex(x => new { x.Status, x.NextAttemptAt });
         b.HasIndex(x => new { x.StudentId, x.TermId });
+        b.Property(x => x.UnsubscribeToken).HasMaxLength(64);
+        b.HasIndex(x => x.UnsubscribeToken).HasFilter("\"UnsubscribeToken\" IS NOT NULL");
+        b.HasIndex(x => x.NewsletterId).HasFilter("\"NewsletterId\" IS NOT NULL");
     }
 }
 
@@ -386,6 +390,7 @@ internal sealed class AnnouncementConfig : IEntityTypeConfiguration<Announcement
     public void Configure(EntityTypeBuilder<Announcement> b)
     {
         b.Property(x => x.Body).HasMaxLength(20000);
+        b.Property(x => x.BodyHtml).HasMaxLength(Application.Website.RichText.MaxLength);
         b.Property(x => x.Title).HasMaxLength(200);
         b.Property(x => x.Slug).HasMaxLength(100);
         b.Property(x => x.Summary).HasMaxLength(500);
@@ -404,11 +409,17 @@ internal sealed class EventConfig : IEntityTypeConfiguration<SchoolEvent>
 {
     public void Configure(EntityTypeBuilder<SchoolEvent> b)
     {
-        b.Property(x => x.Description).HasMaxLength(4000);
+        b.Property(x => x.Description).HasMaxLength(20000);
+        b.Property(x => x.DescriptionHtml).HasMaxLength(Application.Website.RichText.MaxLength);
         b.Property(x => x.Title).HasMaxLength(200);
         b.Property(x => x.Location).HasMaxLength(200);
         b.HasIndex(x => x.StartsAt);
     }
+}
+
+internal sealed class MediaAssetConfig : IEntityTypeConfiguration<MediaAsset>
+{
+    public void Configure(EntityTypeBuilder<MediaAsset> b) => b.Property(x => x.ImagePath).HasMaxLength(300);
 }
 
 internal sealed class GalleryPhotoConfig : IEntityTypeConfiguration<GalleryPhoto>
@@ -693,6 +704,253 @@ internal sealed class NewsletterConfig : IEntityTypeConfiguration<NewsletterSubs
     public void Configure(EntityTypeBuilder<NewsletterSubscriber> b)
     {
         b.HasIndex(x => x.Email).IsUnique();
+        b.Property(x => x.Email).HasMaxLength(254);
+        b.Property(x => x.ConfirmTokenHash).HasMaxLength(64);
+        b.HasIndex(x => x.ConfirmTokenHash);
+    }
+}
+
+internal sealed class NewsletterIssueConfig : IEntityTypeConfiguration<Newsletter>
+{
+    public void Configure(EntityTypeBuilder<Newsletter> b)
+    {
+        b.Property(x => x.Title).HasMaxLength(150);
+        b.Property(x => x.Preheader).HasMaxLength(200);
+        b.Property(x => x.BodyHtml).HasMaxLength(Application.Website.RichText.MaxLength);
+        b.Property(x => x.BodyText).HasMaxLength(Application.Website.RichText.MaxLength);
+        b.Property(x => x.Audience).HasConversion<int>();
+        b.Property(x => x.Section).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Slug).HasMaxLength(180);
+        b.HasIndex(x => x.Slug);
+        b.HasIndex(x => new { x.Status, x.ScheduledFor });
+    }
+}
+
+internal sealed class HomeworkConfig : IEntityTypeConfiguration<Domain.Homework.HomeworkTask>
+{
+    public void Configure(EntityTypeBuilder<Domain.Homework.HomeworkTask> b)
+    {
+        b.ToTable("Homework");
+        b.Property(x => x.Title).HasMaxLength(200);
+        b.Property(x => x.SetByName).HasMaxLength(200);
+        b.Property(x => x.Instructions).HasMaxLength(20000);
+        b.Property(x => x.InstructionsHtml).HasMaxLength(Application.Website.RichText.MaxLength);
+        b.HasIndex(x => new { x.ClassRoomId, x.DueOn });
+        b.HasOne<ClassRoom>().WithMany().HasForeignKey(x => x.ClassRoomId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Files, f =>
+        {
+            f.ToTable("HomeworkFiles");
+            f.WithOwner().HasForeignKey("HomeworkId");
+            f.HasKey(x => x.Id);
+            // Ids are made in code: without this EF takes a new file on an existing row for an old one (UPDATE of nothing).
+            f.Property(x => x.Id).ValueGeneratedNever();
+            f.Property(x => x.Key).HasMaxLength(300);
+            f.Property(x => x.FileName).HasMaxLength(200);
+            f.Property(x => x.ContentType).HasMaxLength(100);
+        });
+    }
+}
+
+internal sealed class HomeworkSubmissionConfig : IEntityTypeConfiguration<Domain.Homework.HomeworkSubmission>
+{
+    public void Configure(EntityTypeBuilder<Domain.Homework.HomeworkSubmission> b)
+    {
+        b.HasIndex(x => new { x.HomeworkId, x.StudentId }).IsUnique();
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Feedback).HasMaxLength(4000);
+        b.Property(x => x.Text).HasMaxLength(20000);
+        b.HasOne<Domain.Homework.HomeworkTask>().WithMany().HasForeignKey(x => x.HomeworkId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsMany(x => x.Files, f =>
+        {
+            f.ToTable("HomeworkSubmissionFiles");
+            f.WithOwner().HasForeignKey("SubmissionId");
+            f.HasKey(x => x.Id);
+            // Ids are made in code: without this EF takes a new file on an existing row for an old one (UPDATE of nothing).
+            f.Property(x => x.Id).ValueGeneratedNever();
+            f.Property(x => x.Key).HasMaxLength(300);
+            f.Property(x => x.FileName).HasMaxLength(200);
+            f.Property(x => x.ContentType).HasMaxLength(100);
+        });
+    }
+}
+
+internal sealed class BookEntryConfig : IEntityTypeConfiguration<BookEntry>
+{
+    public void Configure(EntityTypeBuilder<BookEntry> b)
+    {
+        b.Property(x => x.AuthorName).HasMaxLength(200);
+        b.Property(x => x.Body).HasMaxLength(4000);
+        b.Property(x => x.Side).HasConversion<string>().HasMaxLength(10);
+        b.HasIndex(x => new { x.StudentId, x.CreatedAt });
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsOne(x => x.Attachment, f =>
+        {
+            f.Property(x => x.Id).HasColumnName("AttachmentId");
+            f.Property(x => x.Key).HasColumnName("AttachmentKey").HasMaxLength(300);
+            f.Property(x => x.FileName).HasColumnName("AttachmentName").HasMaxLength(200);
+            f.Property(x => x.ContentType).HasColumnName("AttachmentType").HasMaxLength(100);
+            f.Property(x => x.Size).HasColumnName("AttachmentSize");
+        });
+    }
+}
+
+internal sealed class BookDigestMarkConfig : IEntityTypeConfiguration<BookDigestMark>
+{
+    public void Configure(EntityTypeBuilder<BookDigestMark> b)
+    {
+        b.HasKey(x => x.UserId);
+        b.HasOne<Application.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class BookReadConfig : IEntityTypeConfiguration<BookRead>
+{
+    public void Configure(EntityTypeBuilder<BookRead> b)
+    {
+        b.HasKey(x => new { x.StudentId, x.UserId });
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Application.Identity.AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class BusConfig : IEntityTypeConfiguration<Domain.Transport.Bus>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.Bus> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(80);
+        b.Property(x => x.PlateNumber).HasMaxLength(20);
+        b.HasOne<Staff>().WithMany().HasForeignKey(x => x.DriverStaffId).OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+internal sealed class BusRunConfig : IEntityTypeConfiguration<Domain.Transport.BusRun>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.BusRun> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(80);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+    }
+}
+
+internal sealed class TripLogConfig : IEntityTypeConfiguration<Domain.Transport.TripLog>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.TripLog> b)
+    {
+        b.HasIndex(x => new { x.BusId, x.RunId, x.Date }).IsUnique();
+        b.HasIndex(x => x.Date);
+        b.Property(x => x.Note).HasMaxLength(500);
+        b.Property(x => x.Correction).HasMaxLength(500);
+        b.HasOne<Domain.Transport.Bus>().WithMany().HasForeignKey(x => x.BusId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Domain.Transport.BusRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class CheckQuestionConfig : IEntityTypeConfiguration<Domain.Transport.CheckQuestion>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.CheckQuestion> b)
+    {
+        b.Property(x => x.Text).HasMaxLength(200);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+    }
+}
+
+internal sealed class DailyCheckConfig : IEntityTypeConfiguration<Domain.Transport.DailyCheck>
+{
+    public void Configure(EntityTypeBuilder<Domain.Transport.DailyCheck> b)
+    {
+        b.HasIndex(x => new { x.BusId, x.Date }).IsUnique();
+        b.Property(x => x.DriverName).HasMaxLength(200);
+        b.Property(x => x.Notes).HasMaxLength(2000);
+        b.HasOne<Domain.Transport.Bus>().WithMany().HasForeignKey(x => x.BusId).OnDelete(DeleteBehavior.Cascade);
+        b.OwnsMany(x => x.Answers, a =>
+        {
+            a.ToTable("DailyCheckAnswers");
+            a.WithOwner().HasForeignKey("DailyCheckId");
+            a.Property<int>("Id");
+            a.HasKey("Id");
+            a.Property(x => x.Question).HasMaxLength(200);
+            a.Property(x => x.Kind).HasConversion<string>().HasMaxLength(10);
+            a.Property(x => x.Number).HasPrecision(12, 2);
+            a.Property(x => x.Text).HasMaxLength(1000);
+        });
+    }
+}
+
+internal sealed class StoreItemConfig : IEntityTypeConfiguration<Domain.Store.StoreItem>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StoreItem> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(120);
+        b.Property(x => x.Description).HasMaxLength(1000);
+        b.Property(x => x.Category).HasConversion<string>().HasMaxLength(16);
+        b.Property(x => x.Sections).HasConversion<int>();
+        b.Property(x => x.ImagePath).HasMaxLength(200);
+        b.HasMany(x => x.Variants).WithOne().HasForeignKey(v => v.ItemId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class StoreVariantConfig : IEntityTypeConfiguration<Domain.Store.StoreVariant>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StoreVariant> b)
+    {
+        b.Property(x => x.Label).HasMaxLength(60);
+        b.Property(x => x.Price).HasPrecision(12, 2);
+        // Two sales of the last item at once: the second one fails instead of selling stock that isn't there.
+        b.Property(x => x.Stock).IsConcurrencyToken();
+    }
+}
+
+internal sealed class StockMovementConfig : IEntityTypeConfiguration<Domain.Store.StockMovement>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StockMovement> b)
+    {
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(12);
+        b.Property(x => x.Note).HasMaxLength(300);
+        b.Property(x => x.Supplier).HasMaxLength(120);
+        b.Property(x => x.UnitCost).HasPrecision(12, 2);
+        b.HasIndex(x => new { x.VariantId, x.CreatedAt });
+        b.HasOne<Domain.Store.StoreVariant>().WithMany().HasForeignKey(x => x.VariantId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class StoreOrderConfig : IEntityTypeConfiguration<Domain.Store.StoreOrder>
+{
+    public void Configure(EntityTypeBuilder<Domain.Store.StoreOrder> b)
+    {
+        b.HasIndex(x => x.Number).IsUnique();
+        b.HasIndex(x => new { x.StudentId, x.CreatedAt });
+        b.HasIndex(x => new { x.Status, x.HoldUntil });
+        b.Property(x => x.Number).HasMaxLength(24);
+        b.Property(x => x.PlacedByName).HasMaxLength(200);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(12);
+        b.Property(x => x.Payment).HasConversion<string>().HasMaxLength(14);
+        b.Property(x => x.PaidWith).HasConversion<string>().HasMaxLength(14);
+        b.Property(x => x.PaymentReference).HasMaxLength(100);
+        b.Property(x => x.CancelReason).HasMaxLength(300);
+        b.Property(x => x.Total).HasPrecision(12, 2);
+        b.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Restrict);
+        b.OwnsMany(x => x.Lines, l =>
+        {
+            l.ToTable("StoreOrderLines");
+            l.WithOwner().HasForeignKey("OrderId");
+            l.Property<int>("Id");
+            l.HasKey("Id");
+            l.Property(x => x.ItemName).HasMaxLength(120);
+            l.Property(x => x.VariantLabel).HasMaxLength(60);
+            l.Property(x => x.UnitPrice).HasPrecision(12, 2);
+            l.Ignore(x => x.LineTotal);
+        });
+    }
+}
+
+internal sealed class NewsletterOptOutConfig : IEntityTypeConfiguration<NewsletterOptOut>
+{
+    public void Configure(EntityTypeBuilder<NewsletterOptOut> b)
+    {
+        b.HasKey(x => x.Email);
         b.Property(x => x.Email).HasMaxLength(254);
     }
 }

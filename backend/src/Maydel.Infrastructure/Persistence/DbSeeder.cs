@@ -47,9 +47,12 @@ public sealed class DbSeeder(
         await SeedAcademicStructureAsync(ct);
         await SeedAssessmentAsync(ct);
         await SeedSchoolProfileAsync(ct);
+        await SeedTransportAsync(ct);
+        await SeedStoreAsync(ct);
         if (_options.DemoData)
         {
             await SeedDemoDataAsync(ct);
+            await SeedDemoDriverAsync(ct);
             await ResetDemoAccountsAsync();
         }
     }
@@ -136,6 +139,57 @@ public sealed class DbSeeder(
     }
 
     /// <summary>The first start-up copies the <c>School</c> configuration into the editable profile (E2.6); after that the admin owns it.</summary>
+    /// <summary>The school bus's usual runs and a starter driver checklist (E18); the admin edits both. Only when there are none.</summary>
+    private async Task SeedTransportAsync(CancellationToken ct)
+    {
+        if (!await db.BusRuns.AnyAsync(ct))
+            db.BusRuns.AddRange(
+                new Domain.Transport.BusRun { Name = "Morning pickup – Batch A", Kind = Domain.Transport.RunKind.Pickup, Order = 1 },
+                new Domain.Transport.BusRun { Name = "Morning pickup – Batch B", Kind = Domain.Transport.RunKind.Pickup, Order = 2 },
+                new Domain.Transport.BusRun { Name = "Afternoon drop-off – Batch A", Kind = Domain.Transport.RunKind.DropOff, Order = 3 },
+                new Domain.Transport.BusRun { Name = "Afternoon drop-off – Batch B", Kind = Domain.Transport.RunKind.DropOff, Order = 4 });
+        if (!await db.CheckQuestions.AnyAsync(ct))
+        {
+            var order = 0;
+            Domain.Transport.CheckQuestion Q(string text, Domain.Transport.CheckKind kind = Domain.Transport.CheckKind.YesNo, bool flagIfAnswered = false) =>
+                new() { Text = text, Kind = kind, Order = ++order, FlagIfAnswered = flagIfAnswered };
+            db.CheckQuestions.AddRange(
+                Q("Enough fuel for today's runs?"), Q("Tyres look OK?"), Q("Lights and indicators working?"), Q("Brakes OK?"),
+                Q("Seat belts and doors working?"), Q("First-aid kit and fire extinguisher on board?"), Q("Bus clean inside?"),
+                Q("Odometer reading (km)", Domain.Transport.CheckKind.Number),
+                Q("Any incident, damage or problem? Describe it", Domain.Transport.CheckKind.Text, flagIfAnswered: true));
+        }
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// A starter uniform list (E19.1) the admin completes: no prices and not on sale until priced. Only when the store is empty;
+    /// houses and sizes are placeholders to rename.
+    /// </summary>
+    private async Task SeedStoreAsync(CancellationToken ct)
+    {
+        if (await db.StoreItems.AnyAsync(ct)) return;
+        string[] sizes = ["Age 3–4", "Age 5–6", "Age 7–8", "Age 9–10", "Age 11–12", "S", "M", "L", "XL"];
+        const Domain.Store.StoreSections Secondary = Domain.Store.StoreSections.JuniorSecondary | Domain.Store.StoreSections.SeniorSecondary;
+        Domain.Store.StoreItem Item(string name, Domain.Store.StoreCategory category, Domain.Store.StoreSections sections, string? description, params string[] labels) => new()
+        {
+            Name = name, Category = category, Sections = sections, Description = description,
+            Variants = [.. labels.Select((l, i) => new Domain.Store.StoreVariant { Label = l, Order = i })],
+        };
+        db.StoreItems.AddRange(
+            Item("Blazer (black)", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, "School blazer with the crest.", sizes),
+            Item("White shirt", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, null, sizes),
+            Item("School tie", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, null, "Standard"),
+            Item("Skirt (black)", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.None, null, sizes),
+            Item("Trousers (black)", Domain.Store.StoreCategory.Uniform, Secondary, "Secondary school.", "S", "M", "L", "XL"),
+            Item("Shorts (black)", Domain.Store.StoreCategory.Uniform, Domain.Store.StoreSections.Primary, "Primary school.", sizes[..5]),
+            Item("House sportswear", Domain.Store.StoreCategory.Sportswear, Domain.Store.StoreSections.None, "In your child's house colour.",
+                "Red house – S", "Red house – M", "Red house – L", "Blue house – S", "Blue house – M", "Blue house – L",
+                "Green house – S", "Green house – M", "Green house – L", "Yellow house – S", "Yellow house – M", "Yellow house – L"),
+            Item("Replacement ID card", Domain.Store.StoreCategory.IdCard, Domain.Store.StoreSections.None, null, "Standard"));
+        await db.SaveChangesAsync(ct);
+    }
+
     private async Task SeedSchoolProfileAsync(CancellationToken ct)
     {
         var defaults = school.Value;
@@ -196,7 +250,7 @@ public sealed class DbSeeder(
     private static readonly (string UserName, bool MustChangePassword)[] DemoAccounts =
     [
         ("admin@maydel.test", false), ("teacher@maydel.test", false), ("bursar@maydel.test", false),
-        ("parent@maydel.test", false), ("newteacher@maydel.test", true),
+        ("parent@maydel.test", false), ("newteacher@maydel.test", true), ("driver@maydel.test", false),
         ("MSS/2026/0001", false), ("MSS/2026/0002", false), ("MSS/2026/0003", false), ("MSS/2026/0004", false), ("MSS/2026/0005", false),
     ];
 
@@ -216,6 +270,29 @@ public sealed class DbSeeder(
             user.LockoutEnd = null;
             await users.UpdateAsync(user);
         }
+    }
+
+    /// <summary>A demo bus driver on "Bus 1" (E18), added to existing demo databases too.</summary>
+    private async Task SeedDemoDriverAsync(CancellationToken ct)
+    {
+        const string email = "driver@maydel.test";
+        var user = await users.FindByNameAsync(email) ?? await CreateUserAsync(email, "Mr. Musa Ibrahim", Roles.Driver, DemoPassword);
+        var staff = await db.Staff.FirstOrDefaultAsync(s => s.UserId == user.Id, ct);
+        if (staff is null)
+        {
+            var number = 1;
+            while (await db.Staff.AnyAsync(s => s.StaffNumber == $"MSS-DRV-{number:000}", ct)) number++;
+            db.Staff.Add(staff = new Staff { StaffNumber = $"MSS-DRV-{number:000}", FullName = "Mr. Musa Ibrahim", Email = email, JobTitle = "School bus driver", UserId = user.Id });
+        }
+        // The demo driver must drive a bus: reuse a driverless "Bus 1" (e.g. made while testing), or add one.
+        if (!await db.Buses.AnyAsync(b => b.DriverStaffId == staff.Id, ct))
+        {
+            if (await db.Buses.Where(b => b.Name == "Bus 1" && b.DriverStaffId == null).OrderBy(b => b.CreatedAt).FirstOrDefaultAsync(ct) is { } bus)
+                bus.DriverStaffId = staff.Id;
+            else
+                db.Buses.Add(new Domain.Transport.Bus { Name = "Bus 1", PlateNumber = "ABJ 123 MS", Capacity = 30, DriverStaffId = staff.Id });
+        }
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task SeedDemoDataAsync(CancellationToken ct)

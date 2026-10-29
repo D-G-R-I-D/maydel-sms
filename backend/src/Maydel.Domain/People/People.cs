@@ -145,6 +145,9 @@ public class Staff : Entity
     public string? Phone { get; set; }
     public string? JobTitle { get; set; }
     public string? Bio { get; set; }
+
+    /// <summary>How the website shows the name (e.g. "Mrs. G. Okafor"); null = <see cref="FullName"/>.</summary>
+    public string? WebsiteName { get; set; }
     public string? PhotoPath { get; set; }
     public bool ShowOnWebsite { get; set; }
     public int WebsiteOrder { get; set; }

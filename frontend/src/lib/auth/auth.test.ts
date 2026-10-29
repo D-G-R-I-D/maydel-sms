@@ -40,6 +40,12 @@ describe("roles", () => {
     expect(canEnter("/clock", ["Teacher"])).toBe(true);
     expect(canEnter("/clock", ["Parent"])).toBe(false);
     expect(canEnter("/clock/kiosk", ["Parent"])).toBe(true);
+    expect(canEnter("/clock", ["Driver"])).toBe(true);
+    expect(canEnter("/driver", ["Driver"])).toBe(true);
+    expect(canEnter("/driver", ["Admin"])).toBe(true);
+    expect(canEnter("/driver", ["Teacher"])).toBe(false);
+    expect(canEnter("/admin", ["Driver"])).toBe(false);
+    expect(homeFor(["Driver"])).toBe("/driver");
     expect(canEnter("/admissions", ["Teacher"])).toBe(false);
     expect(canEnter("/portal", ["Applicant"])).toBe(false);
     expect(canEnter("/admin", ["Applicant"])).toBe(false);

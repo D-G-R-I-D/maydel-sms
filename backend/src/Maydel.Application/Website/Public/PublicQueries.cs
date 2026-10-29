@@ -20,6 +20,8 @@ public enum PublicImageKind
     News,
     Gallery,
     Staff,
+    Media,
+    Store,
 }
 
 /// <summary>A picture that's on the public website (published public post, gallery photo, or staff shown on the site).</summary>
@@ -42,7 +44,7 @@ internal sealed class GetNewsHandler(IAppDbContext db) : IQueryHandler<GetNewsQu
     public async Task<Result<NewsArticle>> Handle(GetNewsQuery q, CancellationToken ct) =>
         await db.PublicPosts().FirstOrDefaultAsync(a => a.Slug == q.Slug, ct) is { } a
             ? new NewsArticle(a.Id, a.Slug, a.Title, a.Summary, a.Body, a.Category, a.PublishedAt!.Value, a.UpdatedAt, WebsiteUrls.Image("news", a.Id, a.ImagePath),
-                a.LinkUrl, a.LinkText)
+                a.LinkUrl, a.LinkText, a.BodyHtml)
             : WebsiteErrors.PostNotFound;
 }
 
@@ -85,7 +87,7 @@ internal sealed class ListPublicEventsHandler(IAppDbContext db, ISchoolClock clo
         return await db.Events.AsNoTracking()
             .Where(e => (e.Audience & Audience.Public) == Audience.Public && (e.EndsAt ?? e.StartsAt) >= now)
             .OrderBy(e => e.StartsAt).Take(Math.Clamp(q.Take, 1, 100))
-            .Select(e => new PublicEvent(e.Id, e.Title, e.Description, e.StartsAt, e.EndsAt, e.Location)).ToListAsync(ct);
+            .Select(e => new PublicEvent(e.Id, e.Title, e.Description, e.StartsAt, e.EndsAt, e.Location, e.DescriptionHtml)).ToListAsync(ct);
     }
 }
 
@@ -105,7 +107,7 @@ internal sealed class ListPublicStaffHandler(IAppDbContext db) : IQueryHandler<L
 {
     public async Task<Result<IReadOnlyList<PublicStaff>>> Handle(ListPublicStaffQuery q, CancellationToken ct) =>
         (await db.Staff.AsNoTracking().Where(s => s.ShowOnWebsite && s.IsActive).OrderBy(s => s.WebsiteOrder).ThenBy(s => s.FullName).ToListAsync(ct))
-            .Select(s => new PublicStaff(s.Id, s.FullName, s.JobTitle, s.Bio, WebsiteUrls.Image("staff", s.Id, s.PhotoPath))).ToList();
+            .Select(s => new PublicStaff(s.Id, s.WebsiteName ?? s.FullName, s.JobTitle, s.Bio, WebsiteUrls.Image("staff", s.Id, s.PhotoPath))).ToList();
 }
 
 internal sealed class GetPublicImageHandler(IAppDbContext db, PhotoStore photos) : IQueryHandler<GetPublicImageQuery, PhotoContent>
@@ -116,6 +118,8 @@ internal sealed class GetPublicImageHandler(IAppDbContext db, PhotoStore photos)
         {
             PublicImageKind.News => await db.PublicPosts().Where(a => a.Id == q.Id).Select(a => a.ImagePath).FirstOrDefaultAsync(ct),
             PublicImageKind.Gallery => await db.GalleryPhotos.AsNoTracking().Where(p => p.Id == q.Id).Select(p => p.ImagePath).FirstOrDefaultAsync(ct),
+            PublicImageKind.Media => await db.MediaAssets.AsNoTracking().Where(m => m.Id == q.Id).Select(m => m.ImagePath).FirstOrDefaultAsync(ct),
+            PublicImageKind.Store => await db.StoreItems.AsNoTracking().Where(i => i.Id == q.Id).Select(i => i.ImagePath).FirstOrDefaultAsync(ct),
             // Only staff the school chose to show: everyone else's photo stays private.
             _ => await db.Staff.AsNoTracking().Where(s => s.Id == q.Id && s.ShowOnWebsite && s.IsActive).Select(s => s.PhotoPath).FirstOrDefaultAsync(ct),
         };

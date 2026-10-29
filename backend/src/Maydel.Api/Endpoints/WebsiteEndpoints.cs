@@ -35,6 +35,7 @@ public static class WebsiteEndpoints
         cms.MapPut("/posts/{id:guid}/image", SetPostImage).WithName("SetPostImage").Upload();
         cms.MapDelete("/posts/{id:guid}/image", RemovePostImage).WithName("RemovePostImage").ProducesProblems(400, 401, 403, 404);
         cms.MapGet("/events", Events).WithName("ListEvents").ProducesProblems(401, 403);
+        cms.MapPost("/media", UploadMedia).WithName("UploadMedia").Upload();
         cms.MapPost("/events", CreateEvent).WithName("CreateEvent").ProducesProblems(400, 401, 403);
         cms.MapPut("/events/{id:guid}", UpdateEvent).WithName("UpdateEvent").ProducesProblems(400, 401, 403, 404);
         cms.MapDelete("/events/{id:guid}", DeleteEvent).WithName("DeleteEvent").ProducesProblems(401, 403, 404);
@@ -44,6 +45,7 @@ public static class WebsiteEndpoints
         cms.MapDelete("/gallery/{id:guid}", DeletePhoto).WithName("DeleteGalleryPhoto").ProducesProblems(401, 403, 404);
         cms.MapGet("/messages", Messages).WithName("ListContactMessages").ProducesProblems(401, 403);
         cms.MapPut("/messages/{id:guid}/status", MessageStatusSet).WithName("SetContactMessageStatus").ProducesProblems(400, 401, 403, 404);
+        cms.MapGet("/staff", WebsiteStaff).WithName("ListWebsiteStaff").ProducesProblems(401, 403);
         cms.MapPut("/staff/{id:guid}", StaffProfile).WithName("SetStaffWebsiteProfile").ProducesProblems(400, 401, 403, 404);
         cms.MapGet("/testimonials", Testimonials).WithName("ListTestimonials").ProducesProblems(401, 403);
         cms.MapPost("/testimonials", CreateTestimonial).WithName("CreateTestimonial").ProducesProblems(400, 401, 403);
@@ -131,6 +133,12 @@ public static class WebsiteEndpoints
     private static async Task<Results<Ok<PostDto>, ProblemHttpResult>> RemovePostImage(Guid id, ICommandHandler<SetPostImageCommand, PostDto> h, CancellationToken ct) =>
         (await h.Handle(new SetPostImageCommand(id, null), ct)).ToHttpResult();
 
+    private static async Task<Results<Ok<Maydel.Application.Website.Media.MediaDto>, ProblemHttpResult>> UploadMedia(IFormFile? file,
+        ICommandHandler<Maydel.Application.Website.Media.UploadMediaCommand, Maydel.Application.Website.Media.MediaDto> h, CancellationToken ct) =>
+        await PhotoEndpoints.ReadAsync(file, ct) is { } bytes
+            ? (await h.Handle(new Maydel.Application.Website.Media.UploadMediaCommand(bytes), ct)).ToHttpResult()
+            : PhotoErrors.Invalid.ToProblem();
+
     private static async Task<Results<Ok<IReadOnlyList<EventDto>>, ProblemHttpResult>> Events(DateTimeOffset? from, IQueryHandler<ListEventsQuery, IReadOnlyList<EventDto>> h, CancellationToken ct) =>
         (await h.Handle(new ListEventsQuery(from), ct)).ToHttpResult();
     private static async Task<Results<Ok<EventDto>, ProblemHttpResult>> CreateEvent(EventInput body, ICommandHandler<SaveEventCommand, EventDto> h, CancellationToken ct) =>
@@ -157,6 +165,9 @@ public static class WebsiteEndpoints
         (await h.Handle(q, ct)).ToHttpResult();
     private static async Task<Results<Ok<ContactMessageDto>, ProblemHttpResult>> MessageStatusSet(Guid id, StatusInput body, ICommandHandler<SetContactStatusCommand, ContactMessageDto> h, CancellationToken ct) =>
         (await h.Handle(new SetContactStatusCommand(id, body.Status), ct)).ToHttpResult();
+    private static async Task<Results<Ok<IReadOnlyList<Maydel.Application.Website.StaffProfiles.WebsiteStaffRow>>, ProblemHttpResult>> WebsiteStaff(
+        IQueryHandler<Maydel.Application.Website.StaffProfiles.ListWebsiteStaffQuery, IReadOnlyList<Maydel.Application.Website.StaffProfiles.WebsiteStaffRow>> h, CancellationToken ct) =>
+        (await h.Handle(new Maydel.Application.Website.StaffProfiles.ListWebsiteStaffQuery(), ct)).ToHttpResult();
     private static async Task<Results<Ok<PublicStaff>, ProblemHttpResult>> StaffProfile(Guid id, StaffWebsiteInput body, ICommandHandler<SetStaffWebsiteCommand, PublicStaff> h, CancellationToken ct) =>
         (await h.Handle(new SetStaffWebsiteCommand(id, body), ct)).ToHttpResult();
 

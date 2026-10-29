@@ -43,7 +43,7 @@ public static class StaffErrors
 
 public static class StaffRoles
 {
-    public static readonly IReadOnlyList<Role> All = [Role.Admin, Role.Teacher, Role.Bursar];
+    public static readonly IReadOnlyList<Role> All = [Role.Admin, Role.Teacher, Role.Bursar, Role.Driver];
     public static bool IsStaffRole(Role role) => All.Contains(role);
 }
 

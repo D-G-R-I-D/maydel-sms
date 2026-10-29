@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddOptions<SchoolProfileOptions>().BindConfiguration(SchoolProfileOptions.Section);
         services.AddSingleton<IReportCardRenderer, Reports.QuestPdfReportCardRenderer>();
         services.AddSingleton<IFinanceDocumentRenderer, Reports.QuestPdfFinanceRenderer>();
+        services.AddSingleton<IStoreDocumentRenderer, Reports.QuestPdfStoreRenderer>();
         services.AddSingleton<IAdmissionFormRenderer, Reports.QuestPdfAdmissionFormRenderer>();
         services.AddSingleton<IAdmissionLetterRenderer, Reports.QuestPdfAdmissionLetterRenderer>();
         services.AddOptions<Ai.AiOptions>().BindConfiguration(Ai.AiOptions.Section);
@@ -93,6 +94,9 @@ public static class DependencyInjection
         services.AddHostedService<Notifications.EmailOutboxWorker>();
         services.AddHostedService<Admissions.AdmissionsWorker>();
         services.AddHostedService<Finance.FeeRemindersWorker>();
+        services.AddHostedService<Notifications.NewsletterWorker>();
+        services.AddHostedService<Notifications.BookDigestWorker>();
+        services.AddHostedService<Finance.StoreWorker>();
 
         // E10.5 Paystack. Secret key from the environment only (Paystack__SecretKey).
         services.AddOptions<PaystackOptions>().BindConfiguration(PaystackOptions.Section);

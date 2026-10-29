@@ -57,6 +57,24 @@ public interface IAppDbContext
     DbSet<Testimonial> Testimonials { get; }
     DbSet<NoticeRead> NoticeReads { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<MediaAsset> MediaAssets { get; }
+    DbSet<Newsletter> Newsletters { get; }
+    DbSet<NewsletterOptOut> NewsletterOptOuts { get; }
+    DbSet<Domain.Homework.HomeworkTask> Homework { get; }
+    DbSet<Domain.Homework.HomeworkSubmission> HomeworkSubmissions { get; }
+    DbSet<BookEntry> BookEntries { get; }
+    DbSet<BookRead> BookReads { get; }
+    DbSet<BookDigestMark> BookDigestMarks { get; }
+    DbSet<Domain.Transport.Bus> Buses { get; }
+    DbSet<Domain.Transport.BusRun> BusRuns { get; }
+    DbSet<Domain.Transport.TripLog> TripLogs { get; }
+    DbSet<Domain.Transport.CheckQuestion> CheckQuestions { get; }
+    DbSet<Domain.Transport.DailyCheck> DailyChecks { get; }
+    DbSet<Domain.Store.StoreItem> StoreItems { get; }
+    DbSet<Domain.Store.StoreVariant> StoreVariants { get; }
+    DbSet<Domain.Store.StockMovement> StockMovements { get; }
+    DbSet<Domain.Store.StoreOrder> StoreOrders { get; }
+    DbSet<Domain.Store.StoreSettings> StoreSettings { get; }
     DbSet<Domain.StaffAttendance.ClockSettings> ClockSettings { get; }
     DbSet<Domain.StaffAttendance.StaffDay> StaffDays { get; }
 

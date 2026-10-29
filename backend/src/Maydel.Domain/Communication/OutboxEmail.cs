@@ -30,6 +30,15 @@ public enum EmailKind
 
     /// <summary>A reminder that fees are overdue (E12.8). Plain text.</summary>
     FeesOverdue,
+
+    /// <summary>A newsletter copy (E12.6): its formatted body is taken from the newsletter at send time.</summary>
+    Newsletter,
+
+    /// <summary>"Please confirm your subscription" for a website sign-up (double opt-in).</summary>
+    NewsletterConfirm,
+
+    /// <summary>The evening summary of unread communication-book notes (E17.2). Plain text.</summary>
+    BookDigest,
 }
 
 public enum EmailStatus
@@ -62,6 +71,10 @@ public class OutboxEmail : Entity
     public Guid? InvoiceId { get; set; }
     public Guid? PaymentId { get; set; }
     public Guid? ApplicationId { get; set; }
+    public Guid? NewsletterId { get; set; }
+
+    /// <summary>The recipient's unsubscribe link token (newsletters only).</summary>
+    public string? UnsubscribeToken { get; set; }
 
     /// <summary>Replies go here instead of the sender (e.g. the visitor who used the contact form).</summary>
     public string? ReplyTo { get; set; }

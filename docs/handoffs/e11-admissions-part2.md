@@ -22,7 +22,7 @@
 ## Endpoints
 | Method & path | Who | Body / response | Errors |
 |---|---|---|---|
-| `GET /api/public/admissions/blank-form.pdf?sessionId` | anyone | PDF | 404 |
+| `GET /api/admissions/blank-form.pdf?sessionId` | staff (moved 2026-10-26: the office prints it for walk-in families; online the form unlocks after the fee) | PDF | 404 |
 | `GET /api/admissions/applications/{id}` | Applicant, Parent (own) | `ApplicationDetail` | 404 |
 | `PUT /api/admissions/applications/{id}/form` | Applicant, Parent (own) | `SaveFormRequest` → `ApplicationDetail` | 400 (field lengths, emails, `childFirstName`); 404; 422 `admission.form_locked` |
 | `POST /api/admissions/applications/{id}/documents` | Applicant, Parent (own) | **multipart**: `kind` (`PassportPhoto\|BirthCertificate\|LastReportCard\|Other`), `file` → `ApplicationDetail` | 400 `file` / `kind`; 404; 422 `admission.form_locked` / `admission.too_many_documents` |

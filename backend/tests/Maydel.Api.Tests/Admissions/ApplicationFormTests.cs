@@ -45,9 +45,12 @@ public sealed class ApplicationFormTests(PostgresFixture fixture)
         var text = await PdfTextAsync(await family.GetAsync($"/api/admissions/applications/{application}/form.pdf"));
         Assert.Contains("Okonkwo", text);
         Assert.Contains(submitted.Application.ReferenceNumber, text);
-        Assert.Contains("APPLICATION FOR ADMISSION", await PdfTextAsync(await Api.CreateClient().GetAsync($"/api/public/admissions/blank-form.pdf?sessionId={session}")));
-
+        // The blank form is for the office only: online, the form unlocks after the fee is paid.
         var staff = await Api.ClientAsync(Roles.Admin);
+        Assert.Contains("APPLICATION FOR ADMISSION", await PdfTextAsync(await staff.GetAsync($"/api/admissions/blank-form.pdf?sessionId={session}")));
+        Assert.NotEqual(HttpStatusCode.OK, (await Api.CreateClient().GetAsync($"/api/public/admissions/blank-form.pdf?sessionId={session}")).StatusCode); // the old public address is gone
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Api.CreateClient().GetAsync($"/api/admissions/blank-form.pdf?sessionId={session}")).StatusCode);
+
         Assert.Equal(2, (await ReadAsync<ApplicationDetail>(await staff.GetAsync($"/api/admissions/applications/{application}/detail"))).Documents.Count);
     }
 

@@ -11,6 +11,8 @@ import { HeroBackdrop } from "@/components/site/hero-backdrop";
 import { EventItem, NewsCard, SectionHeading } from "@/components/site/cards";
 
 const pillarIcons = [GraduationCap, HeartHandshake, Users, BookOpen];
+/** One picture per programme card, in the order of `programmes`: early years, primary, junior, senior. */
+const programmeImages = [siteImages.nurseryCrest, siteImages.pupilsClassroom, siteImages.teacherStudent, siteImages.seniorPortrait];
 
 /** E7.9: the homepage. Highlights carousel and ticker from the CMS, the school's story, latest news and events. */
 export default async function HomePage() {
@@ -128,15 +130,25 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6" aria-label="Programmes">
         <SectionHeading eyebrow="Our programmes" title="Every stage of your child's learning journey." />
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {programmes.map((p) => (
-            <li key={p.title}>
-              <Card className="h-full space-y-1 p-5">
-                <p className="text-xs font-semibold text-brand">{p.range}</p>
-                <h3 className="font-display text-lg font-semibold">{p.title}</h3>
-                <p className="text-sm text-muted">{p.text}</p>
-              </Card>
-            </li>
-          ))}
+          {programmes.map((p, i) => {
+            const img = programmeImages[i];
+            return (
+              <li key={p.title}>
+                <Card className="h-full overflow-hidden p-0">
+                  {img && (
+                    <div className="relative aspect-[4/3] bg-surface-2">
+                      <Image src={img.src} alt={img.alt} fill sizes="(min-width: 1024px) 280px, (min-width: 640px) 50vw, 100vw" className="object-cover object-top" />
+                    </div>
+                  )}
+                  <div className="space-y-1 p-5">
+                    <p className="text-xs font-semibold text-brand">{p.range}</p>
+                    <h3 className="font-display text-lg font-semibold">{p.title}</h3>
+                    <p className="text-sm text-muted">{p.text}</p>
+                  </div>
+                </Card>
+              </li>
+            );
+          })}
         </ul>
         <Link href="/admissions-info" className="mt-5 inline-flex items-center gap-1 font-medium text-brand hover:underline">
           How admission works

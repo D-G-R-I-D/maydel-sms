@@ -494,4 +494,10 @@ public class NewsletterSubscriber : Entity
 {
     public required string Email { get; set; }
     public bool IsActive { get; set; } = true;
+
+    /// <summary>Double opt-in: newsletters go only to confirmed addresses (E12.6, NDPA consent).</summary>
+    public DateTimeOffset? ConfirmedAt { get; set; }
+
+    /// <summary>SHA-256 of the token in the confirmation link; cleared once confirmed.</summary>
+    public string? ConfirmTokenHash { get; set; }
 }

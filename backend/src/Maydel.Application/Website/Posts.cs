@@ -7,7 +7,8 @@ namespace Maydel.Application.Website;
 internal static class PostMapping
 {
     public static PostDto ToDto(this Announcement a) => new(a.Id, a.Title, a.Slug, a.Summary, a.Body, a.Category, a.Audience, a.IsPinned, a.PublishedAt,
-        a.ShowFrom, a.ShowUntil, a.IsFeatured, a.LinkUrl, a.LinkText, a.InTicker, a.InCarousel, WebsiteUrls.Image("news", a.Id, a.ImagePath), a.CreatedAt, a.UpdatedAt);
+        a.ShowFrom, a.ShowUntil, a.IsFeatured, a.LinkUrl, a.LinkText, a.InTicker, a.InCarousel, WebsiteUrls.Image("news", a.Id, a.ImagePath), a.CreatedAt, a.UpdatedAt,
+        a.BodyHtml);
 
     public static void Apply(this Announcement a, PostInput i)
     {
@@ -15,6 +16,9 @@ internal static class PostMapping
         (a.Title, a.Summary, a.Body, a.Category, a.Audience, a.IsPinned, a.ShowFrom, a.ShowUntil) =
             (i.Title ?? "", C(i.Summary), i.Body ?? "", C(i.Category), i.Audience, i.IsPinned, i.ShowFrom, i.ShowUntil);
         (a.IsFeatured, a.LinkUrl, a.LinkText, a.InTicker, a.InCarousel) = (i.IsFeatured, C(i.LinkUrl), C(i.LinkText), i.InTicker, i.InCarousel);
+        // Written in the editor: keep the cleaned HTML and derive the plain text from it.
+        a.BodyHtml = null;
+        if (RichText.Clean(i.BodyHtml) is { } rich) (a.BodyHtml, a.Body) = rich;
     }
 
     /// <summary>A unique slug for the title (adds -2, -3… when taken).</summary>

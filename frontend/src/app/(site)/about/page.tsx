@@ -66,6 +66,22 @@ export default function AboutPage() {
         </ul>
       </section>
 
+      <section className="grid gap-6 lg:grid-cols-2 lg:items-center" aria-labelledby="teachers">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-surface-2">
+          <Image src={siteImages.teacherStudent.src} alt={siteImages.teacherStudent.alt} fill sizes="(min-width: 1024px) 560px, 100vw" className="object-cover object-[50%_30%]" />
+        </div>
+        <div className="space-y-3">
+          <p className="text-sm font-semibold tracking-wider text-brand uppercase">Our teachers</p>
+          <h2 id="teachers" className="font-display text-3xl font-semibold">
+            Teachers who know every child by name.
+          </h2>
+          <p className="text-muted">
+            Our qualified, dedicated teachers keep classes small enough to notice each child: how they learn best, where they need a hand, and what makes them shine. From
+            Creche to Senior Secondary, they pair a well-structured curriculum with patient, personal attention.
+          </p>
+        </div>
+      </section>
+
       <section className="grid gap-4 sm:grid-cols-2" aria-label="School life">
         {[siteImages.culture, siteImages.courtyard].map((img) => (
           <div key={img.src} className="relative aspect-[4/3] overflow-hidden rounded-card">

@@ -6,19 +6,22 @@ namespace Maydel.Application.Website;
 
 // ---------- Admin (CMS) ----------
 
+/// <summary><c>BodyHtml</c>: formatted content from the editor; when given, <c>Body</c> may be empty and is derived from it.</summary>
 public sealed record PostInput(
     string Title, string? Summary, string Body, string? Category, Audience Audience, bool IsPinned, DateOnly? ShowFrom, DateOnly? ShowUntil,
-    bool IsFeatured, string? LinkUrl, string? LinkText, bool InTicker, bool InCarousel);
+    bool IsFeatured, string? LinkUrl, string? LinkText, bool InTicker, bool InCarousel, string? BodyHtml = null);
 
 /// <summary>A news post or notice as staff edit it. <c>ImageUrl</c> is a public URL once published.</summary>
 public sealed record PostDto(
     Guid Id, string Title, string Slug, string? Summary, string Body, string? Category, Audience Audience, bool IsPinned, DateTimeOffset? PublishedAt,
     DateOnly? ShowFrom, DateOnly? ShowUntil, bool IsFeatured, string? LinkUrl, string? LinkText, bool InTicker, bool InCarousel, string? ImageUrl,
-    DateTimeOffset CreatedAt, DateTimeOffset? UpdatedAt);
+    DateTimeOffset CreatedAt, DateTimeOffset? UpdatedAt, string? BodyHtml);
 
-public sealed record EventInput(string Title, string? Description, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string? Location, Audience Audience);
+public sealed record EventInput(string Title, string? Description, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string? Location, Audience Audience,
+    string? DescriptionHtml = null);
 
-public sealed record EventDto(Guid Id, string Title, string? Description, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string? Location, Audience Audience);
+public sealed record EventDto(Guid Id, string Title, string? Description, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string? Location, Audience Audience,
+    string? DescriptionHtml);
 
 public sealed record PhotoInput(string Title, string? Caption, string Category, int Order, bool IsFeatured);
 
@@ -26,14 +29,16 @@ public sealed record GalleryPhotoDto(Guid Id, string Title, string? Caption, str
 
 public sealed record ContactMessageDto(Guid Id, string Name, string Email, string? Phone, string? Subject, string Message, MessageStatus Status, DateTimeOffset CreatedAt);
 
-public sealed record StaffWebsiteInput(bool ShowOnWebsite, string? JobTitle, string? Bio, int WebsiteOrder);
+/// <summary><c>DisplayName</c>: the name on the website (e.g. "Mrs. G. Okafor"); empty = the staff record's full name.</summary>
+public sealed record StaffWebsiteInput(bool ShowOnWebsite, string? JobTitle, string? Bio, int WebsiteOrder, string? DisplayName = null);
 
 // ---------- Public ----------
 
 public sealed record NewsSummary(Guid Id, string Slug, string Title, string? Summary, string? Category, bool IsPinned, DateTimeOffset PublishedAt, string? ImageUrl);
 
+/// <summary><c>BodyHtml</c>: cleaned formatted content to render as HTML when present; otherwise show <c>Body</c> as text.</summary>
 public sealed record NewsArticle(Guid Id, string Slug, string Title, string? Summary, string Body, string? Category, DateTimeOffset PublishedAt,
-    DateTimeOffset? UpdatedAt, string? ImageUrl, string? LinkUrl, string? LinkText);
+    DateTimeOffset? UpdatedAt, string? ImageUrl, string? LinkUrl, string? LinkText, string? BodyHtml);
 
 /// <summary>A current public notice for the envelope (E7.10). <c>Version</c> changes when it's edited, so "seen" can reset.</summary>
 public sealed record PublicNotice(Guid Id, string Title, string? Summary, string Body, string? LinkUrl, string? LinkText, bool IsFeatured,
@@ -52,7 +57,7 @@ public sealed record TickerItem(Guid Id, string Text, string? Href);
 /// <summary>The homepage carousel (featured news with pictures, then featured photos) and ticker (E7.9).</summary>
 public sealed record Highlights(IReadOnlyList<Slide> Slides, IReadOnlyList<TickerItem> Ticker);
 
-public sealed record PublicEvent(Guid Id, string Title, string? Description, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string? Location);
+public sealed record PublicEvent(Guid Id, string Title, string? Description, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string? Location, string? DescriptionHtml);
 
 public sealed record PublicPhoto(Guid Id, string Title, string? Caption, string Category, string ImageUrl);
 

@@ -15,8 +15,14 @@ export const metadata: Metadata = { title: { default: "Console", template: "%s Â
 export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSessionUser();
   // Proofs of payment waiting for the bursar (E10.8): a count on "To verify".
-  const pending = hasAnyRole(user.roles, ["Admin", "Bursar"]) ? await load((api) => api.GET("/api/finance/proofs", { params: { query: { page: 1, pageSize: 1 } } })) : null;
-  const groups = withBadges(filterNav(consoleNav, user.roles), { "/admin/proofs": pending?.ok ? pending.data.totalCount : 0 });
+  const [pending, messages] = await Promise.all([
+    hasAnyRole(user.roles, ["Admin", "Bursar"]) ? load((api) => api.GET("/api/finance/proofs", { params: { query: { page: 1, pageSize: 1 } } })) : null,
+    hasAnyRole(user.roles, ["Admin"]) ? load((api) => api.GET("/api/cms/messages", { params: { query: { status: "New", page: 1, pageSize: 1 } } })) : null,
+  ]);
+  const groups = withBadges(filterNav(consoleNav, user.roles), {
+    "/admin/proofs": pending?.ok ? pending.data.totalCount : 0,
+    "/admin/website/messages": messages?.ok ? messages.data.totalCount : 0,
+  });
 
   return (
     <div className="flex min-h-dvh">

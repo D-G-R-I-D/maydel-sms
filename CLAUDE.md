@@ -20,7 +20,7 @@ dotnet tool restore && dotnet ef migrations add <Name> -p backend/src/Maydel.Inf
 dotnet new install backend/templates/slice               # then: dotnet new maydel-slice -n CreateStudent --module Students --kind command --response StudentDetail -o backend/src/Maydel.Application/Students/CreateStudent
 cd frontend && npm run dev | npm run lint | npm run typecheck | npm test
 ```
-Demo accounts (Development): `admin@maydel.test`, `teacher@maydel.test`, `bursar@maydel.test`, `parent@maydel.test`, `newteacher@maydel.test` (must change password), students `MSS/2026/0001`–`0005`. Password for all: `Demo#Pass2026`.
+Demo accounts (Development): `admin@maydel.test`, `teacher@maydel.test`, `bursar@maydel.test`, `parent@maydel.test`, `newteacher@maydel.test` (must change password), `driver@maydel.test` (Bus 1), students `MSS/2026/0001`–`0005`. Password for all: `Demo#Pass2026`.
 
 ## Backend conventions (see docs/adr/ADR-004)
 - Projects: `Maydel.Domain` ← `Maydel.Application` ← `Maydel.Infrastructure` / `Maydel.Api`.
