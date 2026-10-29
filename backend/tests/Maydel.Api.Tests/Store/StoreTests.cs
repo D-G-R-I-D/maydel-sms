@@ -35,6 +35,8 @@ public sealed class StoreTests(PostgresFixture fixture)
         var tie = await ReadAsync<StoreItemDto>(await bursar.PostAsJsonAsync("/api/store/items", Item($"Tie {Guid.NewGuid():N}"[..12], isActive: true, price: 2500)));
         var variant = Assert.Single(tie.Variants);
         Assert.True(variant.IsLow); // nothing in stock yet
+        Assert.Equal(tie.Name, (await ReadAsync<StoreItemDto>(await bursar.GetAsync($"/api/store/items/{tie.Id}"))).Name);
+        await (await bursar.GetAsync($"/api/store/items/{Guid.NewGuid()}")).AssertProblemAsync(HttpStatusCode.NotFound, "store.item_not_found");
 
         var stocked = await ReadAsync<VariantDto>(await bursar.PostAsJsonAsync($"/api/store/variants/{variant.Id}/restock", new { quantity = 10, unitCost = 1500, supplier = "Abuja Uniforms" }));
         Assert.Equal((10, false), (stocked.Stock, stocked.IsLow));
@@ -92,6 +94,11 @@ public sealed class StoreTests(PostgresFixture fixture)
         (await bursar.PostAsJsonAsync($"/api/store/orders/{order.Id}/pay", new { method = "Pos", reference = "POS-11" })).EnsureSuccessStatusCode();
         var done = await ReadAsync<StoreOrderDto>(await bursar.PostAsync($"/api/store/orders/{order.Id}/collected", null));
         Assert.Equal((OrderStatus.Collected, OrderPayment.Paid), (done.Status, done.Payment));
+
+        // A notification link carries only the order id: the family can open it, nobody else can.
+        Assert.Equal(OrderStatus.Collected, (await ReadAsync<StoreOrderDto>(await parent.GetAsync($"/api/portal/shop/orders/{order.Id}"))).Status);
+        var stranger = await ParentAsync((await SchoolBuilder.SetUpAsync(Api)).Students[0]);
+        await (await stranger.GetAsync($"/api/portal/shop/orders/{order.Id}")).AssertProblemAsync(HttpStatusCode.NotFound, "store.order_not_found");
 
         // A second order the parent cancels gives its stock back; a third that's never paid is released when the hold runs out.
         var second = await ReadAsync<StoreOrderDto>(await parent.PostAsJsonAsync($"/api/portal/children/{child}/shop/orders", new { lines = new[] { new { variantId = variant, quantity = 1 } }, payment = "AtOffice" }));

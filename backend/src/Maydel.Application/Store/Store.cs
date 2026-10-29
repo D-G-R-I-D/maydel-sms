@@ -151,6 +151,7 @@ internal sealed class StoreOrders(IAppDbContext db, ICurrentUser me, ISchoolCloc
 // ---------- Catalogue and stock (admin, bursar) ----------
 
 public sealed record ListStoreItemsQuery(StoreCategory? Category = null, bool IncludeInactive = true) : IQuery<IReadOnlyList<StoreItemDto>>;
+public sealed record GetStoreItemQuery(Guid Id) : IQuery<StoreItemDto>;
 public sealed record SaveStoreItemCommand(Guid? Id, StoreItemInput Input) : ICommand<StoreItemDto>;
 public sealed record SetStoreItemImageCommand(Guid Id, byte[]? File) : ICommand<StoreItemDto>;
 public sealed record RestockCommand(Guid VariantId, RestockInput Input) : ICommand<VariantDto>;
@@ -169,6 +170,13 @@ internal sealed class ListStoreItemsHandler(IAppDbContext db) : IQueryHandler<Li
         if (!q.IncludeInactive) items = items.Where(i => i.IsActive);
         return (await items.OrderBy(i => i.Category).ThenBy(i => i.Name).ToListAsync(ct)).Select(i => i.Dto()).ToList();
     }
+}
+
+internal sealed class GetStoreItemHandler(IAppDbContext db) : IQueryHandler<GetStoreItemQuery, StoreItemDto>
+{
+    public async Task<Result<StoreItemDto>> Handle(GetStoreItemQuery q, CancellationToken ct) =>
+        await db.StoreItems.AsNoTracking().Include(i => i.Variants).FirstOrDefaultAsync(i => i.Id == q.Id, ct) is { } item
+            ? item.Dto() : StoreErrors.ItemNotFound;
 }
 
 internal sealed class SaveStoreItemHandler(IAppDbContext db) : ICommandHandler<SaveStoreItemCommand, StoreItemDto>
@@ -422,6 +430,9 @@ internal sealed class ReleaseExpiredOrdersHandler(IAppDbContext db, StoreOrders 
 public sealed record GetShopQuery(Guid StudentId) : IQuery<ShopCatalogue>;
 public sealed record PlaceShopOrderCommand(Guid StudentId, ShopOrderInput Input) : ICommand<StoreOrderDto>;
 public sealed record ListShopOrdersQuery(Guid StudentId) : IQuery<IReadOnlyList<StoreOrderDto>>;
+
+/// <summary>One order of any of the signed-in family's children (for links that carry only the order id); 404 for anyone else's.</summary>
+public sealed record GetMyShopOrderQuery(Guid OrderId) : IQuery<StoreOrderDto>;
 public sealed record CancelShopOrderCommand(Guid StudentId, Guid OrderId) : ICommand<StoreOrderDto>;
 
 internal sealed class GetShopHandler(IAppDbContext db, AccessRules access) : IQueryHandler<GetShopQuery, ShopCatalogue>
@@ -473,6 +484,17 @@ internal sealed class ListShopOrdersHandler(IAppDbContext db, AccessRules access
         if (!await access.PortalStudents().AnyAsync(s => s.Id == q.StudentId, ct)) return Error.NotFound("portal.student_not_found", "That student isn't linked to your account.");
         var list = await db.StoreOrders.AsNoTracking().Where(o => o.StudentId == q.StudentId).OrderByDescending(o => o.CreatedAt).Take(100).ToListAsync(ct);
         return Result<IReadOnlyList<StoreOrderDto>>.Success(await db.DtosAsync(list, ct));
+    }
+}
+
+internal sealed class GetMyShopOrderHandler(IAppDbContext db, AccessRules access) : IQueryHandler<GetMyShopOrderQuery, StoreOrderDto>
+{
+    public async Task<Result<StoreOrderDto>> Handle(GetMyShopOrderQuery q, CancellationToken ct)
+    {
+        var mine = access.PortalStudents().Select(s => s.Id);
+        if (await db.StoreOrders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == q.OrderId && mine.Contains(o.StudentId), ct) is not { } order)
+            return StoreErrors.OrderNotFound;
+        return (await db.DtosAsync([order], ct))[0];
     }
 }
 
